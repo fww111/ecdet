@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_projx.xsd">
+  <SchemaVersion>2.1</SchemaVersion>
+  <Header>### uVision Project, (C) Keil Software</Header>
+  <Targets>
+    <Target>
+      <TargetName>demo_rtos_cm4</TargetName>
+      <ToolsetNumber>0x4</ToolsetNumber>
+      <ToolsetName>ARM-ADS</ToolsetName>
+      <TargetOption>
+        <TargetCommonOption>
+          <Device>STM32F407VGTx</Device>
+          <Vendor>STMicroelectronics</Vendor>
+          <Cpu>IRAM(0x20000000,0x20000) IROM(0x8000000,0x100000)</Cpu>
+        </TargetCommonOption>
+        <TargetArmAds>
+          <Cads>
+            <VariousControls>
+              <IncludePath>../include;../src;../../CMSIS/Include</IncludePath>
+              <Define>USE_STDPERIPH_DRIVER,STM32F40_41xxx</Define>
+            </VariousControls>
+          </Cads>
+        </TargetArmAds>
+      </TargetOption>
+    </Target>
+  </Targets>
+  <Groups>
+    <Group>
+      <GroupName>Application</GroupName>
+      <Files>
+        <File>
+          <FileName>main.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\src\main.c</FilePath>
+        </File>
+        <File>
+          <FileName>sensor.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\src\sensor.c</FilePath>
+        </File>
+        <File>
+          <FileName>comm.c</FileName>
+          <FileType>1</FileType>
+          <FilePath>..\src\comm.c</FilePath>
+        </File>
+      </Files>
+    </Group>
+  </Groups>
+</Project>

@@ -1,0 +1,117 @@
+{
+  "$description": "CWE↔MISRA C:2012↔GJB 8114-2013 双向映射表（方案 3.3.7）。GJB 编号体系待取得授权标准文本后补齐（gjb_id 为 null 表示映射待核实），verified=false 的条目仅作检索线索，不进入合规结论。",
+  "mappings": [
+    {
+      "cwe": "CWE-120",
+      "title": "经典缓冲区溢出（拷贝未校验长度）",
+      "misra": ["MISRA C:2012 21.3"],
+      "cert": ["CERT C STR31-C"],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-787",
+      "title": "越界写",
+      "misra": [],
+      "cert": ["CERT C ARR30-C", "CERT C STR31-C"],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-125",
+      "title": "越界读",
+      "misra": [],
+      "cert": ["CERT C ARR30-C"],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-190",
+      "title": "整数溢出或回绕",
+      "misra": ["MISRA C:2012 10.x", "MISRA C:2012 21.3"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-197",
+      "title": "数值截断错误",
+      "misra": ["MISRA C:2012 10.x"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-674",
+      "title": "不受控递归",
+      "misra": ["MISRA C:2012 17.2"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-338",
+      "title": "使用密码学不安全的伪随机数发生器",
+      "misra": ["MISRA C:2012 21.3"],
+      "cert": ["CERT C MSC30-C"],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-134",
+      "title": "使用外部可控格式串",
+      "misra": [],
+      "cert": ["CERT C FIO30-C"],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-758",
+      "title": "依赖未定义/未指明/实现定义行为",
+      "misra": ["MISRA C:2012 1.x", "MISRA C:2012 17.3"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-676",
+      "title": "使用潜在危险函数",
+      "misra": ["MISRA C:2012 21.3", "MISRA C:2012 21.6"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-242",
+      "title": "使用无效继承函数（如 gets）",
+      "misra": ["MISRA C:2012 21.6"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-563",
+      "title": "未使用的变量或参数",
+      "misra": ["MISRA C:2012 2.7"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-709",
+      "title": "保留标识符的不当使用",
+      "misra": ["MISRA C:2012 21.1"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    },
+    {
+      "cwe": "CWE-1284",
+      "title": "无界读取（scanf %s 无宽度）",
+      "misra": ["MISRA C:2012 21.6"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": false
+    }
+  ]
+}
