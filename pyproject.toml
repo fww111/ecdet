@@ -1,0 +1,28 @@
+[project]
+name = "ecdet"
+version = "0.1.0"
+description = "嵌入式软件代码缺陷与安全漏洞检测系统（Embedded Code Defect & Security Detection Toolkit）"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "ecdet 项目组" }]
+keywords = ["embedded", "static-analysis", "misra", "cert-c", "gjb", "sarif", "cwe"]
+# 核心零第三方依赖：标准库实现词法/结构分析与 SARIF 读写，保证在任意构建机上即装即用。
+dependencies = []
+
+[project.scripts]
+ecdet = "ecdet.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ecdet"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

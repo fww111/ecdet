@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# ecdet 产物
+ecdet_reports/
+ecdet_build/
+compile_commands.json
+data/juliet/
+uv.lock
+.zcode/
