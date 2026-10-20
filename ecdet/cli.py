@@ -26,12 +26,15 @@ from ecdet.l3_analysis.engine import (
 from ecdet.l5_report import aggregate, build_compliance_records, render_html_report
 
 
+_SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache__",
+              ".venv", "tests"}
+
+
 def _collect_sources(root: Path) -> list[Path]:
-    skip = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache__",
-            ".venv", "tests"}
     out = []
     for p in sorted(root.rglob("*")):
-        if p.suffix.lower() in (".c", ".h") and not any(s in p.parts for s in skip):
+        if p.suffix.lower() in (".c", ".h") and \
+                not any(s in p.parts for s in _SKIP_DIRS):
             out.append(p.relative_to(root))
     return out
 
@@ -55,7 +58,18 @@ def cmd_scan(args: argparse.Namespace) -> int:
     if not files:
         print("错误：未发现 C 源文件", file=sys.stderr)
         return 2
-    target = AnalysisTarget(root=root, files=files)
+    svd_path = None
+    if args.svd:
+        svd_path = Path(args.svd)
+    else:
+        candidates = [p for p in sorted(root.rglob("*.svd"))
+                      if not any(s in p.parts for s in _SKIP_DIRS)]
+        svd_path = candidates[0] if candidates else None
+    if svd_path and not svd_path.is_absolute():
+        svd_path = root / svd_path
+    target = AnalysisTarget(root=root, files=files, svd_path=svd_path)
+    if svd_path:
+        print(f"[L2] 硬件语义：加载 SVD {svd_path.name}（MMIO 权限检查启用）")
     alerts, metas = run_all_engines(target, profile=args.profile,
                                     disable=args.disable, enable=args.enable)
 
@@ -142,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--enable", nargs="*", default=[], help="额外启用规则 ID")
     p_scan.add_argument("--no-build", action="store_true",
                         help="跳过 L1 构建复现，直接源码扫描")
+    p_scan.add_argument("--svd", help="CMSIS-SVD 芯片描述文件（缺省自动发现工程内 *.svd）")
     p_scan.add_argument("--output", "-o", help="报告输出目录")
     p_scan.set_defaults(func=cmd_scan)
 

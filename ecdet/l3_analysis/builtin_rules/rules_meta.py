@@ -86,6 +86,19 @@ BUILTIN_RULES: list[RuleMeta] = [
     RuleMeta("ECDET-CWE-563", ECDET, "Advisory", "syntactic",
              "函数参数在函数体内未被使用（未使用参数）",
              ["CWE-563"]),
+    # ---------------- ECDET 硬件语义规则（阶段二，P2） ----------------
+    RuleMeta("ECDET-MMIO-ACCESS", ECDET, "Mandatory", "dataflow",
+             "违背 SVD 定义的 MMIO 寄存器访问权限（写只读/读写只寄存器）",
+             []),
+    RuleMeta("ECDET-ISR-RACE", ECDET, "Required", "dataflow",
+             "ISR 与任务上下文共享全局变量且访问侧无临界区保护",
+             ["CWE-362", "CWE-667"]),
+    RuleMeta("ECDET-VOLATILE", ECDET, "Advisory", "syntactic",
+             "ISR 共享变量未声明 volatile，编译器优化可能破坏跨上下文可见性",
+             ["CWE-362"]),
+    RuleMeta("ECDET-ISR-BLOCK", ECDET, "Mandatory", "syntactic",
+             "ISR 中调用阻塞/非 FromISR 安全的 RTOS API",
+             ["CWE-676"]),
 ]
 
 _RULES_INDEX = {r.rule_id: r for r in BUILTIN_RULES}

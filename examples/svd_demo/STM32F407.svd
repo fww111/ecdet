@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 简化 STM32F407 SVD：仅保留 GPIOA 片段，用于演示 MMIO 权限检查 -->
+<device xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="CMSIS-SVD.xsd">
+  <name>STM32F407VG</name>
+  <manufacturer>STMicroelectronics</manufacturer>
+  <cpu>
+    <name>CM4</name>
+  </cpu>
+  <peripherals>
+    <peripheral>
+      <name>GPIOA</name>
+      <description>General purpose I/O</description>
+      <baseAddress>0x40020000</baseAddress>
+      <registers>
+        <register>
+          <name>MODER</name>
+          <description>GPIO port mode register</description>
+          <addressOffset>0x00</addressOffset>
+          <access>read-write</access>
+          <size>32</size>
+        </register>
+        <register>
+          <name>IDR</name>
+          <description>GPIO port input data register</description>
+          <addressOffset>0x10</addressOffset>
+          <access>read-only</access>
+          <size>32</size>
+        </register>
+        <register>
+          <name>ODR</name>
+          <description>GPIO port output data register</description>
+          <addressOffset>0x14</addressOffset>
+          <access>read-write</access>
+          <size>32</size>
+        </register>
+        <register>
+          <name>BSRR</name>
+          <description>GPIO port bit set/reset register</description>
+          <addressOffset>0x18</addressOffset>
+          <access>write-only</access>
+          <size>32</size>
+        </register>
+      </registers>
+    </peripheral>
+  </peripherals>
+</device>

@@ -121,11 +121,13 @@ def render_html_report(result: AggregationResult,
     comp_rows = "".join(
         f"<tr><td>{_esc(r.rule_id)}</td><td>{_esc(r.category)}</td>"
         f"<td>{_esc(r.title)}</td>"
+        f"<td>{_esc(r.gjb_topic) if r.gjb_topic else '—'}</td>"
         f"<td>{'<span class=ok>合规</span>' if r.status == 'compliant' else '偏离'}</td>"
         f"<td>{r.violation_count}</td></tr>"
         for r in records)
-    parts.append(f"<section><h2>规范合规记录（MISRA/CERT/ECDET）</h2>"
+    parts.append(f"<section><h2>规范合规记录（MISRA/CERT/ECDET，含 GJB 8114 主题映射）</h2>"
                  f"<table><tr><th>规则</th><th>类别</th><th>描述</th>"
+                 f"<th>GJB 8114 主题（待授权文本核实）</th>"
                  f"<th>状态</th><th>违例数</th></tr>{comp_rows}</table></section>")
 
     # 告警明细

@@ -40,6 +40,7 @@ class AnalysisTarget:
 
     root: Path
     files: list[Path] = field(default_factory=list)
+    svd_path: Path | None = None       # CMSIS-SVD 芯片描述（提供则启用 MMIO 检查）
 
     def read(self, rel: Path) -> str:
         return (self.root / rel).read_text(encoding="utf-8", errors="replace")
@@ -97,6 +98,22 @@ class BuiltinEngine(Engine):
                 project_groups.setdefault(fn, set()).add(rid)
         for fn, rids in project_groups.items():
             alerts.extend(fn(ctx, rids))
+
+        # L3 硬件语义注入（P2，方案 3.3.2）：SVD 提供时含 MMIO 权限检查
+        from ecdet.l3_analysis.hw_model.checks_hw import HW_RULES
+        from ecdet.l3_analysis.hw_model.context import build_hw_context
+        hw = build_hw_context(ctx, target.svd_path)
+        hw_groups: dict[object, set[str]] = {}
+        for rid, fn in HW_RULES.items():
+            if rid in enabled_rules:
+                hw_groups.setdefault(fn, set()).add(rid)
+        for fn, rids in hw_groups.items():
+            alerts.extend(fn(ctx, hw, rids))
+
+        # L3 抽象解释（P4，方案 3.3.4）：常量传播 → 越界下标 Proven 级证明
+        if "CERT C ARR30-C" in enabled_rules:
+            from ecdet.l3_analysis.abstract_interp import proven_index_check
+            alerts.extend(proven_index_check(facts))
         return alerts
 
 
@@ -158,6 +175,13 @@ DEFAULT_ENGINES: list[Engine] = [
 ]
 
 
+def _make_default_engines() -> list[Engine]:
+    """延迟导入 ESBMC 适配器，保持模块加载轻量。"""
+    from ecdet.l3_analysis.adapters.esbmc import ESBMCAdapter
+
+    return [BuiltinEngine(), CppcheckAdapter(), ClangTidyAdapter(), ESBMCAdapter()]
+
+
 def all_rule_metas(engines: list[Engine]) -> list[RuleMeta]:
     """汇总所有可用引擎的规则元数据。"""
     metas: dict[str, RuleMeta] = {}
@@ -181,7 +205,7 @@ def run_all_engines(target: AnalysisTarget, profile: str | None = None,
                     disable: list[str] | None = None, enable: list[str] | None = None,
                     engines: list[Engine] | None = None) -> tuple[list[Alert], list[RuleMeta]]:
     """调度全部可用引擎并合并告警。"""
-    engs = engines or DEFAULT_ENGINES
+    engs = engines if engines is not None else _make_default_engines()
     usable = [e for e in engs if e.available()]
     metas = all_rule_metas(usable)
     enabled = resolve_enabled(metas, profile, disable, enable)
