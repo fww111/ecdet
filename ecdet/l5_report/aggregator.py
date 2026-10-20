@@ -17,13 +17,25 @@ from pathlib import Path
 from ecdet.l2_ir.model import Alert, Provenance, RuleMeta, Severity
 
 _MAP_PATH = Path(__file__).parent.parent / "rules_db" / "cwe_map.json"
+_GJB_MAP_PATH = Path(__file__).parent.parent / "rules_db" / "gjb_map.json"
+
+
+def _load_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"mappings": []}
 
 
 def _load_cwe_map() -> dict:
-    try:
-        return json.loads(_MAP_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"mappings": []}
+    return _load_json(_MAP_PATH)
+
+
+def _load_gjb_map() -> dict[str, str]:
+    """rule_id → GJB 主题（主题级映射，编号待授权文本核实）。"""
+    data = _load_json(_GJB_MAP_PATH)
+    return {m["rule_id"]: m.get("gjb_topic", "")
+            for m in data.get("mappings", [])}
 
 
 @dataclass
@@ -149,11 +161,13 @@ class ComplianceRecord:
     title: str
     status: str                 # compliant（零违例）/ deviation（存在偏离）/ not-applicable
     violation_count: int = 0
+    gjb_topic: str = ""         # GJB 8114 主题级映射（编号待授权文本核实）
 
 
 def build_compliance_records(result: AggregationResult) -> list[ComplianceRecord]:
     """按规则生成合规记录（方案 3.3.7：每规则合规/偏离与证据）。"""
     counts = Counter(c.primary.rule_id for c in result.clusters)
+    gjb = _load_gjb_map()
     records: list[ComplianceRecord] = []
     for meta in result.rule_metas:
         n = counts.get(meta.rule_id, 0)
@@ -164,6 +178,7 @@ def build_compliance_records(result: AggregationResult) -> list[ComplianceRecord
                 title=meta.title_zh,
                 status="compliant" if n == 0 else "deviation",
                 violation_count=n,
+                gjb_topic=gjb.get(meta.rule_id, ""),
             )
         )
     records.sort(key=lambda r: (-r.violation_count, r.rule_id))

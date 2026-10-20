@@ -71,6 +71,30 @@ def test_report_from_sarif(tmp_path, capsys):
     assert (tmp_path / "regen.html").exists()
 
 
+def test_scan_svd_demo(tmp_path, capsys):
+    """阶段二端到端：SVD 自动发现 → 硬件语义规则 + Proven 分级入 SARIF。"""
+    code = main(["scan", str(EXAMPLES / "svd_demo"), "--no-build",
+                 "-o", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert "MMIO 权限检查启用" in out
+
+    sarif = json.loads((tmp_path / "results.sarif").read_text(encoding="utf-8"))
+    results = sarif["runs"][0]["results"]
+    rule_ids = {r["ruleId"] for r in results}
+    assert "ECDET-MMIO-ACCESS" in rule_ids
+    assert "ECDET-ISR-RACE" in rule_ids
+    assert "ECDET-VOLATILE" in rule_ids
+    assert "ECDET-ISR-BLOCK" in rule_ids
+    provs = {r["properties"]["provenance"] for r in results}
+    assert "proven" in provs        # 抽象解释/ESBMC 级结论存在（engine 字段区分）
+
+    engines = {r["properties"]["engine"] for r in results}
+    assert "builtin-hw" in engines
+
+    html = (tmp_path / "report.html").read_text(encoding="utf-8")
+    assert "GJB 8114" in html       # 合规记录含 GJB 主题映射列
+
+
 def test_init_ccdb_keil(tmp_path, capsys):
     """对 keil_demo（仅 uvprojx，无 CMakeLists）执行 init-ccdb 应走 keil-xml 通道。"""
     code = main(["init-ccdb", str(EXAMPLES / "keil_demo")])
