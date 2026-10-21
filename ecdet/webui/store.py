@@ -45,6 +45,26 @@ CREATE TABLE IF NOT EXISTS alerts (
     evidence TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_run ON alerts(run_id);
+CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+CREATE TABLE IF NOT EXISTS fixes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL REFERENCES runs(id),
+    alert_id INTEGER,
+    rule_id TEXT, path TEXT, line INTEGER, func TEXT,
+    verified INTEGER NOT NULL DEFAULT 0,
+    fail_reason TEXT, explanation TEXT, diff TEXT,
+    created_at REAL
+);
+CREATE TABLE IF NOT EXISTS fix_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL REFERENCES runs(id),
+    status TEXT NOT NULL DEFAULT 'pending',   -- pending/running/done/failed
+    error TEXT, accepted INTEGER, rejected INTEGER,
+    created_at REAL, finished_at REAL
+);
 """
 
 
@@ -253,3 +273,71 @@ class Store:
             "GROUP BY status", (run_id,)).fetchall()
         by_status = {r["status"]: r["n"] for r in rows}
         return {"by_severity": by_sev, "by_status": by_status}
+
+    # ---- 设置（LLM 接入） ----
+
+    def set_setting(self, key: str, value: str) -> None:
+        self._exec(
+            "INSERT INTO settings(key, value) VALUES (?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value))
+
+    def get_settings(self) -> dict:
+        rows = self._exec("SELECT key, value FROM settings").fetchall()
+        return {r["key"]: r["value"] for r in rows}
+
+    # ---- 修复建议 ----
+
+    def add_fix(self, run_id: int, alert_id: int | None, rule_id: str,
+                path: str, line: int, func: str, verified: bool,
+                fail_reason: str, explanation: str, diff: str) -> int:
+        cur = self._exec(
+            "INSERT INTO fixes(run_id, alert_id, rule_id, path, line, func, "
+            "verified, fail_reason, explanation, diff, created_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (run_id, alert_id, rule_id, path, line, func,
+             int(verified), fail_reason, explanation, diff, _now()))
+        return int(cur.lastrowid)
+
+    def list_fixes(self, run_id: int) -> list[dict]:
+        rows = self._exec(
+            "SELECT * FROM fixes WHERE run_id=? ORDER BY verified DESC, id",
+            (run_id,)).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["verified"] = bool(d["verified"])
+            out.append(d)
+        return out
+
+    def fixes_for_alerts(self, run_id: int,
+                         alert_ids: list[int]) -> dict[int, dict]:
+        if not alert_ids:
+            return {}
+        marks = ",".join("?" * len(alert_ids))
+        rows = self._exec(
+            f"SELECT * FROM fixes WHERE run_id=? AND alert_id IN ({marks}) "
+            f"AND verified=1", (run_id, *alert_ids)).fetchall()
+        return {r["alert_id"]: dict(r) for r in rows}
+
+    def add_fix_job(self, run_id: int) -> int:
+        cur = self._exec(
+            "INSERT INTO fix_jobs(run_id, status, created_at) "
+            "VALUES (?,'pending',?)", (run_id, _now()))
+        return int(cur.lastrowid)
+
+    def set_fix_job(self, job_id: int, status: str, error: str | None = None,
+                    accepted: int | None = None,
+                    rejected: int | None = None) -> None:
+        finished = status in ("done", "failed")
+        self._exec(
+            "UPDATE fix_jobs SET status=?, error=?, accepted=?, rejected=?, "
+            "finished_at=? WHERE id=?",
+            (status, error, accepted, rejected,
+             _now() if finished else None, job_id))
+
+    def latest_fix_job(self, run_id: int) -> dict | None:
+        row = self._exec(
+            "SELECT * FROM fix_jobs WHERE run_id=? "
+            "ORDER BY id DESC LIMIT 1", (run_id,)).fetchone()
+        return dict(row) if row else None

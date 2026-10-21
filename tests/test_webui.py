@@ -262,3 +262,90 @@ def test_static_assets_served(ui):
         urllib.request.urlopen(base + "/static/../secrets", timeout=10)
     except urllib.error.HTTPError as e:
         assert e.code in (400, 404)
+
+
+# ---------------- V1.0：设置 / 一键修复 ----------------
+
+
+def test_settings_roundtrip_mask(ui):
+    _, base = ui
+    _post(base, "/api/settings", {"llm_mode": "real",
+                                  "llm_base_url": "http://127.0.0.1:9/v1",
+                                  "llm_api_key": "sk-test-1234",
+                                  "llm_model": "test-model"})
+    s = _get(base, "/api/settings")
+    assert s["llm_mode"] == "real"
+    assert s["llm_base_url"] == "http://127.0.0.1:9/v1"
+    assert s["llm_model"] == "test-model"
+    assert s["api_key_set"] is True
+    assert "1234" in s["api_key_masked"] and "sk-test" not in s["api_key_masked"]
+    # 空 key 不覆盖旧值
+    _post(base, "/api/settings", {"llm_model": "model-2"})
+    s2 = _get(base, "/api/settings")
+    assert s2["llm_model"] == "model-2" and s2["api_key_set"] is True
+
+
+def test_settings_test_endpoint(ui):
+    """测试连接：起一个 OpenAI 格式的假端点验证探针回路。"""
+    ui_obj, base = ui
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    class FakeOpenAI(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            body = b'{"choices":[{"message":{"content":"pong"}}]}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), FakeOpenAI)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    port = httpd.server_address[1]
+    try:
+        _post(base, "/api/settings", {"llm_mode": "real",
+                                      "llm_base_url": f"http://127.0.0.1:{port}/v1",
+                                      "llm_api_key": "sk-x",
+                                      "llm_model": "fake"})
+        r = _post(base, "/api/settings/test")
+        assert r["ok"] is True and "pong" in r["message"]
+    finally:
+        httpd.shutdown()
+
+
+def test_one_click_fix_flow(ui):
+    """扫描（Mock 分诊）→ 一键修复 → 采纳补丁含 diff（STR31→strncpy）。"""
+    _, base = ui
+    reg = _post(base, "/api/projects",
+                {"name": "fixdemo", "source_type": "path",
+                 "path": str(EXAMPLES / "demo_rtos")})
+    run = _post(base, "/api/runs", {"project_id": reg["project_id"],
+                                    "triage": "mock"})
+    done = _wait_run(base, run["run_id"])
+    assert done["status"] == "done"
+
+    job = _post(base, f"/api/runs/{run['run_id']}/fix")
+    assert job["job_id"] >= 1
+    deadline = time.time() + 120
+    while time.time() < deadline:
+        data = _get(base, f"/api/runs/{run['run_id']}/fixes")
+        j = data["job"]
+        if j and j["status"] in ("done", "failed"):
+            break
+        time.sleep(0.5)
+    assert j["status"] == "done", j.get("error")
+    assert j["accepted"] >= 1
+    str31 = [p for p in data["proposals"]
+             if p["rule_id"] == "CERT C STR31-C" and p["verified"]]
+    assert str31, "STR31 正确补丁应被验证采纳"
+    assert "strncpy" in str31[0]["diff"]
+
+    # 告警详情接口携带 run_id（抽屉按 alert_id 匹配补丁）
+    alerts = _get(base, f"/api/runs/{run['run_id']}/alerts")["alerts"]
+    target = next(a for a in alerts if a["rule_id"] == "CERT C STR31-C")
+    detail = _get(base, f"/api/alerts/{target['id']}")
+    assert detail["run_id"] == run["run_id"]

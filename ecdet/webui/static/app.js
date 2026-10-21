@@ -348,6 +348,9 @@ async function loadAlerts() {
 
 async function openAlert(id) {
   const a = await api("GET", "/api/alerts/" + id);
+  const fixes = a.run_id
+    ? await api("GET", `/api/runs/${a.run_id}/fixes`) : null;
+  const myFix = fixes ? (fixes.proposals.find(p => p.alert_id === a.id)) : null;
   $("drawer-title").innerHTML =
     `<span class="badge ${a.severity}">${a.severity}</span>
      <span class="badge ${a.provenance}">${PROV_LABEL[a.provenance]||a.provenance}</span>
@@ -358,6 +361,12 @@ async function openAlert(id) {
       （置信度 ${(a.triage.confidence??0).toFixed(2)}${a.triage.verified?"，证据已核对":""}
       ${a.triage.used_rag?"，RAG 重判":""}）</b>
       <div class="muted" style="margin-top:4px">${esc(a.triage.reason||"")}</div></div>` : "";
+  const fixHtml = myFix ? `
+    <h2 style="font-size:13px;margin:14px 0 4px">
+      ${myFix.verified ? "✓ 已验证修复补丁" : "修复建议（未通过验证）"}</h2>
+    ${myFix.verified ? "" : `<div class="muted">${esc(myFix.fail_reason||"")}</div>`}
+    ${myFix.explanation ? `<div class="muted" style="margin-bottom:6px">${esc(myFix.explanation)}</div>` : ""}
+    ${myFix.diff ? fixDiffHtml(myFix.diff) : '<div class="muted">无 diff</div>'}` : "";
   const ev = (a.evidence||[]).map(e => `
     <div class="evi"><span class="k">${esc(e.kind)}</span>${esc(e.message)}
       ${e.path?`<div class="muted path">${esc(e.path)}:${e.line??""}</div>`:""}</div>`).join("")
@@ -369,6 +378,7 @@ async function openAlert(id) {
     <div class="kv"><b>说明</b>${esc(a.message)}</div>
     ${tri}
     <h2 style="font-size:13px;margin:14px 0 4px">证据链</h2>${ev}
+    ${fixHtml}
     <div style="display:flex;gap:8px;margin-top:16px" id="alert-actions">
       <button class="btn sm green" onclick="markAlert(${a.id},'confirmed')">✓ 确认真缺陷</button>
       <button class="btn sm gray" onclick="markAlert(${a.id},'dismissed')">豁免（误报/不适用）</button>
@@ -393,6 +403,161 @@ async function markAlert(id, status) {
   loadAlerts();
 }
 
+/* ================= 修复建议 ================= */
+
+async function renderFixes(el) {
+  const runs = (await api("GET", "/api/runs")).runs.filter(r => r.status === "done");
+  el.innerHTML = `
+    <div class="page-head"><div><h1>修复建议</h1>
+      <div class="desc">LLM 生成补丁 → 静态重扫 + gcc 语法验证闭环，未通过验证的补丁不会出现在采纳列表</div></div></div>
+    ${runs.length ? "" : `<div class="card">${emptyGuide()}</div>`}
+    <div class="card" ${runs.length ? "" : 'style="display:none"'}>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+        <select id="fx-run" onchange="loadFixes()" style="max-width:240px">
+          ${runs.map(r => `<option value="${r.id}" ${r.id===alertsRun?"selected":""}>
+            运行 #${r.id}</option>`).join("")}
+        </select>
+        <button class="btn" id="fx-go" onclick="startFix()">⚙ 一键修复</button>
+        <span class="muted" id="fx-job"></span>
+      </div>
+      <div id="fx-list"></div>
+    </div>`;
+  if (runs.length) { alertsRun = alertsRun || runs[0].id; loadFixes(); }
+}
+
+async function startFix() {
+  const runId = $("fx-run").value;
+  $("fx-go").disabled = true;
+  try {
+    await api("POST", `/api/runs/${runId}/fix`);
+    toast("修复任务已提交，后台执行中…");
+    pollFixJob(runId);
+  } catch (e) { toast("✗ " + e.message, true); $("fx-go").disabled = false; }
+}
+
+function fixDiffHtml(diff) {
+  const lines = diff.split("\n").map(ln => {
+    const cls = ln.startsWith("+") && !ln.startsWith("+++") ? "add"
+      : ln.startsWith("-") && !ln.startsWith("---") ? "del" : "ctx";
+    return `<div class="d-${cls}">${esc(ln) || " "}</div>`;
+  }).join("");
+  return `<pre style="background:#0f172a;color:#e2e8f0;border-radius:8px;
+    padding:12px;font-size:12px;overflow-x:auto;line-height:1.5">${lines}</pre>`;
+}
+
+async function loadFixes() {
+  const runId = $("fx-run").value;
+  alertsRun = Number(runId);
+  const data = await api("GET", `/api/runs/${runId}/fixes`);
+  renderFixPanel(runId, data);
+}
+
+function renderFixPanel(runId, data) {
+  const job = data.job;
+  const el = $("fx-list");
+  const jobEl = $("fx-job");
+  if (job && ["pending", "running"].includes(job.status)) {
+    jobEl.innerHTML = `<span class="spin"></span> 修复执行中…`;
+    $("fx-go").disabled = true;
+    clearTimeout(renderFixPanel._t);
+    renderFixPanel._t = setTimeout(() => loadFixes(), 2000);
+  } else {
+    $("fx-go").disabled = false;
+    jobEl.textContent = job && job.status === "done"
+      ? `上次：采纳 ${job.accepted} / 拒绝 ${job.rejected}`
+      : (job && job.status === "failed" ? `上次失败：${job.error || ""}` : "");
+  }
+  if (!data.proposals.length) {
+    el.innerHTML = `<div class="empty">尚无修复建议。确认告警后点「⚙ 一键修复」；
+      LLM 判定的真缺陷（TRUE_POSITIVE）与动态 PoC 告警会自动纳入修复目标。</div>`;
+    return;
+  }
+  el.innerHTML = data.proposals.map(p => `
+    <div style="border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <span class="badge ${p.verified ? 'done' : 'failed'}">${p.verified ? "✓ 已采纳（验证通过）" : "✗ 已拒绝"}</span>
+        <b>${esc(p.rule_id)}</b>
+        <span class="path">${esc(p.path)}:${p.line}</span>
+        ${p.func ? `<span class="muted">函数 ${esc(p.func)}</span>` : ""}
+      </div>
+      ${p.verified ? "" : `<div class="muted">拒绝原因：${esc(p.fail_reason||"")}</div>`}
+      ${p.explanation ? `<div class="muted">${esc(p.explanation)}</div>` : ""}
+      ${p.diff ? fixDiffHtml(p.diff) : ""}
+    </div>`).join("");
+}
+
+async function pollFixJob(runId) {
+  const data = await api("GET", `/api/runs/${runId}/fixes`);
+  if (data.job && ["pending", "running"].includes(data.job.status)) {
+    renderFixPanel(runId, data);
+    clearTimeout(pollFixJob._t);
+    pollFixJob._t = setTimeout(() => pollFixJob(runId), 2000);
+  } else {
+    loadFixes();
+    toast(data.job && data.job.status === "done"
+      ? `✓ 修复完成：采纳 ${data.job.accepted} / 拒绝 ${data.job.rejected}`
+      : "✗ 修复任务失败", data.job?.status !== "done");
+  }
+}
+
+/* ================= 大模型设置 ================= */
+
+async function renderSettings(el) {
+  const s = await api("GET", "/api/settings");
+  el.innerHTML = `
+    <div class="page-head"><div><h1>大模型设置</h1>
+      <div class="desc">配置后分诊与修复建议直接使用真实端点；凭据保存在本机 SQLite，数据不出域</div></div></div>
+    <div class="card" style="max-width:560px">
+      <label>工作模式</label>
+      <select id="s-mode">
+        <option value="mock" ${s.llm_mode==="mock"?"selected":""}>Mock（离线演示，确定性判定）</option>
+        <option value="real" ${s.llm_mode==="real"?"selected":""}>真实端点（OpenAI 兼容 / vLLM / Ollama）</option>
+      </select>
+      <label>Base URL</label>
+      <input type="text" id="s-url" placeholder="http://127.0.0.1:8000/v1" value="${esc(s.llm_base_url)}">
+      <label>API Key ${s.api_key_set ? `<span class="muted">（已保存 ${esc(s.api_key_masked)}，留空则不修改）</span>` : ""}</label>
+      <input type="password" id="s-key" placeholder="${s.api_key_set ? "不修改请留空" : "sk-…"}">
+      <label>模型名</label>
+      <input type="text" id="s-model" placeholder="Qwen2.5-Coder-7B-Instruct" value="${esc(s.llm_model)}">
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn" onclick="saveSettings()">保存设置</button>
+        <button class="btn ghost" onclick="testSettings()">测试连接</button>
+        <span class="muted" id="s-msg" style="align-self:center"></span>
+      </div>
+    </div>
+    <div class="card" style="max-width:560px"><h2>说明</h2>
+      <div class="muted">
+        · 兼容一切 OpenAI Chat Completions 形态的端点（vLLM、Ollama、LM Studio 等）；<br>
+        · 扫描时「LLM 分诊=真实端点」与一键修复都会使用此配置；<br>
+        · API Key 仅存本机数据库，回传时脱敏显示。
+      </div></div>`;
+}
+
+async function saveSettings() {
+  await api("POST", "/api/settings", {
+    llm_mode: $("s-mode").value,
+    llm_base_url: $("s-url").value.trim(),
+    llm_api_key: $("s-key").value.trim(),
+    llm_model: $("s-model").value.trim(),
+  });
+  toast("✓ 设置已保存");
+  renderSettings($("main"));
+}
+
+async function testSettings() {
+  const msg = $("s-msg");
+  msg.innerHTML = '<span class="spin"></span> 连接中…';
+  await api("POST", "/api/settings", {
+    llm_mode: $("s-mode").value,
+    llm_base_url: $("s-url").value.trim(),
+    llm_api_key: $("s-key").value.trim(),
+    llm_model: $("s-model").value.trim(),
+  });
+  const r = await api("POST", "/api/settings/test");
+  msg.textContent = r.ok ? "✓ 连接成功：" + r.message : "✗ " + r.message;
+  msg.style.color = r.ok ? "var(--green)" : "var(--red)";
+}
+
 /* ================= 路由 ================= */
 
 async function route() {
@@ -400,13 +565,15 @@ async function route() {
   const [path, qs] = hash.slice(1).split("?");
   const name = path.replace(/^\//, "") || "overview";
   const query = Object.fromEntries(new URLSearchParams(qs || ""));
-  document.querySelectorAll("nav a").forEach(a =>
+  document.querySelectorAll("nav a, .side-settings a").forEach(a =>
     a.classList.toggle("on", a.dataset.route === name));
   const el = $("main");
   try {
     if (name === "projects") await renderProjects(el);
     else if (name === "runs") await renderRuns(el);
     else if (name === "alerts") await renderAlerts(el, query);
+    else if (name === "fixes") await renderFixes(el);
+    else if (name === "settings") await renderSettings(el);
     else await renderOverview(el);
   } catch (e) {
     el.innerHTML = `<div class="card"><div class="empty">加载失败：${esc(e.message)}</div></div>`;

@@ -115,27 +115,39 @@ def _extract_archive(data: bytes, dest: Path) -> None:
 
 
 class ScanRunner:
-    """后台单工人队列：Run 依次执行，状态经 Store 流转。"""
+    """后台单工人队列：扫描与修复任务依次执行，状态经 Store 流转。"""
 
     def __init__(self, store: Store, data_dir: Path):
         self.store = store
         self.data_dir = Path(data_dir)
-        self._queue: queue.Queue[int] = queue.Queue()
+        self._queue: queue.Queue[dict] = queue.Queue()
         self._thread = threading.Thread(target=self._worker, daemon=True)
         self._thread.start()
 
     def submit(self, project_id: int, params: dict) -> int:
         run_id = self.store.add_run(project_id, params)
-        self._queue.put(run_id)
+        self._queue.put({"kind": "scan", "id": run_id})
         return run_id
+
+    def submit_fix(self, run_id: int) -> int:
+        job_id = self.store.add_fix_job(run_id)
+        self._queue.put({"kind": "fix", "id": job_id, "run_id": run_id})
+        return job_id
 
     def _worker(self) -> None:
         while True:
-            run_id = self._queue.get()
+            task = self._queue.get()
             try:
-                self._execute(run_id)
+                if task["kind"] == "scan":
+                    self._execute(task["id"])
+                else:
+                    self._execute_fixes(task["id"], task["run_id"])
             except Exception as e:  # noqa: BLE001 —— 任务隔离，失败入状态
-                self.store.set_run_status(run_id, "failed", error=str(e))
+                if task["kind"] == "scan":
+                    self.store.set_run_status(task["id"], "failed",
+                                              error=str(e))
+                else:
+                    self.store.set_fix_job(task["id"], "failed", error=str(e))
 
     def _execute(self, run_id: int) -> None:
         store = self.store
@@ -185,15 +197,13 @@ class ScanRunner:
                 for f_ in engine.run(workspace, facts):
                     alerts.append(f_.to_alert())
 
-        # L4 分诊（可选）
+        # L4 分诊（可选）：mock 或设置页配置的真实端点
         triage_mode = params.get("triage", "off")
         if triage_mode != "off" and alerts:
             if triage_mode == "mock":
                 client = MockLlmClient()
             else:
-                import os
-                client = OpenAICompatClient()
-                _ = os
+                client = llm_client_from_settings(store)
             triage_alerts(alerts, workspace, client=client)
 
         # L5 聚合输出
@@ -227,3 +237,85 @@ class ScanRunner:
         stats["files"] = len(files)
         stats["out_dir"] = str(out_dir)
         store.set_run_status(run_id, "done", stats=stats, out_dir=str(out_dir))
+
+    # ---- 一键修复（L4 修复闭环：建议生成 + ToolLoopVerify） ----
+
+    def _execute_fixes(self, job_id: int, run_id: int,
+                       max_targets: int = 8) -> None:
+        store = self.store
+        store.set_fix_job(job_id, "running")
+        run = store.get_run(run_id)
+        project = store.get_project(run["project_id"])
+        workspace = Path(project["workspace"])
+
+        # 修复目标：人工确认 或 LLM 判真缺陷（动态通道 PoC 告警一并纳入）
+        candidates = []
+        for a in store.list_alerts(run_id, limit=1000):
+            tri = a.get("triage") or {}
+            if a["status"] == "confirmed" or tri.get("verdict") == "TRUE_POSITIVE" \
+                    or a["engine"] == "dynamic":
+                candidates.append(a)
+        candidates = candidates[:max_targets]
+        if not candidates:
+            store.set_fix_job(job_id, "failed",
+                              error="无可修复目标（需先确认告警或启用 LLM 分诊）")
+            return
+
+        from ecdet.l2_ir.model import Alert, Location, Severity
+        from ecdet.l3_analysis.builtin_rules.checks import (
+            build_file_facts, finalize_facts)
+        from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
+
+        # 修复走补丁格式输出：mock 用修复专用客户端，real 用设置端点
+        cfg = store.get_settings()
+        if cfg.get("llm_mode") == "real":
+            fix_client = llm_client_from_settings(store)
+        else:
+            fix_client = MockFixClient()
+        proposer = FixProposer(fix_client)
+        verifier = FixVerifier(workspace, use_compiler=True)
+
+        need = sorted({a["path"].replace("\\", "/") for a in candidates})
+        sources: dict[str, str] = {}
+        facts = []
+        for rel in need:
+            p = workspace / rel
+            if p.exists():
+                text = p.read_text(encoding="utf-8", errors="replace")
+                sources[rel] = text
+                facts.append(build_file_facts(rel, text))
+        ctx = finalize_facts(facts)
+
+        accepted = rejected = 0
+        for a in candidates:
+            alert = Alert(rule_id=a["rule_id"], engine=a["engine"],
+                          severity=Severity(a["severity"]),
+                          message=a["message"],
+                          location=Location(path=a["path"], line=a["line"]))
+            proposal = proposer.propose(alert, ctx)
+            src = sources.get(a["path"].replace("\\", "/"))
+            if not proposal.fail_reason and src is not None:
+                proposal = verifier.verify(proposal, ctx, src)
+            if proposal.verified:
+                accepted += 1
+            else:
+                rejected += 1
+            store.add_fix(
+                run_id=run_id, alert_id=a["id"], rule_id=a["rule_id"],
+                path=a["path"], line=a["line"], func=proposal.func_name,
+                verified=proposal.verified,
+                fail_reason=proposal.fail_reason,
+                explanation=proposal.explanation, diff=proposal.diff)
+        store.set_fix_job(job_id, "done", accepted=accepted, rejected=rejected)
+
+
+def llm_client_from_settings(store: Store):
+    """按设置页配置构建 LLM 客户端（mode=mock 或 OpenAI 兼容端点）。"""
+    cfg = store.get_settings()
+    if cfg.get("llm_mode", "mock") == "real":
+        import os
+        api_key = cfg.get("llm_api_key") or os.environ.get("ECODET_LLM_API_KEY")
+        return OpenAICompatClient(
+            base_url=cfg.get("llm_base_url") or None,
+            model=cfg.get("llm_model") or None, api_key=api_key or None)
+    return MockLlmClient()
