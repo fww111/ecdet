@@ -349,3 +349,38 @@ def test_one_click_fix_flow(ui):
     target = next(a for a in alerts if a["rule_id"] == "CERT C STR31-C")
     detail = _get(base, f"/api/alerts/{target['id']}")
     assert detail["run_id"] == run["run_id"]
+
+
+def test_targeted_fix_by_alert_ids(ui):
+    """勾选定向修复：只修选中的告警，且原文件内容保持不变。"""
+    _, base = ui
+    reg = _post(base, "/api/projects",
+                {"name": "tf", "source_type": "path",
+                 "path": str(EXAMPLES / "demo_rtos")})
+    run = _post(base, "/api/runs", {"project_id": reg["project_id"],
+                                    "triage": "mock"})
+    done = _wait_run(base, run["run_id"])
+    assert done["status"] == "done"
+
+    alerts = _get(base, f"/api/runs/{run['run_id']}/alerts")["alerts"]
+    str31 = next(a for a in alerts if a["rule_id"] == "CERT C STR31-C")
+    target_file = EXAMPLES / "demo_rtos" / "src" / "sensor.c"
+    before = target_file.read_bytes()
+
+    # 只勾 STR31 与 ARR30 两条
+    arr30 = next(a for a in alerts if a["rule_id"] == "CERT C ARR30-C")
+    job = _post(base, f"/api/runs/{run['run_id']}/fix",
+                {"alert_ids": [str31["id"], arr30["id"]]})
+    deadline = time.time() + 120
+    data = {}
+    while time.time() < deadline:
+        data = _get(base, f"/api/runs/{run['run_id']}/fixes")
+        if data["job"] and data["job"]["status"] in ("done", "failed"):
+            break
+        time.sleep(0.5)
+    assert data["job"]["status"] == "done", data["job"].get("error")
+    assert len(data["proposals"]) == 2, "只应生成勾选的 2 条建议"
+    assert {p["rule_id"] for p in data["proposals"]} ==         {"CERT C STR31-C", "CERT C ARR30-C"}
+
+    # 原文件一个字节都不能变（修复只生成补丁不落盘）
+    assert target_file.read_bytes() == before
