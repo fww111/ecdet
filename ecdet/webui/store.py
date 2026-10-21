@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS alerts (
     provenance TEXT NOT NULL,
     triage TEXT,                        -- JSON（L4 分诊结论）
     status TEXT NOT NULL DEFAULT 'pending',   -- pending / confirmed / dismissed
-    fingerprint TEXT
+    fingerprint TEXT,
+    evidence TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_run ON alerts(run_id);
 """
@@ -62,6 +63,10 @@ class Store:
         self._conn.row_factory = sqlite3.Row
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            try:      # 旧库迁移：补 evidence 列
+                self._conn.execute("ALTER TABLE alerts ADD COLUMN evidence TEXT")
+            except sqlite3.OperationalError:
+                pass
             self._conn.commit()
 
     def _exec(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
@@ -144,14 +149,16 @@ class Store:
         with self._lock:
             self._conn.executemany(
                 "INSERT INTO alerts(run_id, rule_id, engine, severity, path, "
-                "line, message, cwe, provenance, triage, status, fingerprint) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?)",
+                "line, message, cwe, provenance, triage, status, fingerprint, "
+                "evidence) VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?,?)",
                 [(run_id, a["rule_id"], a["engine"], a["severity"], a["path"],
                   a["line"], a["message"], a.get("cwe"),
                   a["provenance"],
                   json.dumps(a["triage"], ensure_ascii=False)
                   if a.get("triage") else None,
-                  a.get("fingerprint", "")) for a in alerts])
+                  a.get("fingerprint", ""),
+                  json.dumps(a.get("evidence") or [], ensure_ascii=False))
+                 for a in alerts])
             self._conn.commit()
 
     def list_alerts(self, run_id: int, severity: str | None = None,
@@ -183,8 +190,51 @@ class Store:
         for r in rows:
             d = dict(r)
             d["triage"] = json.loads(d["triage"]) if d["triage"] else None
+            d["evidence"] = json.loads(d["evidence"]) if d.get("evidence") else []
             out.append(d)
         return out
+
+    def get_alert(self, alert_id: int) -> dict | None:
+        row = self._exec("SELECT * FROM alerts WHERE id=?",
+                         (alert_id,)).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        d["triage"] = json.loads(d["triage"]) if d["triage"] else None
+        d["evidence"] = json.loads(d["evidence"]) if d["evidence"] else []
+        return d
+
+    def summary(self) -> dict:
+        """总览聚合：工程/运行/告警总量与分布（仪表盘数据源）。"""
+        n_projects = self._exec(
+            "SELECT COUNT(*) AS n FROM projects").fetchone()["n"]
+        n_runs = self._exec(
+            "SELECT COUNT(*) AS n FROM runs WHERE status='done'").fetchone()["n"]
+        n_alerts = self._exec(
+            "SELECT COUNT(*) AS n FROM alerts").fetchone()["n"]
+        by_sev = {r["severity"]: r["n"] for r in self._exec(
+            "SELECT severity, COUNT(*) AS n FROM alerts "
+            "GROUP BY severity").fetchall()}
+        by_prov = {r["provenance"]: r["n"] for r in self._exec(
+            "SELECT provenance, COUNT(*) AS n FROM alerts "
+            "GROUP BY provenance").fetchall()}
+        by_triage = {r["v"]: r["n"] for r in self._exec(
+            "SELECT JSON_EXTRACT(triage,'$.verdict') AS v, COUNT(*) AS n "
+            "FROM alerts WHERE triage IS NOT NULL GROUP BY v").fetchall()}
+        recent = []
+        for r in self._exec(
+                "SELECT id, project_id, status, stats, finished_at FROM runs "
+                "ORDER BY id DESC LIMIT 5").fetchall():
+            d = dict(r)
+            d["stats"] = json.loads(d["stats"]) if d["stats"] else {}
+            recent.append(d)
+        pending = self._exec(
+            "SELECT COUNT(*) AS n FROM alerts WHERE status='pending'"
+        ).fetchone()["n"]
+        return {"projects": n_projects, "runs_done": n_runs,
+                "alerts_total": n_alerts, "pending_review": pending,
+                "by_severity": by_sev, "by_provenance": by_prov,
+                "by_triage": by_triage, "recent_runs": recent}
 
     def set_alert_status(self, alert_id: int, status: str) -> bool:
         if status not in ("pending", "confirmed", "dismissed"):

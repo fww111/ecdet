@@ -223,3 +223,42 @@ def test_index_page(ui):
     with urllib.request.urlopen(base + "/", timeout=10) as r:
         html = r.read().decode("utf-8")
         assert "ecdet 控制台" in html
+
+
+# ---------------- V0.9：总览聚合 / 告警详情（证据链） / 静态资源 ----------------
+
+
+def test_summary_and_alert_detail(ui):
+    ui_obj, base = ui
+    reg = _post(base, "/api/projects",
+                {"name": "demo", "source_type": "path",
+                 "path": str(EXAMPLES / "demo_rtos")})
+    run = _post(base, "/api/runs", {"project_id": reg["project_id"],
+                                    "triage": "mock"})
+    done = _wait_run(base, run["run_id"])
+    assert done["status"] == "done"
+
+    s = _get(base, "/api/summary")
+    assert s["projects"] >= 1 and s["runs_done"] >= 1
+    assert s["alerts_total"] == done["stats"]["total"]
+    assert set(s["by_severity"]) <= {"error", "warning", "note"}
+    assert len(s["recent_runs"]) >= 1
+
+    alerts = _get(base, f"/api/runs/{run['run_id']}/alerts?severity=error")["alerts"]
+    detail = _get(base, f"/api/alerts/{alerts[0]['id']}")
+    assert detail["rule_id"] == alerts[0]["rule_id"]
+    assert isinstance(detail["evidence"], list)
+    assert any("证据" in e["message"] or e["message"] for e in detail["evidence"])
+
+
+def test_static_assets_served(ui):
+    _, base = ui
+    for path, marker in (("/static/style.css", "--sidebar"),
+                         ("/static/app.js", "ecdet")):
+        with urllib.request.urlopen(base + path, timeout=10) as r:
+            body = r.read().decode("utf-8")
+            assert marker in body
+    try:
+        urllib.request.urlopen(base + "/static/../secrets", timeout=10)
+    except urllib.error.HTTPError as e:
+        assert e.code in (400, 404)

@@ -80,6 +80,14 @@ class WebUI:
 
         if not parts:
             return h._file(_STATIC / "index.html", "text/html; charset=utf-8")
+        if parts[0] == "static" and len(parts) == 2:
+            ctypes = {".css": "text/css; charset=utf-8",
+                      ".js": "application/javascript; charset=utf-8",
+                      ".svg": "image/svg+xml"}
+            f = (_STATIC / parts[1]).resolve()
+            if f.suffix in ctypes and f.parent == _STATIC.resolve():
+                return h._file(f, ctypes[f.suffix])
+            return h._json(404, {"error": "not found"})
         if parts[:2] == ["api", "projects"]:
             return h._json(200, {"projects": self.store.list_projects()})
         if parts[:2] == ["api", "runs"] and len(parts) == 2:
@@ -106,6 +114,12 @@ class WebUI:
                 out = Path(run.get("out_dir") or "")
                 return h._file(out / "results.sarif",
                                "application/json; charset=utf-8")
+        if parts[:2] == ["api", "summary"]:
+            return h._json(200, self.store.summary())
+        if parts[:2] == ["api", "alerts"] and len(parts) == 3:
+            alert = self.store.get_alert(int(parts[2]))
+            return h._json(200, alert) if alert else h._json(
+                404, {"error": "alert not found"})
         if parts[:2] == ["api", "carriers"]:
             from ecdet.l3_analysis.dynamic.carriers import probe_carriers
             return h._json(200, {"carriers": [
