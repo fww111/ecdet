@@ -129,8 +129,10 @@ class WebUI:
                 return h._file(out / "results.sarif",
                                "application/json; charset=utf-8")
             if parts[3] == "fixes":
-                return h._json(200, {"job": self.store.latest_fix_job(run_id),
-                                     "proposals": self.store.list_fixes(run_id)})
+                job = self.store.latest_fix_job(run_id)
+                return h._json(200, {"job": job,
+                    "proposals": self.store.list_fixes(
+                        run_id, job_id=job["id"] if job else None)})
         if parts[:2] == ["api", "summary"]:
             return h._json(200, self.store.summary())
         if parts[:2] == ["api", "alerts"] and len(parts) == 3:
@@ -238,14 +240,13 @@ class WebUI:
             run = self.store.get_run(run_id)
             if not run or run["status"] != "done":
                 return h._json(400, {"error": "运行不存在或未完成"})
-            job_id = self.runner.submit_fix(run_id)
+            data = json.loads(body.decode("utf-8") or "{}")
+            alert_ids = data.get("alert_ids") or None
+            if alert_ids and not isinstance(alert_ids, list):
+                return h._json(400, {"error": "alert_ids 须为数组"})
+            job_id = self.runner.submit_fix(run_id, alert_ids)
             return h._json(200, {"job_id": job_id})
 
-        if parts[:2] == ["api", "runs"] and len(parts) == 4 \
-                and parts[3] == "fixes":
-            run_id = int(parts[2])
-            return h._json(200, {"job": self.store.latest_fix_job(run_id),
-                                 "proposals": self.store.list_fixes(run_id)})
         return h._json(404, {"error": "not found"})
 
 

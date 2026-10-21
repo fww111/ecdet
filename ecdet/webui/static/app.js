@@ -292,16 +292,19 @@ async function loadRunsTable() {
 
 let alertsRun = null;
 
+let fixSelection = new Set();      // 勾选待修复的告警 id
+
 async function renderAlerts(el, query) {
   const runs = (await api("GET", "/api/runs")).runs.filter(r => r.status === "done");
   alertsRun = query.run ? Number(query.run) : (runs[0] ? runs[0].id : null);
+  fixSelection = new Set();
   el.innerHTML = `
     <div class="page-head"><div><h1>告警中心</h1>
-      <div class="desc">逐条研判：确认真缺陷或豁免误报，状态落库</div></div></div>
+      <div class="desc">逐条研判：确认真缺陷或豁免误报；勾选后可定向一键修复（只生成并验证补丁，不改原文件）</div></div></div>
     ${runs.length ? "" : `<div class="card">${emptyGuide()}</div>`}
     <div class="card" ${runs.length ? "" : 'style="display:none"'}>
       <div class="filters" style="display:flex;gap:8px;margin-bottom:10px">
-        <select id="a-run" onchange="alertsRun=Number(this.value);loadAlerts()"
+        <select id="a-run" onchange="alertsRun=Number(this.value);fixSelection.clear();loadAlerts()"
           style="max-width:240px">
           ${runs.map(r => `<option value="${r.id}" ${r.id===alertsRun?"selected":""}>
             运行 #${r.id}</option>`).join("")}
@@ -318,24 +321,32 @@ async function renderAlerts(el, query) {
       </div>
       <div id="alert-stat" class="muted" style="margin-bottom:6px"></div>
       <div id="alert-table"></div>
+    </div>
+    <div id="fix-bar" class="hidden" style="position:sticky;bottom:14px;
+        background:var(--ink);color:#fff;border-radius:10px;padding:10px 16px;
+        display:flex;gap:12px;align-items:center;box-shadow:var(--shadow-lg);z-index:30">
+      <span id="fix-bar-n"></span>
+      <button class="btn sm green" onclick="fixSelected()">⚙ 修复选中</button>
+      <button class="btn sm ghost" onclick="fixSelection.clear();renderAlertRows()">取消</button>
     </div>`;
   if (alertsRun) loadAlerts();
 }
 
-async function loadAlerts() {
-  const q = new URLSearchParams({ severity: $("a-sev").value,
-    status: $("a-status").value, q: $("a-q").value });
-  const data = await api("GET", `/api/runs/${alertsRun}/alerts?` + q);
+function renderAlertRows(alerts) {
   const el = $("alert-table");
-  $("alert-stat").textContent = `筛选结果 ${data.alerts.length} 条`;
-  if (!data.alerts.length) {
+  if (!alerts.length) {
     el.innerHTML = `<div class="empty">当前筛选条件下没有告警。</div>`;
     return;
   }
   el.innerHTML = `<table><thead><tr>
+      <th style="width:30px"><input type="checkbox" id="a-all"
+        onclick="toggleAllChecks(this.checked)"></th>
       <th>位置</th><th>级别</th><th>规则</th><th>结论</th><th>复核</th>
-    </tr></thead><tbody>${data.alerts.map(a => `
+    </tr></thead><tbody>${alerts.map(a => `
       <tr class="click" onclick="openAlert(${a.id})">
+        <td onclick="event.stopPropagation()">
+          <input type="checkbox" ${fixSelection.has(a.id)?"checked":""}
+            onchange="toggleCheck(${a.id}, this.checked)"></td>
         <td><span class="path">${esc(a.path)}</span>:${a.line}</td>
         <td><span class="badge ${a.severity}">${a.severity}</span>
             <span class="badge ${a.provenance}">${PROV_LABEL[a.provenance]||a.provenance}</span></td>
@@ -344,6 +355,47 @@ async function loadAlerts() {
         <td><span class="badge ${a.status}">${
           {pending:"待处理",confirmed:"已确认",dismissed:"已豁免"}[a.status]}</span></td>
       </tr>`).join("")}</tbody></table>`;
+  updateFixBar();
+}
+
+function toggleCheck(id, on) {
+  if (on) fixSelection.add(id); else fixSelection.delete(id);
+  updateFixBar();
+}
+function toggleAllChecks(on) {
+  document.querySelectorAll("#alert-table tbody input[type=checkbox]")
+    .forEach(cb => {
+      cb.checked = on;
+      const id = Number(cb.getAttribute("onchange").match(/\d+/)[0]);
+      if (on) fixSelection.add(id); else fixSelection.delete(id);
+    });
+  updateFixBar();
+}
+function updateFixBar() {
+  const bar = $("fix-bar");
+  if (!bar) return;
+  bar.classList.toggle("hidden", fixSelection.size === 0);
+  $("fix-bar-n").textContent = `已勾选 ${fixSelection.size} 条告警`;
+}
+
+async function fixSelected() {
+  if (!fixSelection.size) return;
+  try {
+    await api("POST", `/api/runs/${alertsRun}/fix`,
+              { alert_ids: [...fixSelection] });
+    const n = fixSelection.size;
+    fixSelection.clear();
+    toast(`✓ 已提交 ${n} 条定向修复任务`);
+    location.hash = "#/fixes";
+  } catch (e) { toast("✗ " + e.message, true); }
+}
+
+async function loadAlerts() {
+  const q = new URLSearchParams({ severity: $("a-sev").value,
+    status: $("a-status").value, q: $("a-q").value });
+  const data = await api("GET", `/api/runs/${alertsRun}/alerts?` + q);
+  $("alert-stat").textContent = `筛选结果 ${data.alerts.length} 条`;
+  renderAlertRows(data.alerts);
 }
 
 async function openAlert(id) {
@@ -412,14 +464,18 @@ async function renderFixes(el) {
       <div class="desc">LLM 生成补丁 → 静态重扫 + gcc 语法验证闭环，未通过验证的补丁不会出现在采纳列表</div></div></div>
     ${runs.length ? "" : `<div class="card">${emptyGuide()}</div>`}
     <div class="card" ${runs.length ? "" : 'style="display:none"'}>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px">
         <select id="fx-run" onchange="loadFixes()" style="max-width:240px">
           ${runs.map(r => `<option value="${r.id}" ${r.id===alertsRun?"selected":""}>
             运行 #${r.id}</option>`).join("")}
         </select>
-        <button class="btn" id="fx-go" onclick="startFix()">⚙ 一键修复</button>
+        <button class="btn" id="fx-go" onclick="startFix()">⚙ 一键修复（自动目标）</button>
         <span class="muted" id="fx-job"></span>
       </div>
+      <div class="muted" style="margin-bottom:10px">
+        自动目标 = 人工确认 + LLM 真缺陷 + 动态 PoC；要指定条目请到
+        <a class="link" href="#/alerts">告警中心</a> 勾选后「修复选中」。
+        <b>修复只生成并验证补丁，不改动工程原文件</b>——「已采纳」表示补丁通过了验证，可自行审阅后应用。</div>
       <div id="fx-list"></div>
     </div>`;
   if (runs.length) { alertsRun = alertsRun || runs[0].id; loadFixes(); }

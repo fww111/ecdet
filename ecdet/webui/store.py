@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS fix_jobs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     run_id INTEGER NOT NULL REFERENCES runs(id),
     status TEXT NOT NULL DEFAULT 'pending',   -- pending/running/done/failed
+    param TEXT,                               -- JSON：指定修复的 alert_ids
     error TEXT, accepted INTEGER, rejected INTEGER,
     created_at REAL, finished_at REAL
 );
@@ -83,10 +84,15 @@ class Store:
         self._conn.row_factory = sqlite3.Row
         with self._lock:
             self._conn.executescript(_SCHEMA)
-            try:      # 旧库迁移：补 evidence 列
-                self._conn.execute("ALTER TABLE alerts ADD COLUMN evidence TEXT")
-            except sqlite3.OperationalError:
-                pass
+            for alter in (  # 旧库迁移：逐列补齐（已存在则忽略）
+                "ALTER TABLE alerts ADD COLUMN evidence TEXT",
+                "ALTER TABLE fix_jobs ADD COLUMN param TEXT",
+                "ALTER TABLE fixes ADD COLUMN job_id INTEGER",
+            ):
+                try:
+                    self._conn.execute(alter)
+                except sqlite3.OperationalError:
+                    pass
             self._conn.commit()
 
     def _exec(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
@@ -290,19 +296,25 @@ class Store:
 
     def add_fix(self, run_id: int, alert_id: int | None, rule_id: str,
                 path: str, line: int, func: str, verified: bool,
-                fail_reason: str, explanation: str, diff: str) -> int:
+                fail_reason: str, explanation: str, diff: str,
+                job_id: int | None = None) -> int:
         cur = self._exec(
             "INSERT INTO fixes(run_id, alert_id, rule_id, path, line, func, "
-            "verified, fail_reason, explanation, diff, created_at) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "verified, fail_reason, explanation, diff, created_at, job_id) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (run_id, alert_id, rule_id, path, line, func,
-             int(verified), fail_reason, explanation, diff, _now()))
+             int(verified), fail_reason, explanation, diff, _now(), job_id))
         return int(cur.lastrowid)
 
-    def list_fixes(self, run_id: int) -> list[dict]:
-        rows = self._exec(
-            "SELECT * FROM fixes WHERE run_id=? ORDER BY verified DESC, id",
-            (run_id,)).fetchall()
+    def list_fixes(self, run_id: int,
+                   job_id: int | None = None) -> list[dict]:
+        sql = "SELECT * FROM fixes WHERE run_id=?"
+        params: list = [run_id]
+        if job_id:
+            sql += " AND job_id=?"
+            params.append(job_id)
+        sql += " ORDER BY verified DESC, id"
+        rows = self._exec(sql, tuple(params)).fetchall()
         out = []
         for r in rows:
             d = dict(r)
@@ -320,10 +332,12 @@ class Store:
             f"AND verified=1", (run_id, *alert_ids)).fetchall()
         return {r["alert_id"]: dict(r) for r in rows}
 
-    def add_fix_job(self, run_id: int) -> int:
+    def add_fix_job(self, run_id: int, alert_ids: list[int] | None = None) -> int:
         cur = self._exec(
-            "INSERT INTO fix_jobs(run_id, status, created_at) "
-            "VALUES (?,'pending',?)", (run_id, _now()))
+            "INSERT INTO fix_jobs(run_id, status, param, created_at) "
+            "VALUES (?,'pending',?,?)",
+            (run_id,
+             json.dumps(alert_ids) if alert_ids else None, _now()))
         return int(cur.lastrowid)
 
     def set_fix_job(self, job_id: int, status: str, error: str | None = None,
@@ -340,4 +354,8 @@ class Store:
         row = self._exec(
             "SELECT * FROM fix_jobs WHERE run_id=? "
             "ORDER BY id DESC LIMIT 1", (run_id,)).fetchone()
-        return dict(row) if row else None
+        if not row:
+            return None
+        d = dict(row)
+        d["param"] = json.loads(d["param"]) if d.get("param") else None
+        return d

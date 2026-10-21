@@ -129,9 +129,11 @@ class ScanRunner:
         self._queue.put({"kind": "scan", "id": run_id})
         return run_id
 
-    def submit_fix(self, run_id: int) -> int:
-        job_id = self.store.add_fix_job(run_id)
-        self._queue.put({"kind": "fix", "id": job_id, "run_id": run_id})
+    def submit_fix(self, run_id: int,
+                   alert_ids: list[int] | None = None) -> int:
+        job_id = self.store.add_fix_job(run_id, alert_ids)
+        self._queue.put({"kind": "fix", "id": job_id, "run_id": run_id,
+                         "alert_ids": alert_ids})
         return job_id
 
     def _worker(self) -> None:
@@ -141,7 +143,8 @@ class ScanRunner:
                 if task["kind"] == "scan":
                     self._execute(task["id"])
                 else:
-                    self._execute_fixes(task["id"], task["run_id"])
+                    self._execute_fixes(task["id"], task["run_id"],
+                                        alert_ids=task.get("alert_ids"))
             except Exception as e:  # noqa: BLE001 —— 任务隔离，失败入状态
                 if task["kind"] == "scan":
                     self.store.set_run_status(task["id"], "failed",
@@ -241,6 +244,7 @@ class ScanRunner:
     # ---- 一键修复（L4 修复闭环：建议生成 + ToolLoopVerify） ----
 
     def _execute_fixes(self, job_id: int, run_id: int,
+                       alert_ids: list[int] | None = None,
                        max_targets: int = 8) -> None:
         store = self.store
         store.set_fix_job(job_id, "running")
@@ -248,17 +252,24 @@ class ScanRunner:
         project = store.get_project(run["project_id"])
         workspace = Path(project["workspace"])
 
-        # 修复目标：人工确认 或 LLM 判真缺陷（动态通道 PoC 告警一并纳入）
-        candidates = []
-        for a in store.list_alerts(run_id, limit=1000):
-            tri = a.get("triage") or {}
-            if a["status"] == "confirmed" or tri.get("verdict") == "TRUE_POSITIVE" \
-                    or a["engine"] == "dynamic":
-                candidates.append(a)
-        candidates = candidates[:max_targets]
+        if alert_ids:
+            # 定向修复：只修用户勾选的告警
+            wanted = set(alert_ids)
+            candidates = [a for a in store.list_alerts(run_id, limit=1000)
+                          if a["id"] in wanted]
+        else:
+            # 自动目标：人工确认 或 LLM 判真缺陷（动态 PoC 一并纳入）
+            candidates = []
+            for a in store.list_alerts(run_id, limit=1000):
+                tri = a.get("triage") or {}
+                if a["status"] == "confirmed" \
+                        or tri.get("verdict") == "TRUE_POSITIVE" \
+                        or a["engine"] == "dynamic":
+                    candidates.append(a)
+            candidates = candidates[:max_targets]
         if not candidates:
             store.set_fix_job(job_id, "failed",
-                              error="无可修复目标（需先确认告警或启用 LLM 分诊）")
+                              error="无可修复目标（勾选告警，或先确认/启用分诊）")
             return
 
         from ecdet.l2_ir.model import Alert, Location, Severity
@@ -305,7 +316,8 @@ class ScanRunner:
                 path=a["path"], line=a["line"], func=proposal.func_name,
                 verified=proposal.verified,
                 fail_reason=proposal.fail_reason,
-                explanation=proposal.explanation, diff=proposal.diff)
+                explanation=proposal.explanation, diff=proposal.diff,
+                job_id=job_id)
         store.set_fix_job(job_id, "done", accepted=accepted, rejected=rejected)
 
 
