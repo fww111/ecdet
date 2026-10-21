@@ -195,6 +195,24 @@ def all_rule_metas(engines: list[Engine]) -> list[RuleMeta]:
     return list(metas.values())
 
 
+def collect_sources(root: Path, extra_skip: set[str] | None = None) -> list[Path]:
+    """收集工程源文件（相对路径），供 CLI / 编排层共用。
+
+    过滤按相对根的 parts 判定：rglob 产出的路径带 root 前缀，
+    若按全路径 parts 判定，位于 tests/ 等目录下的工程会被整体误杀。
+    """
+    skip = {".git", ".svn", "build", "ecdet_build", "node_modules",
+            "__pycache__", ".venv", "ecdet_reports"}
+    skip |= extra_skip or set()
+    out = []
+    for p in sorted(root.rglob("*")):
+        rel = p.relative_to(root)
+        if p.suffix.lower() in (".c", ".h") and \
+                not any(s in rel.parts for s in skip):
+            out.append(rel)
+    return out
+
+
 def resolve_enabled(rules: list[RuleMeta], profile: str | None,
                     disable: list[str] | None, enable: list[str] | None) -> set[str]:
     """解析行业配置 + 显式启停 → 生效规则集。"""
