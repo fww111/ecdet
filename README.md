@@ -144,6 +144,11 @@ uv run ecdet serve --port 8600     # 打开 http://127.0.0.1:8600
 
 扫描参数：行业 profile / SVD / LLM 分诊 Mock 或真实端点 / 动态通道开关；后台任务队列串行执行、进行中任务自动轮询；HTML 报告与 SARIF 可下载；动态载体可用性披露。纯标准库实现（ThreadingHTTPServer + SQLite + 原生 JS/CSS，零外链、离线可用），无新增第三方依赖。
 
+## 一键修复与大模型接入（v1.0）
+
+- **修复建议页**：对已完成运行点「⚙ 一键修复」——对人工确认 / LLM 判真缺陷 / 动态 PoC 三类告警批量生成补丁，经 ToolLoopVerify（静态重扫 + gcc 语法检查）验证后展示 diff（采纳/拒绝与原因），告警详情抽屉同步显示对应补丁；
+- **大模型设置页**：前端直接填 Base URL / API Key / 模型名（OpenAI 兼容：vLLM / Ollama / LM Studio），带"测试连接"探针；凭据存本机 SQLite（回传脱敏），保存后分诊与修复即用真实端点，Mock 模式保持离线可用。
+
 ## 容器化部署（阶段五试点准备）
 
 ```bash
@@ -231,6 +236,7 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 - [x] 2027 Q3 阶段四（提前实施）：消融评测框架（表 3-5 报告产出）、Juliet 基准管线、增量分析（3.3.9）
 - [x] **V1.2 新增范围（P7 / 3.3.5-3.3.7）**：动态分析引擎（激励建模 + harness 闭环 + oracle 三类 + PoC 可复现）、运行时监控（Suspected→Detected 裁决）、六智能体编排（`ecdet orchestrate`，结构化交接 + 分层路由 + 人工复核闸门 + 单智能体降级）、消融 A5/A6 与动态贡献率指标
 - [x] Web 控制台：工程三源注册（路径/zip/Git）+ 扫描任务队列 + 告警浏览/人工复核状态流转（零依赖）
+- [x] Web 一键修复（补丁 diff 展示 + 验证闭环）+ 前端大模型设置（API Key 存本机、测试连接）
 - [x] 阶段五准备：Docker 容器化封装（内置 cppcheck 基线）
 - [ ] 阶段四后半：Juliet/Toyota ITC 全量基准成稿（联网下载后即可运行）、Unicorn/Renode 仿真载体接入（三级吞吐-保真梯度中档与高档）、LLM harness 生成接入动态测试智能体
 - [ ] 2027 Q4 阶段五：试点部署与迭代（真机接入与仿真保真度校准）

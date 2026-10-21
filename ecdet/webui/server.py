@@ -25,6 +25,20 @@ class WebUI:
         self.port = port
         self._httpd: ThreadingHTTPServer | None = None
 
+    def _settings_view(self) -> dict:
+        """设置视图：api_key 永不明文回传，仅返回脱敏尾号。"""
+        cfg = self.store.get_settings()
+        key = cfg.get("llm_api_key") or ""
+        masked = ("••••" + key[-4:]) if len(key) >= 4 else \
+            ("••••" if key else "")
+        return {
+            "llm_mode": cfg.get("llm_mode", "mock"),
+            "llm_base_url": cfg.get("llm_base_url", ""),
+            "llm_model": cfg.get("llm_model", ""),
+            "api_key_masked": masked,
+            "api_key_set": bool(key),
+        }
+
     def make_server(self) -> ThreadingHTTPServer:
         ui = self
 
@@ -114,12 +128,17 @@ class WebUI:
                 out = Path(run.get("out_dir") or "")
                 return h._file(out / "results.sarif",
                                "application/json; charset=utf-8")
+            if parts[3] == "fixes":
+                return h._json(200, {"job": self.store.latest_fix_job(run_id),
+                                     "proposals": self.store.list_fixes(run_id)})
         if parts[:2] == ["api", "summary"]:
             return h._json(200, self.store.summary())
         if parts[:2] == ["api", "alerts"] and len(parts) == 3:
             alert = self.store.get_alert(int(parts[2]))
             return h._json(200, alert) if alert else h._json(
                 404, {"error": "alert not found"})
+        if parts[:2] == ["api", "settings"] and len(parts) == 2:
+            return h._json(200, self._settings_view())
         if parts[:2] == ["api", "carriers"]:
             from ecdet.l3_analysis.dynamic.carriers import probe_carriers
             return h._json(200, {"carriers": [
@@ -182,6 +201,51 @@ class WebUI:
                                              data.get("status", ""))
             return h._json(200 if ok else 400,
                            {"ok": ok} if ok else {"error": "非法状态"})
+
+        if parts[:2] == ["api", "settings"] and len(parts) == 2:
+            data = json.loads(body.decode("utf-8") or "{}")
+            if data.get("llm_mode") is not None:
+                self.store.set_setting("llm_mode", data["llm_mode"])
+            if data.get("llm_base_url") is not None:
+                self.store.set_setting("llm_base_url", data["llm_base_url"])
+            if data.get("llm_model") is not None:
+                self.store.set_setting("llm_model", data["llm_model"])
+            # 空 api_key = 保留旧值
+            if data.get("llm_api_key"):
+                self.store.set_setting("llm_api_key", data["llm_api_key"])
+            return h._json(200, self._settings_view())
+
+        if parts[:2] == ["api", "settings"] and len(parts) == 3 \
+                and parts[2] == "test":
+            cfg = self.store.get_settings()
+            base_url = cfg.get("llm_base_url") or None
+            model = cfg.get("llm_model") or None
+            api_key = cfg.get("llm_api_key") or None
+            from ecdet.l4_llm.client import OpenAICompatClient
+            try:
+                client = OpenAICompatClient(base_url=base_url, model=model,
+                                            api_key=api_key, timeout=20)
+                reply = client.complete("你是连通性探针。", "只回复：pong")
+                ok = "pong" in reply.lower()
+                return h._json(200, {"ok": ok,
+                                     "message": reply[:120] or "空响应"})
+            except Exception as e:  # noqa: BLE001 —— 连通性失败原样回传
+                return h._json(200, {"ok": False, "message": str(e)[:200]})
+
+        if parts[:2] == ["api", "runs"] and len(parts) == 4 \
+                and parts[3] == "fix":
+            run_id = int(parts[2])
+            run = self.store.get_run(run_id)
+            if not run or run["status"] != "done":
+                return h._json(400, {"error": "运行不存在或未完成"})
+            job_id = self.runner.submit_fix(run_id)
+            return h._json(200, {"job_id": job_id})
+
+        if parts[:2] == ["api", "runs"] and len(parts) == 4 \
+                and parts[3] == "fixes":
+            run_id = int(parts[2])
+            return h._json(200, {"job": self.store.latest_fix_job(run_id),
+                                 "proposals": self.store.list_fixes(run_id)})
         return h._json(404, {"error": "not found"})
 
 
