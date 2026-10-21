@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -187,6 +188,87 @@ def cmd_triage(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_fix(args: argparse.Namespace) -> int:
+    """L4 修复建议 + ToolLoopVerify 验证闭环。"""
+    from ecdet.l2_ir import load_sarif
+    from ecdet.l3_analysis.builtin_rules.checks import build_file_facts, finalize_facts
+    from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
+    from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
+
+    sarif_path = Path(args.sarif)
+    if not sarif_path.exists():
+        print(f"错误：SARIF 不存在 {sarif_path}", file=sys.stderr)
+        return 2
+    project = Path(args.project).resolve() if args.project else sarif_path.parent.parent
+    alerts, metas = load_sarif(sarif_path)
+
+    # 只对真缺陷生成补丁（已分诊时取 TRUE_POSITIVE；未分诊时取全部）
+    targets = [a for a in alerts
+               if (a.triage or {}).get("verdict", "TRUE_POSITIVE") == "TRUE_POSITIVE"]
+    if args.max:
+        targets = targets[:args.max]
+    if not targets:
+        print("无待修复告警（无 TRUE_POSITIVE 结论）")
+        return 0
+
+    # 构建工程事实
+    need = sorted({a.location.path.replace("\\", "/") for a in targets})
+    sources: dict[str, str] = {}
+    facts = []
+    for rel in need:
+        p = project / rel
+        if p.exists():
+            src = p.read_text(encoding="utf-8", errors="replace")
+            sources[rel] = src
+            facts.append(build_file_facts(rel, src))
+    ctx = finalize_facts(facts)
+
+    client = MockFixClient() if args.mock else OpenAICompatClient(
+        base_url=args.llm_url, model=args.model)
+    mode = "Mock（离线演示）" if args.mock else client.base_url
+    print(f"[L4] 修复建议 LLM：{mode}")
+    proposer = FixProposer(client)
+    verifier = FixVerifier(project, use_compiler=not args.no_compile)
+
+    out_dir = (Path(args.output) if args.output else sarif_path.parent) / "fixes"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    accepted, rejected = 0, 0
+    records = []
+    for i, a in enumerate(targets, 1):
+        proposal = proposer.propose(a, ctx)
+        if not proposal.fail_reason:
+            src = sources.get(a.location.path.replace("\\", "/"))
+            if src is not None:
+                proposal = verifier.verify(proposal, ctx, src)
+        tag = "采纳" if proposal.verified else "拒绝"
+        accepted += int(proposal.verified)
+        rejected += int(not proposal.verified)
+        print(f"  [{tag}] {a.rule_id} @ {a.location.path}:{a.location.line}"
+              + ("" if proposal.verified else f" —— {proposal.fail_reason}"))
+        records.append({
+            "rule_id": a.rule_id, "path": a.location.path,
+            "line": a.location.line, "func": proposal.func_name,
+            "verified": proposal.verified,
+            "fail_reason": proposal.fail_reason,
+            "explanation": proposal.explanation, "diff": proposal.diff,
+        })
+        if proposal.verified and proposal.diff:
+            patch_name = f"{i:02d}_{a.rule_id.replace(' ', '_').replace(':', '')}_" \
+                         f"{Path(a.location.path).stem}.patch"
+            (out_dir / patch_name).write_text(proposal.diff + "\n",
+                                              encoding="utf-8")
+
+    (out_dir / "fixes.json").write_text(
+        json.dumps({"accepted": accepted, "rejected": rejected,
+                    "proposals": records}, ensure_ascii=False, indent=2),
+        encoding="utf-8")
+    print(f"\n=== L4 修复闭环完成 ===")
+    print(f"建议 {len(records)} 条：采纳 {accepted} / 拒绝 {rejected}"
+          f"（验证：静态重扫 + {'gcc 语法检查' if not args.no_compile else '未启用编译检查'}）")
+    print(f"补丁与记录：{out_dir}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ecdet",
@@ -232,6 +314,18 @@ def main(argv: list[str] | None = None) -> int:
                           help="上下文字符预算（默认 8000）")
     p_triage.add_argument("--output", "-o", help="输出目录（缺省覆盖原 SARIF 所在目录）")
     p_triage.set_defaults(func=cmd_triage)
+
+    p_fix = sub.add_parser("fix", help="L4 修复建议生成 + ToolLoopVerify 验证闭环")
+    p_fix.add_argument("sarif", help="results.sarif 路径（建议先 triage）")
+    p_fix.add_argument("--project", help="工程根目录（缺省取 SARIF 上两级）")
+    p_fix.add_argument("--llm-url", help="OpenAI 兼容端点（缺省 env）")
+    p_fix.add_argument("--model", help="模型名（缺省 env）")
+    p_fix.add_argument("--mock", action="store_true", help="使用确定性 Mock LLM")
+    p_fix.add_argument("--no-compile", action="store_true",
+                       help="跳过 gcc 语法检查（仅静态重扫验证）")
+    p_fix.add_argument("--max", type=int, default=20, help="单次处理告警数上限")
+    p_fix.add_argument("--output", "-o", help="输出目录")
+    p_fix.set_defaults(func=cmd_fix)
 
     args = parser.parse_args(argv)
     return args.func(args)

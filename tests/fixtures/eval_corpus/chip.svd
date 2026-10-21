@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<device>
+  <name>EVAL32</name>
+  <peripherals>
+    <peripheral>
+      <name>GPIOA</name>
+      <baseAddress>0x40020000</baseAddress>
+      <registers>
+        <register><name>IDR</name><addressOffset>0x10</addressOffset><access>read-only</access></register>
+        <register><name>ODR</name><addressOffset>0x14</addressOffset><access>read-write</access></register>
+      </registers>
+    </peripheral>
+  </peripherals>
+</device>

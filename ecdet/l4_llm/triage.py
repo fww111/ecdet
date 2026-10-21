@@ -185,11 +185,13 @@ class TriageRunner:
 
 def triage_alerts(alerts: list[Alert], project_root,
                   client: LlmClient | None = None,
-                  budget_chars: int = 8000) -> tuple[list[TriageVerdict], int]:
+                  budget_chars: int = 8000,
+                  rag_conf_threshold: float | None = None) -> tuple[list[TriageVerdict], int]:
     """对告警列表执行分诊并回写 alert.triage。返回 (结论列表, LLM 调用次数)。
 
     project_root：告警相对路径的根目录。上下文文件缺失的告警直接
-    NEEDS_REVIEW（不调用 LLM）。
+    NEEDS_REVIEW（不调用 LLM）。rag_conf_threshold 传 0 可禁用 A-RAG
+    （消融配置 A3）。
     """
     from pathlib import Path
 
@@ -204,7 +206,10 @@ def triage_alerts(alerts: list[Alert], project_root,
     ctx = finalize_facts(facts)
     ctx_index = {f.path.replace("\\", "/") for f in ctx.facts}
 
-    runner = TriageRunner(client=client, budget_chars=budget_chars)
+    kwargs = {"budget_chars": budget_chars}
+    if rag_conf_threshold is not None:
+        kwargs["rag_conf_threshold"] = rag_conf_threshold
+    runner = TriageRunner(client=client, **kwargs)
     verdicts: list[TriageVerdict] = []
     for a in alerts:
         if a.location.path.replace("\\", "/") not in ctx_index:
