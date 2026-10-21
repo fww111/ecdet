@@ -26,6 +26,7 @@ from pathlib import Path
 from ecdet.l2_ir.model import Alert, Provenance, RuleMeta
 from ecdet.l3_analysis.builtin_rules.checks import build_file_facts, finalize_facts
 from ecdet.l3_analysis.dynamic import DynamicEngine
+from ecdet.l3_analysis.dynamic.carriers import pick_carrier, probe_carriers
 from ecdet.l3_analysis.engine import AnalysisTarget, collect_sources, run_all_engines
 from ecdet.l3_analysis.monitor import MonitorResult, RuntimeMonitor
 from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
@@ -148,15 +149,32 @@ class Orchestrator:
             facts = [build_file_facts(p, (state.repo / p).read_text(
                 encoding="utf-8", errors="replace"))
                 for p in state.plan["files"] if p.endswith(".c")]
-            engine = DynamicEngine()
+            # LLM harness 修正器：编译闭环失败时回传日志重写（3.3.5）
+            fixer = None
+            if cfg.use_llm:
+                from ecdet.l3_analysis.dynamic.llm_fix import LlmHarnessFixer
+                fixer = LlmHarnessFixer(
+                    MockLlmClient() if cfg.mock else OpenAICompatClient(
+                        base_url=cfg.llm_url, model=cfg.llm_model))
+            engine = DynamicEngine(fixer=fixer)
+            carriers = probe_carriers()
+            picked, picked_info = pick_carrier()
+            state.log("dynamic", "载体梯度：" + "；".join(
+                f"{c.name}({'可用' if c.available else '不可用'})" for c in carriers))
+            if picked is not None and picked.name != "host":
+                state.log("dynamic",
+                          f"选载 {picked.name}（保真档）；宿主档执行回路待固件语料")
             if engine.available:
                 state.dynamic_findings = engine.run(state.repo, facts)
+                state.llm_calls += getattr(fixer, "calls", 0)
                 for f_ in state.dynamic_findings:
                     state.static_alerts.append(f_.to_alert())
                 state.log("dynamic", f"动态通道：{len(state.dynamic_findings)} 个真触发"
                                      f"（PoC 已入 SARIF 池）")
             else:
-                state.log("dynamic", "动态载体不可用（无 gcc），跳过")
+                state.log("dynamic",
+                          f"动态载体不可用"
+                          f"（{picked_info.note if picked_info else '无可用载体'}），跳过")
 
         # 5) 运行时监控（3.3.6 监控智能体）：Suspected 裁决
         if cfg.use_dynamic:

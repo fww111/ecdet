@@ -22,6 +22,13 @@ from ecdet.l3_analysis.builtin_rules.cstruct import (
     parse_switches,
 )
 from ecdet.l3_analysis.builtin_rules.ctokens import CToken, LexResult, PPLine, lex_c
+from ecdet.l3_analysis.builtin_rules.ectypes import (
+    EssentialType,
+    build_type_table,
+    integer_promote,
+    literal_type,
+    usual_arith,
+)
 
 # ---------------------------------------------------------------------------
 # 分析事实对象
@@ -825,6 +832,193 @@ def finalize_facts(facts: list[FileFacts]) -> ProjectContext:
 
 
 # ---------------------------------------------------------------------------
+# MISRA 10.x 整型转换族（方案 3.3.3 UsualArithType 伪代码的可判定实现）
+# ---------------------------------------------------------------------------
+
+_ARITH_OPS = {"+", "-", "*", "/", "%", "&", "|", "^"}
+_ASSIGN_STOP = {";", "{"}
+
+
+def _rhs_tokens(toks: list[CToken], start: int) -> tuple[list[CToken], int]:
+    """收集赋值 rhs 的 token（至顶层分号），返回 (tokens, 下一索引)。"""
+    expr: list[CToken] = []
+    depth = 0
+    j = start
+    while j < len(toks):
+        v = toks[j].value
+        if toks[j].kind == "punct":
+            if v in "([{":
+                depth += 1
+            elif v in ")]}":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif v == ";" and depth == 0:
+                break
+        expr.append(toks[j])
+        j += 1
+    return expr, j
+
+
+_FOLD_OPS = {"+": lambda a, b: a + b, "-": lambda a, b: a - b,
+             "*": lambda a, b: a * b, "&": lambda a, b: a & b,
+             "|": lambda a, b: a | b, "^": lambda a, b: a ^ b}
+
+
+def _literal_value(text: str) -> Optional[int]:
+    """字面量数值（含一元负号/进制/整型后缀）；无法解析返回 None。"""
+    t = text.strip()
+    sign = 1
+    if t.startswith(("+", "-")):
+        sign = -1 if t[0] == "-" else 1
+        t = t[1:]
+    body = t.rstrip("uUlL")
+    if not body:
+        return None
+    try:
+        return sign * int(body, 0)
+    except ValueError:
+        return None
+
+
+def _literal_result(text: str) -> dict:
+    et = literal_type(text)
+    if et is None:
+        return {"kind": "unknown"}
+    return {"kind": "literal", "type": et, "value": _literal_value(text)}
+
+
+def _resolve_expr(expr: list[CToken], types: dict) -> dict:
+    """rhs 表达式分类解析。
+
+    返回 {"kind": "literal|ident|binary|unknown", ...}；literal 携带
+    value 供"值可表示性"判定；双字面量二元做常量折叠（1u+2u → 3u）；
+    cast/取址/调用/sizeof 等一律 unknown（不猜 → 不误报）。
+    """
+    expr = [t for t in expr if not (t.kind == "punct" and t.value == ",")]
+    if not expr:
+        return {"kind": "unknown"}
+    # 一元负号 + 数字 → 负字面量
+    if len(expr) == 2 and expr[0].value in "+-" and expr[1].kind == "number":
+        return _literal_result(expr[0].value + expr[1].value)
+    if len(expr) == 1:
+        t = expr[0]
+        if t.kind == "number":
+            return _literal_result(t.value)
+        if t.kind == "ident":
+            return {"kind": "ident", "type": types.get(t.value), "name": t.value}
+        return {"kind": "unknown"}
+    # cast 显式转换 → 合规路径，跳过
+    if expr[0].value == "(":
+        return {"kind": "unknown"}
+    if expr[0].value in ("&", "*"):
+        return {"kind": "unknown"}
+    # 二元：operand op operand（3 token）
+    if len(expr) == 3 and expr[1].kind == "punct":
+        op = expr[1].value
+
+        def operand(t: CToken) -> dict:
+            if t.kind == "ident":
+                return {"kind": "ident", "type": types.get(t.value), "name": t.value}
+            if t.kind == "number":
+                return _literal_result(t.value)
+            return {"kind": "unknown"}
+
+        left, right = operand(expr[0]), operand(expr[2])
+        if op in _ARITH_OPS and left["type"] and right["type"]:
+            # 双字面量常量折叠：结果按值取基本类型（1u+2u → 3u）
+            if (left["kind"] == "literal" and right["kind"] == "literal"
+                    and left.get("value") is not None
+                    and right.get("value") is not None):
+                fold = _FOLD_OPS.get(op)
+                v = fold(left["value"], right["value"]) if fold else None
+                if v is not None:
+                    folded = _literal_result(str(v))
+                    if folded["kind"] == "literal":
+                        return folded
+            composite = usual_arith(left["type"], right["type"])
+            return {"kind": "binary", "op": op, "left": left,
+                    "right": right, "type": composite}
+        return {"kind": "unknown"}
+    return {"kind": "unknown"}
+
+
+def check_rule_10_x(f: FileFacts, ctx: ProjectContext,
+                    active: set[str]) -> list[Alert]:
+    """MISRA C:2012 10.3 / 10.4（方案 3.3.3 示例的可判定实现）。
+
+    10.3：赋值（含初始化）rhs 基本类型秩高于 lhs 或符号性不同 → 告警；
+          字面量 rhs 采取宽松口径（仅负值赋无符号告警），避免小常量误报。
+    10.4：双操作数均为已知变量且提升后符号性不同 → 告警。
+    cast 显式转换视为合规路径；无法解析的表达式一律不猜。
+    """
+    want_103 = "MISRA C:2012 10.3" in active
+    want_104 = "MISRA C:2012 10.4" in active
+    if not (want_103 or want_104):
+        return []
+    out: list[Alert] = []
+    types = build_type_table(f.lex, f.func_lines, functions=f.functions)
+    toks = f.lex.tokens
+    i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t.kind != "ident" or i + 1 >= len(toks) or toks[i + 1].value != "=":
+            i += 1
+            continue
+        lhs_type = types.get(t.value)
+        expr, nxt = _rhs_tokens(toks, i + 2)
+        parsed = _resolve_expr(expr, types)
+        if lhs_type is not None and parsed["kind"] != "unknown":
+            rhs_type: EssentialType = parsed["type"]
+            if want_103 and rhs_type is not None:
+                if parsed["kind"] == "literal":
+                    # 字面量宽松口径：值可被 lhs 表示即合规（避免 uint8 x=3 类
+                    # 高频误报）；超界（含负值赋无符号）才告警
+                    v = parsed.get("value")
+                    if v is not None:
+                        lo, hi = lhs_type.bounds()
+                        if not (lo <= v <= hi):
+                            out.append(_alert(
+                                "MISRA C:2012 10.3", Severity.WARNING,
+                                f"赋值 {t.value}：字面量 {v} 超出 "
+                                f"{lhs_type.label()} 表示范围 [{lo}, {hi}]",
+                                f.path, t.line, "CWE-190",
+                                [_evidence(f.path, t.line, "type",
+                                           f"{lhs_type.label()} 无法表示 {v}")],
+                            ))
+                elif (rhs_type.rank > lhs_type.rank
+                        or rhs_type.signed != lhs_type.signed):
+                    out.append(_alert(
+                        "MISRA C:2012 10.3", Severity.WARNING,
+                        f"赋值 {t.value}：rhs 为{rhs_type.label()}，"
+                        f"lhs 为{lhs_type.label()}，发生"
+                        f"{'秩收窄' if rhs_type.rank > lhs_type.rank else '符号性改变'}",
+                        f.path, t.line, "CWE-197",
+                        [_evidence(f.path, t.line, "type",
+                                   f"{lhs_type.label()} = {rhs_type.label()}")],
+                    ))
+            if want_104 and parsed["kind"] == "binary":
+                lt, rt = parsed["left"]["type"], parsed["right"]["type"]
+                if (parsed["left"]["kind"] == "ident"
+                        and parsed["right"]["kind"] == "ident"
+                        and integer_promote(lt).signed
+                        != integer_promote(rt).signed):
+                    ln = parsed["left"]["name"]
+                    rn = parsed["right"]["name"]
+                    out.append(_alert(
+                        "MISRA C:2012 10.4", Severity.WARNING,
+                        f"运算符 {parsed['op']} 混用符号性：{ln}（{lt.label()}）"
+                        f"与 {rn}（{rt.label()}），常规算术转换后为"
+                        f"{usual_arith(lt, rt).label()}",
+                        f.path, expr[1].line, "CWE-190",
+                        [_evidence(f.path, expr[1].line, "type",
+                                   f"{ln} {parsed['op']} {rn} 符号性混用")],
+                    ))
+        i = max(nxt, i + 1)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # 规则注册表：rule_id -> (作用域, 检查函数)
 # ---------------------------------------------------------------------------
 
@@ -850,6 +1044,8 @@ FILE_RULES = {
     "ECDET-CWE-1284": check_scanf_unbounded,
     "ECDET-CWE-197": check_literal_truncation,
     "ECDET-CWE-563": check_unused_params,
+    "MISRA C:2012 10.3": check_rule_10_x,
+    "MISRA C:2012 10.4": check_rule_10_x,
 }
 
 PROJECT_RULES = {

@@ -8,4 +8,4 @@
   L5 结果聚合与可证明性输出层（ecdet.l5_report） —— 去重、CWE/MISRA 映射、合规报告
 """
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"

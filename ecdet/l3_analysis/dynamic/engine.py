@@ -97,11 +97,14 @@ class DynamicEngine:
     """
 
     def __init__(self, max_functions: int = 8, max_seeds: int = 32,
-                 run_timeout: int = 5, gcc: str = "gcc"):
+                 run_timeout: int = 5, gcc: str = "gcc", fixer=None,
+                 carrier: str | None = None):
         self.max_functions = max_functions
         self.max_seeds = max_seeds
         self.run_timeout = run_timeout
         self.gcc = gcc
+        self.fixer = fixer                    # LLM harness 修正器（3.3.5）
+        self.carrier = carrier                # 显式指定载体（三级梯度）
 
     @property
     def available(self) -> bool:
@@ -141,10 +144,11 @@ class DynamicEngine:
 
     def _fuzz_one(self, workdir: Path, include_dirs: list[Path],
                   target_rel: str, model, budget: int) -> DynamicFinding | None:
-        """单目标 fuzz：一次编译，逐 seed 执行-oracle，命中即记 PoC。"""
+        """单目标 fuzz：一次编译（含 LLM 修正闭环），逐 seed 执行-oracle。"""
         harness = generate_harness(model, target_rel,
                                    n_seeds=max(model.n_specials, 1))
-        ok, _err = compile_harness(harness, workdir, include_dirs, gcc=self.gcc)
+        ok, _err = compile_harness(harness, workdir, include_dirs,
+                                   gcc=self.gcc, fixer=self.fixer)
         if not ok:
             return None          # 目标不可链接（修正闭环仍失败）→ 放弃该目标
 
