@@ -105,10 +105,13 @@ int main(int argc, char **argv) {{
 
 def compile_harness(harness: Harness, workdir: Path,
                     include_dirs: list[Path], gcc: str = "gcc",
-                    max_fix_rounds: int = 3, timeout: int = 60) -> tuple[bool, str]:
+                    max_fix_rounds: int = 3, timeout: int = 60,
+                    fixer=None) -> tuple[bool, str]:
     """编译闭环：未解析符号自动打桩重编（生成-编译-修正）。
 
-    返回 (是否成功, 错误摘要)。打桩符号记录在 harness.stubs 供 PoC 披露。
+    确定性打桩失败后，若提供 fixer（LLM harness 修正器，方案 3.3.5），
+    以"编译日志回传 → LLM 重写 → 再编译"最多 2 轮收尾。
+    返回 (是否成功, 错误摘要)。
     """
     src = workdir / f"harness_{harness.func_name}.c"
     exe = workdir / f"harness_{harness.func_name}.exe"
@@ -116,28 +119,50 @@ def compile_harness(harness: Harness, workdir: Path,
                 *[f"-I{d}" for d in include_dirs if d.exists()]]
     stubs: list[str] = []
     err_tail = ""
-    for _ in range(max_fix_rounds + 1):
-        harness.source = _apply_stubs(harness.source, stubs)
-        src.write_text(harness.source, encoding="utf-8")
+
+    def _try_compile() -> tuple[bool, str, str]:
+        """返回 (是否成功, 完整 stderr, 错误摘要尾部)。"""
         try:
             proc = subprocess.run(cmd_base + [str(src), "-o", str(exe)],
                                   capture_output=True, text=True,
                                   timeout=timeout, encoding="utf-8",
                                   errors="replace")
         except (subprocess.TimeoutExpired, OSError) as e:
-            return False, f"编译器调用异常：{e}"
+            return False, "", f"编译器调用异常：{e}"
         if proc.returncode == 0:
             harness.exe_path = exe
             harness.stubs = stubs
+            return True, "", ""
+        full_err = proc.stderr or ""
+        return False, full_err, full_err[-500:]
+
+    for _ in range(max_fix_rounds + 1):
+        harness.source = _apply_stubs(harness.source, stubs)
+        src.write_text(harness.source, encoding="utf-8")
+        ok, full_err, err_tail = _try_compile()
+        if ok:
             return True, ""
-        err_tail = (proc.stderr or "")[-500:]
-        missing = [m for m in (_UNDEF_REF_RE.findall(proc.stderr or "")
-                               + _IMPLICIT_DECL_RE.findall(proc.stderr or ""))
+        # 缺失符号必须扫描完整 stderr：GCC 多条 implicit 错误中
+        # 前面的会被尾部截断，漏收会导致打桩半截、下轮重复插入
+        missing = [m for m in (_UNDEF_REF_RE.findall(full_err)
+                               + _IMPLICIT_DECL_RE.findall(full_err))
                    if _STUBABLE.match(m) and m not in stubs
                    and m != harness.func_name]
         if not missing:
-            return False, err_tail
+            break
         stubs.extend(dict.fromkeys(missing))
+
+    # LLM 修正闭环（3.3.5：编译与执行日志回传驱动修正）
+    if fixer is not None:
+        for _ in range(2):
+            fixed = fixer.fix(harness.source, full_err)
+            if not fixed:
+                break
+            harness.source = fixed[0]
+            src.write_text(harness.source, encoding="utf-8")
+            ok, _full, err_tail = _try_compile()
+            if ok:
+                return True, ""
     return False, err_tail
 
 
