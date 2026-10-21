@@ -43,7 +43,8 @@ def main(argv=None) -> int:
     ap.add_argument("--gt", help="基准真值 JSONL（缺省按 --vuln-funcs 自洽生成）")
     ap.add_argument("--vuln-funcs", help="逗号分隔的漏洞函数名（自洽模式）")
     ap.add_argument("--out", default="eval_out", help="输出目录")
-    ap.add_argument("--configs", default="A0,A1,A2,A3", help="消融配置（逗号分隔）")
+    ap.add_argument("--configs", default="A0,A1,A2,A3,A5,A6",
+                    help="消融配置（逗号分隔，默认全开；A4 作用于修复验收率）")
     ap.add_argument("--svd", help="SVD 文件（A0/A1/A3 启用 MMIO 检查）")
     ap.add_argument("--profile", help="规则配置文件（如 juliet：屏蔽工程级规则）")
     ap.add_argument("--mock", action="store_true", help="LLM 用 Mock（默认）")

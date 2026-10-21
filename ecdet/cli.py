@@ -55,7 +55,8 @@ def cmd_scan(args: argparse.Namespace) -> int:
             print(f"[L1] 警告：{w}")
 
     # L3 多引擎扫描（增量模式：影响集收缩扫描范围，方案 3.3.6）
-    files = _collect_sources(root)
+    from ecdet.l3_analysis.engine import collect_sources
+    files = collect_sources(root)
     if not files:
         print("错误：未发现 C 源文件", file=sys.stderr)
         return 2
@@ -91,7 +92,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
         svd_path = Path(args.svd)
     else:
         candidates = [p for p in sorted(root.rglob("*.svd"))
-                      if not any(s in p.parts for s in _SKIP_DIRS)]
+                      if "ecdet_build" not in p.parts]
         svd_path = candidates[0] if candidates else None
     if svd_path and not svd_path.is_absolute():
         svd_path = root / svd_path
@@ -339,6 +340,54 @@ def cmd_impact(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_orchestrate(args: argparse.Namespace) -> int:
+    """六智能体协同全流程（方案 3.3.7 Orchestrate）。"""
+    from ecdet.l4_llm.agents import Orchestrator, OrchestratorConfig
+    from ecdet.l5_report import aggregate, build_compliance_records, render_html_report
+
+    root = Path(args.path).resolve()
+    if not root.exists():
+        print(f"错误：路径不存在 {root}", file=sys.stderr)
+        return 2
+
+    cfg = OrchestratorConfig(
+        mock=args.mock, llm_url=args.llm_url, llm_model=args.model,
+        use_llm=not args.no_llm, use_dynamic=not args.no_dynamic,
+        single_agent=args.single_agent, auto_accept=not args.no_auto_accept,
+        max_fix_targets=args.max_fix)
+    mode = "单智能体串行（A6）" if args.single_agent else "多智能体协同"
+    print(f"[L4] 编排模式：{mode} | LLM：{'Mock' if args.mock else 'OpenAI 兼容端点'}"
+         f" | 动态通道：{'开' if cfg.use_dynamic else '关'}")
+
+    state = Orchestrator(cfg).orchestrate(root)
+    for line in state.logs:
+        print(f"  {line}")
+
+    # L5 聚合与报告
+    result = aggregate(state.static_alerts, state.rule_metas)
+    records = build_compliance_records(result)
+    out_dir = root / "ecdet_reports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    save_sarif(state.static_alerts, state.rule_metas, out_dir / "results.sarif")
+    html = render_html_report(result, records, project_name=root.name,
+                              out_path=out_dir / "report.html")
+
+    if state.review_queue:
+        print("\n=== 人工复核闸门（高危误报判定） ===")
+        for item in state.review_queue:
+            print(f"  {item['rule_id']} @ {item['path']}:{item['line']}")
+            print(f"    LLM 理由：{item['llm_reason'][:80]}")
+
+    print(f"\n=== 编排完成 ===")
+    print(f"告警 {len(state.static_alerts)} 条 | 动态触发 "
+          f"{len(state.dynamic_findings)} | 监控升级 "
+          f"{len(state.monitor_result.upgraded) if state.monitor_result else 0} | "
+          f"修复采纳 {sum(1 for f in state.fixes if f.verified)}")
+    print(f"LLM 调用 {state.llm_calls} 次 | 耗时 {state.seconds:.1f}s")
+    print(f"HTML 报告：{html}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ecdet",
@@ -409,6 +458,22 @@ def main(argv: list[str] | None = None) -> int:
                           help="逗号分隔的变更文件（相对根目录）")
     p_impact.add_argument("--json", action="store_true", help="输出 JSON")
     p_impact.set_defaults(func=cmd_impact)
+
+    p_orch = sub.add_parser("orchestrate", help="六智能体协同全流程（3.3.7）")
+    p_orch.add_argument("path", help="工程根目录")
+    p_orch.add_argument("--svd", help="CMSIS-SVD 文件（缺省自动发现）")
+    p_orch.add_argument("--mock", action="store_true", help="Mock LLM（离线演示）")
+    p_orch.add_argument("--llm-url", help="OpenAI 兼容端点（缺省 env）")
+    p_orch.add_argument("--model", help="模型名（缺省 env）")
+    p_orch.add_argument("--no-llm", action="store_true", help="跳过 L4 研判/修复（A1）")
+    p_orch.add_argument("--no-dynamic", action="store_true",
+                        help="跳过动态通道与运行时监控（A5）")
+    p_orch.add_argument("--single-agent", action="store_true",
+                        help="单智能体串行模式（A6 消融）")
+    p_orch.add_argument("--no-auto-accept", action="store_true",
+                        help="高危误报判定挂起待人工（缺省自动接受并留痕）")
+    p_orch.add_argument("--max-fix", type=int, default=5, help="单次修复目标上限")
+    p_orch.set_defaults(func=cmd_orchestrate)
 
     args = parser.parse_args(argv)
     return args.func(args)

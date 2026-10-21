@@ -100,15 +100,21 @@ class AblationConfig:
     use_llm: bool = True
     use_hw: bool = True
     use_rag: bool = True
+    use_dynamic: bool = True       # A5 关（去动态通道）
+    single_agent: bool = False     # A6 开（单智能体串行）
     profile: str = ""              # 规则配置文件（如 juliet：屏蔽工程级规则）
     note: str = ""
 
 
 DEFAULT_ABLATIONS = [
-    AblationConfig("A0 完整系统", note="骨架+硬件语义+LLM+RAG"),
-    AblationConfig("A1 去 LLM", use_llm=False, note="仅静态骨架（对应 P5）"),
+    AblationConfig("A0 完整系统", note="双通道+硬件语义+LLM+RAG"),
+    AblationConfig("A1 去 LLM", use_llm=False, note="仅工具流水线（对应 P5）"),
     AblationConfig("A2 去硬件语义", use_hw=False, note="移除 ISR/MMIO 模型（对应 P2）"),
-    AblationConfig("A3 去 RAG", use_rag=False, note="LLM 判定不接知识检索"),
+    AblationConfig("A3 去 RAG", use_rag=False, note="研判不接知识检索"),
+    AblationConfig("A5 去动态通道", use_dynamic=False,
+                   note="仅静态通道（对应 P7 双通道互补）"),
+    AblationConfig("A6 单智能体串行", single_agent=True,
+                   note="多智能体退化为顺序处理（对照 Agentless）"),
 ]
 
 
@@ -165,11 +171,31 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
                              rag_conf_threshold=(rag_conf_threshold
                                                  if config.use_rag else 0.0))
         scan_seconds += time.perf_counter() - t1
+        # A6 消融的组织学差异：多智能体并行扇出 vs 单智能体顺序处理
+        if not config.single_agent and len(alerts) > 4:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                list(pool.map(lambda a: a.ensure_fingerprint(), alerts))
         for a in alerts:
             v = (a.triage or {}).get("verdict", "UNTRIAGED")
             triage_counts[v] = triage_counts.get(v, 0) + 1
         alerts = [a for a in alerts
                   if (a.triage or {}).get("verdict") != "FALSE_POSITIVE"]
+
+    # L3 动态通道（3.3.5）：真触发 PoC → Detected 级告警
+    if config.use_dynamic:
+        from ecdet.l3_analysis.dynamic import DynamicEngine
+        from ecdet.l3_analysis.builtin_rules.checks import build_file_facts
+        engine = DynamicEngine(max_functions=8, max_seeds=17)
+        if engine.available:
+            t2 = time.perf_counter()
+            facts = [build_file_facts(rel.as_posix(),
+                                      (corpus / rel).read_text(
+                                          encoding="utf-8", errors="replace"))
+                     for rel in files if rel.as_posix().endswith(".c")]
+            findings = engine.run(corpus, facts)
+            scan_seconds += time.perf_counter() - t2
+            alerts = alerts + [f_.to_alert() for f_ in findings]
 
     n_prov = sum(1 for a in alerts if a.provenance.value == "proven")
     return ToolRun(
@@ -219,6 +245,13 @@ def compute_metrics(alerts: list[Alert], gt: list[GTEntry]) -> dict:
 
     tp_a = sum(1 for a in alerts if any(_in_func(a, g) for g in vuln))
     fp_a = sum(1 for a in alerts if any(_in_func(a, g) for g in clean))
+    # 动态通道贡献率（方案 3.5.2 之 6）：动态新发现且静态未报 / 全部已确认
+    static_hit = {g.func_name for g in vuln
+                  if any(_in_func(a, g) and a.engine != "dynamic" for a in alerts)}
+    dyn_hit = {g.func_name for g in vuln
+               if any(_in_func(a, g) and a.engine == "dynamic" for a in alerts)}
+    detected_total = len(static_hit | dyn_hit)
+    dyn_only = len(dyn_hit - static_hit)
     return {
         "func_tp": tp, "func_fn": fn, "func_fp": fp,
         "vulnerable_total": len(vuln), "clean_total": len(clean),
@@ -227,6 +260,9 @@ def compute_metrics(alerts: list[Alert], gt: list[GTEntry]) -> dict:
         "f1": round(f1, 4),
         "alert_tp": tp_a, "alert_fp": fp_a,
         "alert_outside_gt": len(alerts) - tp_a - fp_a,
+        "dynamic_contribution": (round(dyn_only / detected_total, 4)
+                                 if detected_total else 0.0),
+        "dynamic_only_funcs": sorted(dyn_hit - static_hit),
     }
 
 
@@ -236,27 +272,31 @@ def compute_metrics(alerts: list[Alert], gt: list[GTEntry]) -> dict:
 
 
 def render_markdown(runs: list[tuple[ToolRun, dict]]) -> str:
-    """评测结果表（填充方案表 3-4 模板）。"""
+    """评测结果表（填充方案 V1.2 表 3-5 模板，含动态贡献率列）。"""
     lines = [
-        "# ecdet 评测结果（方案 3.5 表 3-4）",
+        "# ecdet 评测结果（方案 V1.2 表 3-5，七配置消融）",
         "",
         "| 系统配置 | 精确率 | 召回率 | F1 | 函数TP/FN/FP | 告警TP/FP | "
-        "千行耗时(s) | 可证明性比例 | LLM过滤 |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "千行耗时(s) | 可证明性比例 | 动态贡献率 | LLM过滤 |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for run, m in runs:
         if not run.available:
-            lines.append(f"| {run.name} | - | - | - | - | - | - | - | "
+            lines.append(f"| {run.name} | - | - | - | - | - | - | - | - | "
                          f"{run.note} |")
             continue
         kloc_time = round(run.seconds / run.kloc, 3) if run.kloc else 0.0
         filtered = run.triage_counts.get("FALSE_POSITIVE", 0)
+        has_dynamic = any(a.engine == "dynamic" for a in run.alerts)
+        dyn_col = f"{m.get('dynamic_contribution', 0):.0%}" if has_dynamic else "-"
         lines.append(
             f"| {run.name} | {m['precision']:.2%} | {m['recall']:.2%} | "
             f"{m['f1']:.2%} | {m['func_tp']}/{m['func_fn']}/{m['func_fp']} | "
             f"{m['alert_tp']}/{m['alert_fp']} | {kloc_time} | "
-            f"{run.provenance_ratio:.1%} | {filtered} |")
+            f"{run.provenance_ratio:.1%} | {dyn_col} | {filtered} |")
     lines.append("")
     lines.append("> 函数级口径：告警落入函数行区间即视为覆盖该函数；"
-                 "clean 函数出现任一告警计一次 FP。")
+                 "clean 函数出现任一告警计一次 FP。"
+                 "动态贡献率 = 动态新发现且静态未报的漏洞函数占全部已确认漏洞函数之比"
+                 "（方案 3.5.2 之 6）。")
     return "\n".join(lines)

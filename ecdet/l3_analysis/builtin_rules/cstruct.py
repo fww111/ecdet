@@ -30,6 +30,7 @@ class FunctionInfo:
     def_line: int = 0                  # 函数名所在行（告警定位与行归属判定用）
     tokens: list[CToken] = field(default_factory=list)   # 函数体内部 token（不含签名）
     params: list[str] = field(default_factory=list)      # 参数名
+    param_types: list[str] = field(default_factory=list)  # 参数类型文本（与 params 对齐）
 
     @property
     def n_returns(self) -> int:
@@ -147,7 +148,7 @@ def _try_function_at(toks: list[CToken], brace_idx: int) -> FunctionInfo | None:
         if prev.kind == "punct" and prev.value in (";", "}", ",", "*", ")"):
             # `void (*fp)(void) {` 不存在；`int f(void); int g(void) {` —— prev 为 ; 合法
             pass
-        params = _param_names(toks[open_paren + 1 : close_paren])
+        params, param_types = _param_decls(toks[open_paren + 1 : close_paren])
         sig_start = max(0, k - 6)
         signature = " ".join(t.value for t in toks[sig_start : close_paren + 1])
         return FunctionInfo(
@@ -158,6 +159,7 @@ def _try_function_at(toks: list[CToken], brace_idx: int) -> FunctionInfo | None:
             body_open_line=toks[brace_idx].line,
             body_close_line=-1,
             params=params,
+            param_types=param_types,
         )
     return None
 
@@ -174,6 +176,49 @@ def _match_paren_backward(toks: list[CToken], close_idx: int) -> int:
             if depth == 0:
                 return j
     return -1
+
+
+def _param_decls(param_tokens: list[CToken]) -> tuple[list[str], list[str]]:
+    """解析参数声明 → (参数名列表, 参数类型文本列表)。
+
+    每个顶层逗号段：最后的有效标识符为参数名，其余为类型
+    （无类型文本时回退 "int"，兼容 `f(a, b)` 旧式写法）。
+    """
+    names: list[str] = []
+    types: list[str] = []
+    depth = 0
+    seg: list[CToken] = []
+
+    def flush(segment: list[CToken]) -> None:
+        if not segment:
+            return
+        all_text = " ".join(t.value for t in segment)
+        if all_text.strip() in ("void", ""):
+            return
+        idents = [t for t in segment
+                  if t.kind == "ident" and t.value not in _TYPE_KEYWORDS
+                  and t.value not in _STORAGE_KEYWORDS]
+        name = idents[-1].value if idents else ""
+        # 指针属于类型文本：`char *p` → ctype "char *"，名字 "p"
+        type_parts = [t.value for t in segment if not (idents and t is idents[-1])]
+        ctype = " ".join(type_parts).strip()
+        if name:
+            names.append(name)
+            types.append(ctype or "int")
+
+    for t in param_tokens:
+        if t.kind == "punct":
+            if t.value in "([{":
+                depth += 1
+            elif t.value in ")]}":
+                depth -= 1
+            elif t.value == "," and depth == 0:
+                flush(seg)
+                seg = []
+                continue
+        seg.append(t)
+    flush(seg)
+    return names, types
 
 
 def _param_names(param_tokens: list[CToken]) -> list[str]:
