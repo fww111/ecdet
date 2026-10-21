@@ -214,6 +214,10 @@ class ScanRunner:
                 "message": a.message, "cwe": a.cwe,
                 "provenance": c.provenance.value,
                 "triage": a.triage, "fingerprint": a.ensure_fingerprint(),
+                "evidence": [{"kind": e.kind, "message": e.message,
+                              "path": e.location.path if e.location else "",
+                              "line": e.location.line if e.location else None}
+                             for e in a.evidence],
             })
         store.put_alerts(run_id, rows)
 

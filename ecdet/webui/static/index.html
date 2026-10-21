@@ -2,298 +2,60 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>ecdet 控制台</title>
-<style>
-:root { --bg:#f5f7fa; --card:#fff; --ink:#1f2933; --muted:#616e7c;
-        --blue:#1f6feb; --red:#d1242f; --orange:#bf8700; --green:#1a7f37;
-        --border:#e1e4e8; }
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:"Microsoft YaHei","Segoe UI",sans-serif; background:var(--bg);
-       color:var(--ink); font-size:14px; line-height:1.6; }
-.wrap { max-width:1180px; margin:0 auto; padding:20px; }
-h1 { font-size:20px; margin-bottom:2px; }
-.sub { color:var(--muted); font-size:12px; margin-bottom:16px; }
-section { background:var(--card); border:1px solid var(--border);
-          border-radius:8px; padding:14px 16px; margin:14px 0; }
-h2 { font-size:15px; margin-bottom:10px; border-left:4px solid var(--blue);
-     padding-left:8px; }
-label { font-size:12px; color:var(--muted); display:block; margin:6px 0 2px; }
-input,select { width:100%; padding:6px 8px; border:1px solid var(--border);
-               border-radius:6px; font-size:13px; }
-button { background:var(--blue); color:#fff; border:0; border-radius:6px;
-         padding:7px 16px; cursor:pointer; font-size:13px; margin-top:10px; }
-button:hover { opacity:.9; } button:disabled { background:#9ca3af; }
-.row { display:flex; gap:12px; } .row > * { flex:1; }
-table { width:100%; border-collapse:collapse; font-size:13px; }
-th,td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--border);
-        vertical-align:top; }
-th { background:#f0f3f6; white-space:nowrap; }
-tr:hover td { background:#f8fafc; }
-.badge { display:inline-block; padding:1px 8px; border-radius:10px;
-         font-size:12px; white-space:nowrap; }
-.badge.error { background:#ffebe9; color:var(--red); }
-.badge.warning { background:#fff8c5; color:#9a6700; }
-.badge.note { background:#ddf4ff; color:#0969da; }
-.badge.done { background:#dafbe1; color:var(--green); }
-.badge.failed { background:#ffebe9; color:var(--red); }
-.badge.running { background:#fff8c5; color:#9a6700; }
-.badge.pending { background:#f0f3f6; color:var(--ink); }
-.badge.confirmed { background:#dafbe1; color:var(--green); }
-.badge.dismissed { background:#e1e4e8; color:var(--muted); }
-.path { font-family:Consolas,monospace; font-size:12px; }
-.muted { color:var(--muted); font-size:12px; }
-.tabs { display:flex; gap:6px; margin-bottom:8px; }
-.tabs button { margin:0; padding:5px 12px; background:#f0f3f6; color:var(--ink); }
-.tabs button.on { background:var(--blue); color:#fff; }
-.filters { display:flex; gap:8px; margin-bottom:8px; }
-.filters select, .filters input { width:auto; flex:1; }
-.statgrid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
-.card { background:#f8fafc; border:1px solid var(--border); border-radius:6px;
-        padding:8px 10px; text-align:center; }
-.card .num { font-size:22px; font-weight:700; }
-.card .lbl { color:var(--muted); font-size:11px; }
-.link { color:var(--blue); text-decoration:none; font-size:12px; }
-.hidden { display:none; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ecdet 控制台 · 嵌入式代码缺陷与安全漏洞检测</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="wrap">
-  <h1>ecdet 控制台</h1>
-  <div class="sub">嵌入式软件代码缺陷与安全漏洞检测系统 · 静态/动态双通道 + LLM 多智能体</div>
+  <aside class="sidebar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4" stroke="#4ade80"/>
+      </svg>
+      <div><span class="t">ecdet</span><span class="v">v0.9 · 双通道 · 多智能体</span></div>
+    </div>
+    <nav>
+      <a href="#/overview" data-route="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        总览</a>
+      <a href="#/projects" data-route="projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        工程管理</a>
+      <a href="#/runs" data-route="runs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>
+        扫描运行</a>
+      <a href="#/alerts" data-route="alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        告警中心</a>
+    </nav>
+    <div class="side-foot">嵌入式软件代码缺陷<br>与安全漏洞检测系统</div>
+  </aside>
 
-  <section>
-    <h2>注册分析工程</h2>
-    <div class="tabs">
-      <button id="tab-path" class="on" onclick="switchTab('path')">本地路径</button>
-      <button id="tab-upload" onclick="switchTab('upload')">上传压缩包</button>
-      <button id="tab-git" onclick="switchTab('git')">Git 仓库</button>
-    </div>
-    <label>工程名称</label>
-    <input id="p-name" placeholder="如 demo_rtos">
-    <div id="pane-path">
-      <label>服务端工程路径（须包含 C/H 源文件）</label>
-      <input id="p-path" placeholder="如 D:\code\demo_rtos 或 examples/demo_rtos">
-    </div>
-    <div id="pane-upload" class="hidden">
-      <label>zip / tar.gz 归档（解压后须含 C/H 源文件）</label>
-      <input id="p-file" type="file" accept=".zip,.gz,.tgz">
-    </div>
-    <div id="pane-git" class="hidden">
-      <label>仓库地址（私有库可带 token；追加 @分支名 可指定分支）</label>
-      <input id="p-git" placeholder="https://github.com/owner/repo.git@main">
-    </div>
-    <button onclick="registerProject()">注册工程</button>
-    <span id="reg-msg" class="muted"></span>
-  </section>
+  <main class="main" id="main"></main>
 
-  <section>
-    <h2>工程与扫描</h2>
-    <table id="projects"><thead><tr>
-      <th>#</th><th>名称</th><th>来源</th><th>最近运行</th><th>操作</th>
-    </tr></thead><tbody></tbody></table>
-    <div id="run-opts" class="hidden">
-      <div class="row">
-        <div><label>行业 profile</label><select id="o-profile">
-          <option value="">默认（全规则）</option>
-          <option value="automotive">automotive</option>
-          <option value="industrial">industrial</option></select></div>
-        <div><label>SVD 文件（相对工程根，留空自动发现）</label>
-          <input id="o-svd" placeholder="chip.svd"></div>
-        <div><label>LLM 分诊</label><select id="o-triage">
-          <option value="off">关闭</option><option value="mock">Mock</option>
-          <option value="real">真实端点（env）</option></select></div>
-        <div><label>动态通道</label><select id="o-dynamic">
-          <option value="">关闭</option><option value="1">开启</option></select></div>
+  <div class="drawer-mask" id="drawer-mask" onclick="closeDrawer()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div id="drawer-title" style="font-weight:700;font-size:14px;"></div>
+      <button class="x" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </div>
+
+  <div class="modal-mask" id="modal-mask">
+    <div class="modal">
+      <h3 id="modal-title">新建扫描</h3>
+      <div id="modal-body"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;justify-content:flex-end;">
+        <button class="btn ghost" onclick="closeModal()">取消</button>
+        <button class="btn" id="modal-ok">开始扫描</button>
       </div>
-      <button onclick="startRun()">开始扫描</button>
-      <span class="muted" id="run-for"></span>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <h2>扫描运行</h2>
-    <table id="runs"><thead><tr>
-      <th>#</th><th>工程</th><th>状态</th><th>告警</th><th>耗时</th>
-      <th>报告</th>
-    </tr></thead><tbody></tbody></table>
-  </section>
-
-  <section id="alert-panel" class="hidden">
-    <h2>告警明细 <span class="muted" id="alert-run"></span></h2>
-    <div class="filters">
-      <select id="f-sev" onchange="loadAlerts()">
-        <option value="">全部级别</option><option value="error">error</option>
-        <option value="warning">warning</option><option value="note">note</option>
-      </select>
-      <select id="f-status" onchange="loadAlerts()">
-        <option value="">全部状态</option><option value="pending">待处理</option>
-        <option value="confirmed">已确认</option>
-        <option value="dismissed">已豁免</option></select>
-      <input id="f-q" placeholder="搜索说明/路径…" oninput="loadAlerts()">
-    </div>
-    <div class="statgrid" id="statgrid"></div>
-    <table id="alerts"><thead><tr>
-      <th>#</th><th>位置</th><th>级别</th><th>规则</th><th>结论</th>
-      <th>说明</th><th>复核</th>
-    </tr></thead><tbody></tbody></table>
-  </section>
-</div>
-
-<script>
-let curSource = 'path', curProject = null, curRun = null, pollTimer = null;
-
-function switchTab(t) {
-  curSource = t;
-  for (const k of ['path','upload','git']) {
-    document.getElementById('pane-'+k).classList.toggle('hidden', k!==t);
-    document.getElementById('tab-'+k).classList.toggle('on', k===t);
-  }
-}
-async function api(method, url, body, raw) {
-  const opt = { method, headers: {} };
-  if (body !== undefined) {
-    if (raw) { opt.body = body; opt.headers['Content-Type'] = raw; }
-    else { opt.body = JSON.stringify(body);
-           opt.headers['Content-Type'] = 'application/json'; }
-  }
-  const r = await fetch(url, opt);
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error || r.status);
-  return data;
-}
-
-async function registerProject() {
-  const name = document.getElementById('p-name').value.trim() || '未命名工程';
-  const msg = document.getElementById('reg-msg');
-  msg.textContent = '注册中…';
-  try {
-    if (curSource === 'path') {
-      const path = document.getElementById('p-path').value.trim();
-      await api('POST','/api/projects',{name, source_type:'path', path});
-    } else if (curSource === 'git') {
-      const git_url = document.getElementById('p-git').value.trim();
-      await api('POST','/api/projects',{name, source_type:'git', git_url});
-    } else {
-      const f = document.getElementById('p-file').files[0];
-      if (!f) throw new Error('请选择归档文件');
-      const buf = await f.arrayBuffer();
-      await api('POST', '/api/projects?name='+encodeURIComponent(name),
-                new Uint8Array(buf), f.type || 'application/zip');
-    }
-    msg.textContent = '✓ 注册成功';
-    loadProjects();
-  } catch (e) { msg.textContent = '✗ ' + e.message; }
-}
-
-async function loadProjects() {
-  const data = await api('GET','/api/projects');
-  const tb = document.querySelector('#projects tbody');
-  tb.innerHTML = '';
-  for (const p of data.projects) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${p.id}</td><td>${p.name}</td>
-      <td><span class="badge pending">${p.source_type}</span></td>
-      <td class="path">${p.workspace}</td>
-      <td><a class="link" href="#" onclick="selectProject(${p.id},'${p.name}');
-        return false;">配置扫描</a></td>`;
-    tb.appendChild(tr);
-  }
-}
-
-function selectProject(id, name) {
-  curProject = id;
-  document.getElementById('run-opts').classList.remove('hidden');
-  document.getElementById('run-for').textContent = '→ 目标工程：' + name;
-  document.getElementById('run-opts').scrollIntoView({behavior:'smooth'});
-}
-
-async function startRun() {
-  if (!curProject) return;
-  await api('POST','/api/runs',{ project_id: curProject,
-    profile: document.getElementById('o-profile').value || null,
-    svd: document.getElementById('o-svd').value.trim() || null,
-    triage: document.getElementById('o-triage').value,
-    dynamic: !!document.getElementById('o-dynamic').value,
-    no_build: false });
-  loadRuns();
-}
-
-async function loadRuns() {
-  const data = await api('GET','/api/runs');
-  const tb = document.querySelector('#runs tbody');
-  tb.innerHTML = '';
-  const names = {};
-  (await api('GET','/api/projects')).projects.forEach(p => names[p.id] = p.name);
-  let hasActive = false;
-  for (const r of data.runs) {
-    const s = r.stats || {};
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.id}</td><td>${names[r.project_id]||r.project_id}</td>
-      <td><span class="badge ${r.status}">${r.status}</span></td>
-      <td>${s.total!==undefined ? s.total : '—'}</td>
-      <td>${r.finished_at&&r.started_at ? (r.finished_at-r.started_at).toFixed(1)+'s':'—'}</td>
-      <td>${r.status==='done' ? `<a class="link" href="#" onclick="openRun(${r.id});return false;">告警</a>
-            <a class="link" href="/api/runs/${r.id}/report" target="_blank">HTML</a>` : '—'}</td>`;
-    tb.appendChild(tr);
-    if (r.status==='pending' || r.status==='running') hasActive = true;
-  }
-  clearTimeout(pollTimer);
-  if (hasActive) pollTimer = setTimeout(loadRuns, 2000);
-}
-
-async function openRun(id) {
-  curRun = id;
-  document.getElementById('alert-panel').classList.remove('hidden');
-  document.getElementById('alert-run').textContent = '（运行 #'+id+'）';
-  document.getElementById('alert-panel').scrollIntoView({behavior:'smooth'});
-  loadAlerts();
-}
-
-async function loadAlerts() {
-  if (!curRun) return;
-  const q = new URLSearchParams({
-    severity: document.getElementById('f-sev').value,
-    status: document.getElementById('f-status').value,
-    q: document.getElementById('f-q').value });
-  const data = await api('GET','/api/runs/'+curRun+'/alerts?'+q);
-  const tb = document.querySelector('#alerts tbody');
-  tb.innerHTML = '';
-  for (const a of data.alerts) {
-    const tri = a.triage ? a.triage.verdict : '';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${a.id}</td>
-      <td><span class="path">${a.path}</span>:${a.line}</td>
-      <td><span class="badge ${a.severity}">${a.severity}</span>
-          <span class="badge pending">${a.provenance}</span></td>
-      <td>${a.rule_id}${a.cwe?'<br><span class="muted">'+a.cwe+'</span>':''}</td>
-      <td>${tri?'<span class="muted">'+tri+'</span>':'—'}</td>
-      <td>${a.message}</td>
-      <td>
-        <button style="margin:0;padding:2px 8px" onclick="mark(${a.id},'confirmed')">确认</button>
-        <button style="margin:0;padding:2px 8px;background:#9ca3af" onclick="mark(${a.id},'dismissed')">豁免</button>
-      </td>`;
-    tb.appendChild(tr);
-  }
-  const run = await api('GET','/api/runs/'+curRun);
-  const c = run.alert_counts || {};
-  const sg = document.getElementById('statgrid');
-  sg.innerHTML = '';
-  const sev = c.by_severity || {};
-  [['总数', (sev.error||0)+(sev.warning||0)+(sev.note||0)],
-   ['error', sev.error||0],['warning', sev.warning||0],['note', sev.note||0],
-   ['待处理', (c.by_status||{}).pending||0]].forEach(([l,n]) => {
-    sg.innerHTML += `<div class="card"><div class="num">${n}</div>
-      <div class="lbl">${l}</div></div>`;
-  });
-}
-
-async function mark(id, status) {
-  await api('POST','/api/alerts/'+id+'/status',{status});
-  loadAlerts();
-}
-
-loadProjects();
-loadRuns();
-</script>
+  <div id="toast"></div>
+<script src="/static/app.js"></script>
 </body>
 </html>
