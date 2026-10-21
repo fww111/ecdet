@@ -54,11 +54,38 @@ def cmd_scan(args: argparse.Namespace) -> int:
         for w in res.warnings:
             print(f"[L1] 警告：{w}")
 
-    # L3 多引擎扫描
+    # L3 多引擎扫描（增量模式：影响集收缩扫描范围，方案 3.3.6）
     files = _collect_sources(root)
     if not files:
         print("错误：未发现 C 源文件", file=sys.stderr)
         return 2
+
+    old_fps = set()
+    out_dir = Path(args.output) if args.output else root / "ecdet_reports"
+    if args.baseline:
+        from ecdet.incremental import load_baseline_fingerprints
+        bp = Path(args.baseline)
+        if bp.exists():
+            old_fps = load_baseline_fingerprints(bp)
+            print(f"[增量] 载入基线：{bp}（{len(old_fps)} 条指纹）")
+        else:
+            print(f"[增量] 基线文件不存在，按全量处理：{bp}")
+
+    if args.changed:
+        from ecdet.incremental import compute_impact_set
+        changed = [s.strip() for s in args.changed.split(",") if s.strip()]
+        impact = compute_impact_set(root, changed)
+        known = set(files)
+        files = [f for f in files if f.as_posix() in set(impact.affected)]
+        print(f"[增量] 影响集：{len(impact.affected)} 个文件"
+              f"（改动 {len(changed)}，扫描收缩至 {len(files)}）")
+        for f in files:
+            print(f"    {f.as_posix()}  ← {impact.reason.get(f.as_posix(), '?')}")
+        if not files:
+            print("[增量] 影响集为空，无文件需要扫描")
+            return 0
+        _ = known
+
     svd_path = None
     if args.svd:
         svd_path = Path(args.svd)
@@ -78,12 +105,24 @@ def cmd_scan(args: argparse.Namespace) -> int:
     result = aggregate(alerts, metas)
     records = build_compliance_records(result)
 
-    out_dir = Path(args.output) if args.output else root / "ecdet_reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     sarif_path = save_sarif(alerts, metas, out_dir / "results.sarif")
     html_path = render_html_report(result, records,
                                    project_name=root.name,
                                    out_path=out_dir / "report.html")
+
+    # 告警基线：差分 + 更新（方案 3.3.6）
+    if old_fps or args.save_baseline:
+        from ecdet.incremental import diff_baseline, save_baseline
+        diff = diff_baseline(old_fps, alerts)
+        base_path = save_baseline(alerts, out_dir / "baseline.json")
+        if old_fps:
+            print(f"[增量] 基线差分：{diff.summary}")
+            for a in diff.new[:10]:
+                print(f"    [新增] {a.rule_id} @ {a.location.path}:{a.location.line}")
+            if len(diff.new) > 10:
+                print(f"    … 其余 {len(diff.new) - 10} 条新增略")
+        print(f"[增量] 基线已更新：{base_path}")
 
     s = result.stats
     print(f"\n=== ecdet 扫描完成 ===")
@@ -156,6 +195,18 @@ def cmd_triage(args: argparse.Namespace) -> int:
     if not alerts:
         print("SARIF 中无告警，无需分诊")
         return 0
+
+    # 增量研判：仅对基线之外的新增告警调用 LLM（方案 3.3.6）
+    if args.only_new:
+        from ecdet.incremental import load_baseline_fingerprints
+        old_fps = load_baseline_fingerprints(args.only_new)
+        n_skip = sum(1 for a in alerts if a.ensure_fingerprint() in old_fps)
+        alerts = [a for a in alerts if a.fingerprint not in old_fps]
+        print(f"[增量研判] 基线持续告警 {n_skip} 条跳过，"
+              f"仅研判新增 {len(alerts)} 条")
+        if not alerts:
+            print("无新增告警，完成")
+            return 0
 
     if args.mock:
         client = MockLlmClient()
@@ -269,6 +320,25 @@ def cmd_fix(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_impact(args: argparse.Namespace) -> int:
+    """影响集计算：changed → include 反向闭包 → 调用图反向闭包。"""
+    from ecdet.incremental import compute_impact_set
+
+    root = Path(args.path).resolve()
+    if not root.exists():
+        print(f"错误：路径不存在 {root}", file=sys.stderr)
+        return 2
+    changed = [s.strip() for s in args.changed.split(",") if s.strip()]
+    impact = compute_impact_set(root, changed)
+    if args.json:
+        print(json.dumps(impact.as_json(), ensure_ascii=False, indent=2))
+        return 0
+    print(f"变更 {len(impact.changed)} 个文件 → 影响集 {len(impact.affected)} 个文件：")
+    for f in impact.affected:
+        print(f"  {f}  ← {impact.reason.get(f, '?')}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ecdet",
@@ -286,6 +356,11 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--no-build", action="store_true",
                         help="跳过 L1 构建复现，直接源码扫描")
     p_scan.add_argument("--svd", help="CMSIS-SVD 芯片描述文件（缺省自动发现工程内 *.svd）")
+    p_scan.add_argument("--baseline", help="上次扫描的基线 JSON（存在则差分并仅报新增）")
+    p_scan.add_argument("--save-baseline", action="store_true",
+                        help="扫描后将告警指纹存为基线（输出目录 baseline.json）")
+    p_scan.add_argument("--changed", help="增量模式：逗号分隔的变更文件（相对根目录），"
+                                          "按影响集收缩扫描范围")
     p_scan.add_argument("--output", "-o", help="报告输出目录")
     p_scan.set_defaults(func=cmd_scan)
 
@@ -312,6 +387,7 @@ def main(argv: list[str] | None = None) -> int:
                           help="使用确定性 Mock LLM（离线演示/测试）")
     p_triage.add_argument("--budget", type=int, default=8000,
                           help="上下文字符预算（默认 8000）")
+    p_triage.add_argument("--only-new", help="增量研判：仅研判基线 JSON 之外的新增告警")
     p_triage.add_argument("--output", "-o", help="输出目录（缺省覆盖原 SARIF 所在目录）")
     p_triage.set_defaults(func=cmd_triage)
 
@@ -326,6 +402,13 @@ def main(argv: list[str] | None = None) -> int:
     p_fix.add_argument("--max", type=int, default=20, help="单次处理告警数上限")
     p_fix.add_argument("--output", "-o", help="输出目录")
     p_fix.set_defaults(func=cmd_fix)
+
+    p_impact = sub.add_parser("impact", help="增量影响集计算（方案 3.3.6）")
+    p_impact.add_argument("path", help="工程根目录")
+    p_impact.add_argument("--changed", required=True,
+                          help="逗号分隔的变更文件（相对根目录）")
+    p_impact.add_argument("--json", action="store_true", help="输出 JSON")
+    p_impact.set_defaults(func=cmd_impact)
 
     args = parser.parse_args(argv)
     return args.func(args)

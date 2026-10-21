@@ -100,6 +100,7 @@ class AblationConfig:
     use_llm: bool = True
     use_hw: bool = True
     use_rag: bool = True
+    profile: str = ""              # 规则配置文件（如 juliet：屏蔽工程级规则）
     note: str = ""
 
 
@@ -146,6 +147,9 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
     enabled = {r.rule_id for r in BUILTIN_RULES}
     if not config.use_hw:
         enabled -= HW_RULE_IDS
+    if config.profile:
+        from ecdet.l3_analysis.engine import INDUSTRY_PROFILES
+        enabled -= INDUSTRY_PROFILES.get(config.profile, set())
     svd = svd_path if config.use_hw else None
 
     t0 = time.perf_counter()

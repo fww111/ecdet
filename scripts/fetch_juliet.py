@@ -30,6 +30,8 @@ import zipfile
 from collections import defaultdict
 from pathlib import Path
 
+from ecdet.eval import AblationConfig, compute_metrics, load_ground_truth, run_ecdet_config
+
 SARD_URL = "https://samate.nist.gov/SARD/test-suites/112/download/zips/Juliet_C_Cpp.zip"
 
 # Juliet 家族目录名前缀 → ecdet 规则可对应的 CWE 口径
@@ -49,7 +51,25 @@ FAMILY_CWE = {
     "CWE1284": ["CWE-1284"],                # 无界读取
 }
 
-BAD_FUNC_RE = re.compile(r"\b(\w+_bad)\s*\(")
+BAD_SUFFIX = "_bad"
+GOOD_SUFFIX = "_good"
+
+
+def extract_named_functions(src: str, suffix: str) -> list[str]:
+    """抽取函数名以 suffix 结尾的函数切片（复用 ecdet 解析器，精确边界）。
+
+    相比正则回溯，解析器切片不会把文件头的 #include 卷进函数体。
+    """
+    from ecdet.l3_analysis.builtin_rules.ctokens import lex_c
+    from ecdet.l3_analysis.builtin_rules.cstruct import parse_functions
+
+    lex = lex_c(src)
+    out = []
+    for func in parse_functions(lex):
+        if func.name.endswith(suffix):
+            out.append("\n".join(
+                lex.source_lines[func.def_line - 1:func.body_close_line]))
+    return out
 
 
 def iter_juliet_c_files(zip_path: Path):
@@ -66,25 +86,8 @@ def family_of(name: str) -> str | None:
 
 
 def extract_bad_functions(src: str) -> list[str]:
-    """抽取 Juliet 的 *_bad 函数（含签名，从上一语句边界到配对右花括号）。"""
-    out = []
-    for m in BAD_FUNC_RE.finditer(src):
-        sig_start = max(src.rfind(";", 0, m.start()),
-                        src.rfind("}", 0, m.start()), 0) + 1
-        brace = src.find("{", m.end())
-        if brace == -1:
-            continue
-        depth, i = 0, brace
-        while i < len(src):
-            if src[i] == "{":
-                depth += 1
-            elif src[i] == "}":
-                depth -= 1
-                if depth == 0:
-                    out.append(src[sig_start:i + 1])
-                    break
-            i += 1
-    return out
+    """抽取 Juliet 的 *_bad 函数（解析器精确切片）。"""
+    return extract_named_functions(src, BAD_SUFFIX)
 
 
 def evaluate(juliet_zip: Path, limit: int, dest: Path) -> dict:
@@ -159,25 +162,108 @@ def evaluate(juliet_zip: Path, limit: int, dest: Path) -> dict:
     return report
 
 
+def export_corpus(zip_path: Path, out_dir: Path, limit: int) -> Path:
+    """导出评测语料：corpus/*.c + gt.jsonl（方案 3.5 评测框架直接可用）。
+
+    每个 Juliet 用例文件 → 语料文件：保留原 #include/#define 头 +
+    全部 bad/good 函数切片；基准真值 bad=vulnerable、good=clean，
+    CWE 取家族主口径（方案 3.4.1：Juliet 为规则引擎覆盖广度基准）。
+    """
+    from ecdet.l3_analysis.builtin_rules.ctokens import lex_c
+
+    corpus = out_dir / "corpus"
+    corpus.mkdir(parents=True, exist_ok=True)
+    gt_lines: list[str] = []
+    count = 0
+
+    for name, src in iter_juliet_c_files(zip_path):
+        if count >= limit:
+            break
+        fam = family_of(name)
+        if fam not in FAMILY_CWE:
+            continue
+        bads = extract_named_functions(src, BAD_SUFFIX)
+        goods = extract_named_functions(src, GOOD_SUFFIX)
+        if not bads:
+            continue
+
+        # 原文件的预处理头（#include/#define），供函数引用的宏/类型线索
+        lex = lex_c(src)
+        src_lines = src.splitlines()
+        header = [src_lines[p.line - 1] for p in lex.pp_lines
+                  if 0 < p.line <= len(src_lines)]
+
+        lines_out = list(header) + ["", ""]
+        offset = len(lines_out)
+        fname_re = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
+        for label, funcs in (("vulnerable", bads), ("clean", goods)):
+            for func_text in funcs:
+                flines = func_text.splitlines()
+                start = offset + 1
+                lines_out.extend(flines)
+                offset += len(flines)
+                m = fname_re.search(func_text)
+                fname = m.group(1) if m else f"func_{start}"
+                gt_lines.append(json.dumps({
+                    "path": f"{fam}_{count:05d}.c",
+                    "func_name": fname,
+                    "start_line": start, "end_line": offset,
+                    "label": label,
+                    "cwe": FAMILY_CWE[fam][0],
+                }, ensure_ascii=False))
+                lines_out.append("")
+                offset += 1
+
+        (corpus / f"{fam}_{count:05d}.c").write_text(
+            "\n".join(lines_out) + "\n", encoding="utf-8")
+        count += 1
+        if count % 100 == 0:
+            print(f"  已导出 {count}/{limit} …")
+
+    gt_path = out_dir / "gt.jsonl"
+    gt_path.write_text("\n".join(gt_lines) + "\n", encoding="utf-8")
+    print(f"语料：{corpus}（{count} 个用例文件）\n基准真值：{gt_path}")
+    return gt_path
+
+
 def selftest() -> int:
-    """不依赖 Juliet 包：用本地样例验证评测管线端到端可用。"""
+    """不依赖 Juliet 包：验证 检出率管线 + 语料导出→评测框架 全链路。"""
     import tempfile
 
     sample_c = r"""
 #include <stdio.h>
 void CWE242_bad(void) { char b[8]; gets(b); }
+void CWE242_good(void) { char b[8]; fgets(b, sizeof(b), stdin); }
 void CWE190_bad(void) { uint8_t x = 300; (void)x; }
+void CWE190_good(void) { uint8_t x = 250; (void)x; }
 """
     with tempfile.TemporaryDirectory() as td:
         zf = Path(td) / "mini.zip"
         with zipfile.ZipFile(zf, "w") as z:
             z.writestr("testcases/CWE242/x.c", sample_c)
             z.writestr("testcases/CWE190/y.c", sample_c)
+
+        # 路径一：CWE 对照检出率
         rep = evaluate(zf, limit=10, dest=Path(td) / "r.json")
         fams = rep["families"]
         assert "CWE242" in fams and fams["CWE242"]["detected"] >= 1, rep
         assert "CWE190" in fams and fams["CWE190"]["detected"] >= 1, rep
-    print("selftest 通过：Juliet 评测管线（抽包→bad 提取→扫描→CWE 对照）端到端可用")
+
+        # 路径二：语料导出 → ecdet.eval 评测框架（阶段四管线）
+        out = Path(td) / "juliet_ds"
+        gt_path = export_corpus(zf, out, limit=10)
+        gt = load_ground_truth(gt_path)
+        assert any(g.label == "vulnerable" for g in gt)
+        assert any(g.label == "clean" for g in gt)
+        run = run_ecdet_config(out / "corpus",
+                               AblationConfig("A1 去 LLM", use_llm=False,
+                                              profile="juliet"))
+        m = compute_metrics(run.alerts, gt)
+        assert m["func_tp"] >= 2, m          # 两个 bad 函数应被检出
+        assert m["func_fp"] == 0, m          # good 函数不得误报（juliet 配置文件）
+        print(f"  Juliet mini 语料指标：P={m['precision']:.0%} "
+              f"R={m['recall']:.0%}（TP={m['func_tp']} FP={m['func_fp']}）")
+    print("selftest 通过：检出率管线 + 语料导出→评测框架 全链路可用")
     return 0
 
 
@@ -188,6 +274,8 @@ def main(argv=None) -> int:
     ap.add_argument("--dest", type=Path, default=Path("data/juliet"),
                     help="下载/解包目录")
     ap.add_argument("--limit", type=int, default=300, help="评测用例数上限")
+    ap.add_argument("--export-corpus", action="store_true",
+                    help="导出 run_eval 兼容语料（corpus/ + gt.jsonl）后退出")
     ap.add_argument("--selftest", action="store_true", help="离线自检评测管线")
     args = ap.parse_args(argv)
 
@@ -210,6 +298,13 @@ def main(argv=None) -> int:
                     f.write(chunk)
     else:
         ap.error("需要 --zip <path> 或 --download（或 --selftest）")
+
+    if args.export_corpus:
+        export_corpus(zip_path, args.dest, args.limit)
+        print("\n后续评测：uv run python scripts/run_eval.py "
+              f"--corpus {args.dest / 'corpus'} --gt {args.dest / 'gt.jsonl'} "
+              "--out eval_juliet --with-baselines")
+        return 0
 
     report = evaluate(zip_path, args.limit, args.dest / "juliet_report.json")
     print("\n=== Juliet 检出率（内置引擎，函数级简化口径） ===")

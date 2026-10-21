@@ -45,6 +45,7 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default="eval_out", help="输出目录")
     ap.add_argument("--configs", default="A0,A1,A2,A3", help="消融配置（逗号分隔）")
     ap.add_argument("--svd", help="SVD 文件（A0/A1/A3 启用 MMIO 检查）")
+    ap.add_argument("--profile", help="规则配置文件（如 juliet：屏蔽工程级规则）")
     ap.add_argument("--mock", action="store_true", help="LLM 用 Mock（默认）")
     ap.add_argument("--with-baselines", action="store_true",
                     help="附带可用外部基线（cppcheck/clang-tidy）")
@@ -71,6 +72,10 @@ def main(argv=None) -> int:
         key = cfg.name.split()[0]          # A0/A1/...
         if key not in wanted:
             continue
+        if args.profile:
+            cfg = AblationConfig(cfg.name, use_llm=cfg.use_llm,
+                                 use_hw=cfg.use_hw, use_rag=cfg.use_rag,
+                                 profile=args.profile, note=cfg.note)
         print(f"运行 {cfg.name} …")
         run = run_ecdet_config(corpus, cfg, svd_path=svd)
         runs.append((run, compute_metrics(run.alerts, gt)))

@@ -30,6 +30,9 @@ INDUSTRY_PROFILES: dict[str, set[str]] = {
     "automotive": set(),
     # 工控：放宽 stdio（上位机调试常用），其余同默认
     "industrial": {"MISRA C:2012 21.6"},
+    # Juliet 基准评测：单文件函数切片不构成完整工程，
+    # 链接域/隐式声明类工程级规则必然误报，评测时屏蔽（方案 3.4.1）
+    "juliet": {"MISRA C:2012 8.7", "MISRA C:2012 8.9", "MISRA C:2012 17.3"},
 }
 INDUSTRY_PROFILES["automotive"] = set()   # 全启用
 
