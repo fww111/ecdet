@@ -140,6 +140,53 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_triage(args: argparse.Namespace) -> int:
+    """L4 告警分诊：SARIF + 工程上下文 → 分诊结论回写 SARIF/HTML 报告。"""
+    from ecdet.l2_ir import load_sarif
+    from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
+    from ecdet.l4_llm.triage import triage_alerts
+
+    sarif_path = Path(args.sarif)
+    if not sarif_path.exists():
+        print(f"错误：SARIF 不存在 {sarif_path}", file=sys.stderr)
+        return 2
+    project = Path(args.project).resolve() if args.project else sarif_path.parent.parent
+    alerts, metas = load_sarif(sarif_path)
+    if not alerts:
+        print("SARIF 中无告警，无需分诊")
+        return 0
+
+    if args.mock:
+        client = MockLlmClient()
+        print("[L4] 使用 Mock LLM（离线演示模式）")
+    else:
+        client = OpenAICompatClient(base_url=args.llm_url, model=args.model)
+        print(f"[L4] LLM 端点：{client.base_url}（模型 {client.model}）")
+
+    verdicts, calls = triage_alerts(alerts, project, client=client,
+                                    budget_chars=args.budget)
+    by_v: dict[str, int] = {}
+    for v in verdicts:
+        by_v[v.verdict] = by_v.get(v.verdict, 0) + 1
+
+    result = aggregate(alerts, metas)
+    records = build_compliance_records(result)
+    out_dir = Path(args.output) if args.output else sarif_path.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    save_sarif(alerts, metas, out_dir / "results.sarif")
+    render_html_report(result, records, project_name=project.name,
+                       out_path=out_dir / "report.html")
+
+    print("\n=== L4 分诊完成 ===")
+    print(f"告警：{len(verdicts)} 条 | LLM 调用：{calls} 次")
+    for k in ("TRUE_POSITIVE", "FALSE_POSITIVE", "NEEDS_REVIEW"):
+        if by_v.get(k):
+            print(f"  {k}: {by_v[k]}")
+    print(f"\n分诊后 SARIF：{out_dir / 'results.sarif'}")
+    print(f"HTML 报告：{out_dir / 'report.html'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ecdet",
@@ -171,6 +218,20 @@ def main(argv: list[str] | None = None) -> int:
     p_report.add_argument("sarif", help="SARIF 文件路径")
     p_report.add_argument("--output", "-o", help="输出 HTML 路径")
     p_report.set_defaults(func=cmd_report)
+
+    p_triage = sub.add_parser("triage", help="L4 LLM 告警分诊（误报过滤/证据核对）")
+    p_triage.add_argument("sarif", help="scan 产出的 results.sarif 路径")
+    p_triage.add_argument("--project", help="工程根目录（告警相对路径的基准，"
+                                           "缺省取 SARIF 上两级）")
+    p_triage.add_argument("--llm-url", help="OpenAI 兼容端点"
+                                            "（缺省 env ECODET_LLM_BASE_URL 或 vLLM 默认端口）")
+    p_triage.add_argument("--model", help="模型名（缺省 env ECODET_LLM_MODEL）")
+    p_triage.add_argument("--mock", action="store_true",
+                          help="使用确定性 Mock LLM（离线演示/测试）")
+    p_triage.add_argument("--budget", type=int, default=8000,
+                          help="上下文字符预算（默认 8000）")
+    p_triage.add_argument("--output", "-o", help="输出目录（缺省覆盖原 SARIF 所在目录）")
+    p_triage.set_defaults(func=cmd_triage)
 
     args = parser.parse_args(argv)
     return args.func(args)

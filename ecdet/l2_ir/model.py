@@ -89,6 +89,7 @@ class Alert:
     provenance: Provenance = Provenance.SUSPECTED
     evidence: list[Evidence] = field(default_factory=list)
     fingerprint: str = ""                     # 聚合去重主键，空则按内容计算
+    triage: Optional[dict] = None             # L4 分诊结论（verdict/confidence/reason/…）
 
     def compute_fingerprint(self) -> str:
         raw = json.dumps(
@@ -135,6 +136,7 @@ class Alert:
             provenance=Provenance(d.get("provenance", "suspected")),
             evidence=evs,
             fingerprint=d.get("fingerprint", ""),
+            triage=d.get("triage"),
         )
 
 

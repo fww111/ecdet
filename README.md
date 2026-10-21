@@ -31,6 +31,39 @@ uv run python scripts/fetch_juliet.py --selftest            # 离线验证评测
 uv run python scripts/fetch_juliet.py --download --limit 300  # 下载并评测检出率
 ```
 
+## L4 LLM 告警分诊（阶段三，P5）
+
+分诊管线（方案 3.3.5 的工程化）：**上下文裁剪**（告警函数 + 深度 2 调用闭包 + 引用宏，按字符预算截取）→ **LLM 首判**（强制结构化 JSON）→ **A-RAG**（置信度 < 0.6 触发本地知识库检索后重判）→ **证据行号核对**（引用行必须在函数区间内、为真实代码、且包含告警行本身，否则降级 NEEDS_REVIEW）→ 结论回写 SARIF 与报告。
+
+```bash
+uv run ecdet scan examples/svd_demo --no-build -o out
+# 离线演示（确定性 Mock LLM，覆盖真判/误报/RAG/降级四条路径）
+uv run ecdet triage out/results.sarif --project examples/svd_demo --mock -o out
+# 接本地 vLLM / Ollama / LM Studio（OpenAI 兼容端点，数据不出域）
+export ECODET_LLM_BASE_URL=http://127.0.0.1:8000/v1
+export ECODET_LLM_MODEL=Qwen2.5-Coder-7B-Instruct
+uv run ecdet triage out/results.sarif --project examples/svd_demo -o out
+```
+
+幻觉抑制三道闸：输出不可解析 JSON → NEEDS_REVIEW；引用行号越界/指向注释/缺告警行 → 降级；LLM 调用失败 → NEEDS_REVIEW。修复建议验证闭环（编译+静态+CBMC）在阶段三后半接入。
+
+## 自建嵌入式漏洞数据集管线（阶段三，P6）
+
+`scripts/build_dataset.py` 实现方案 3.4.3 六步流程（可离线运行，测试内置 git fixture）：
+
+1. **安全通告清单**：CVE/CWE/修复提交/GB/T 30279 严重级/嵌入式上下文标记（ISR/MMIO/RTOS）；
+2. **修复提交检索**：`git log` 按 CVE/GHSA/security 关键词辅助发现与校验；
+3. **函数切片**：复用 ecdet 词法解析器，修复提交 parent 版本中"文本变化的函数"为漏洞样本，同名修复后版本为配对样本；
+4. **预标注**：清单字段 + ISR 命名自动识别（双标注+仲裁在标注平台完成）；
+5. **指纹去重**：注释/空白规范化后 SHA-256（PrimeVul 近重复删除方法），全库唯一；
+6. **时间划分**：按修复日期 6:2:2 切分 train/val/test，同通告样本不跨集合，杜绝时间泄漏。
+
+```bash
+uv run python scripts/build_dataset.py --manifest data/manifest.json --out data/dataset
+```
+
+输出 `samples.jsonl`（含 code/指纹/标注/划分）、`stats.json`、`LICENSES.md`（逐仓库许可登记，仅分发切片不整仓再分发）。
+
 ## 检测流水线
 
 ```
@@ -44,10 +77,12 @@ uv run python scripts/fetch_juliet.py --download --limit 300  # 下载并评测�
                             ▼
               L2 统一告警模型（SARIF 2.1.0 唯一交换格式）
                             ▼
+              L4 LLM 分诊（上下文裁剪 → A-RAG → 证据核对，P5）
+                            ▼
               L5 聚合去重 + CWE↔MISRA↔GJB 双口径映射
                   + 可证明性分级（Proven/Detected/Suspected）
                             ▼
-              results.sarif + report.html（含证据链与合规记录）
+              results.sarif + report.html（含证据链、分诊结论与合规记录）
 ```
 
 SVD 文件可通过 `--svd <path>` 指定，缺省自动发现工程内 `*.svd`（未提供时 MMIO 检查跳过，ISR/竞争/阻塞检查仍可用）。
@@ -79,6 +114,7 @@ SVD 文件可通过 `--svd <path>` 指定，缺省自动发现工程内 `*.svd`�
 
 - [x] 2026 Q4 阶段一：构建复现工具链 + MISRA 子集规则引擎 MVP + Juliet 接入
 - [x] 2027 Q1 阶段二（提前实施）：SVD/ISR/RTOS 硬件语义建模（P2）、抽象解释常量传播（P4 机制）、SARIF 聚合、GJB 主题映射、ESBMC 适配器
-- [ ] 2027 Q2 阶段三：LLM 增强层与自建嵌入式漏洞数据集（L4 接口已预留）
+- [x] 2027 Q2 阶段三（提前实施）：L4 LLM 分诊层（P5，Mock 全路径可测 + OpenAI 兼容端点接入）、自建数据集采集管线（P6）
+- [ ] 阶段三后半：LLM 修复建议生成与编译/静态/CBMC 验证闭环、数据集在线抓取规模化
 - [ ] 2027 Q3 阶段四：四基线对比评测与合规报告
 - [ ] 2027 Q4 阶段五：试点部署与迭代

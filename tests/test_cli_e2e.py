@@ -95,6 +95,30 @@ def test_scan_svd_demo(tmp_path, capsys):
     assert "GJB 8114" in html       # 合规记录含 GJB 主题映射列
 
 
+def test_cli_triage_mock(tmp_path, capsys):
+    """阶段三端到端：scan → triage（Mock LLM）→ 分诊结论入 SARIF 与报告。"""
+    main(["scan", str(EXAMPLES / "svd_demo"), "--no-build", "-o", str(tmp_path)])
+    code = main(["triage", str(tmp_path / "results.sarif"),
+                 "--project", str(EXAMPLES / "svd_demo"),
+                 "--mock", "-o", str(tmp_path)])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "L4 分诊完成" in out
+    assert "LLM 调用" in out
+
+    sarif = json.loads((tmp_path / "results.sarif").read_text(encoding="utf-8"))
+    results = sarif["runs"][0]["results"]
+    triaged = [r for r in results if "triage" in r["properties"]]
+    assert triaged, "分诊结论应回写 SARIF properties"
+    verdicts = {r["properties"]["triage"]["verdict"] for r in triaged}
+    assert verdicts <= {"TRUE_POSITIVE", "FALSE_POSITIVE", "NEEDS_REVIEW"}
+    assert "TRUE_POSITIVE" in verdicts and "FALSE_POSITIVE" in verdicts
+
+    html = (tmp_path / "report.html").read_text(encoding="utf-8")
+    assert "LLM 分诊结果" in html
+    assert "误报" in html
+
+
 def test_init_ccdb_keil(tmp_path, capsys):
     """对 keil_demo（仅 uvprojx，无 CMakeLists）执行 init-ccdb 应走 keil-xml 通道。"""
     code = main(["init-ccdb", str(EXAMPLES / "keil_demo")])
