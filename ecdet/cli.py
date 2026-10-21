@@ -388,6 +388,16 @@ def cmd_orchestrate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    """Web 控制台：浏览器注册工程 → 后台扫描 → 告警浏览/复核。"""
+    from ecdet.webui import WebUI
+
+    data_dir = Path(args.data_dir).resolve()
+    print(f"数据目录：{data_dir}")
+    WebUI(data_dir, port=args.port).serve()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="ecdet",
@@ -474,6 +484,12 @@ def main(argv: list[str] | None = None) -> int:
                         help="高危误报判定挂起待人工（缺省自动接受并留痕）")
     p_orch.add_argument("--max-fix", type=int, default=5, help="单次修复目标上限")
     p_orch.set_defaults(func=cmd_orchestrate)
+
+    p_serve = sub.add_parser("serve", help="启动 Web 控制台（零依赖）")
+    p_serve.add_argument("--port", type=int, default=8600)
+    p_serve.add_argument("--data-dir", default="webui_data",
+                         help="数据目录（SQLite + 工作区 + 运行产物）")
+    p_serve.set_defaults(func=cmd_serve)
 
     args = parser.parse_args(argv)
     return args.func(args)
