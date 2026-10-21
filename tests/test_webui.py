@@ -384,3 +384,59 @@ def test_targeted_fix_by_alert_ids(ui):
 
     # 原文件一个字节都不能变（修复只生成补丁不落盘）
     assert target_file.read_bytes() == before
+
+
+def test_apply_mode_writes_and_converges(ui):
+    """自动修复模式：验证通过的补丁写入源文件，验收扫描告警下降，
+    原始 examples 不受影响（工程以 zip 副本注册）。"""
+    ui_obj, base = ui
+    import io
+    buf = io.BytesIO()
+    src_root = EXAMPLES / "demo_rtos"
+    with zipfile.ZipFile(buf, "w") as zf:
+        for f in src_root.rglob("*"):
+            if f.is_file() and f.suffix in (".c", ".h", ".txt"):
+                zf.writestr(f.relative_to(src_root).as_posix(),
+                            f.read_text(encoding="utf-8"))
+    reg = _post(base, "/api/projects?name=applydemo",
+                raw=buf.getvalue(), ctype="application/zip")
+    ws = Path(reg["workspace"])
+
+    run = _post(base, "/api/runs", {"project_id": reg["project_id"],
+                                    "triage": "off"})
+    _wait_run(base, run["run_id"])
+    before_err = None
+
+    job = _post(base, f"/api/runs/{run['run_id']}/fix", {"mode": "apply"})
+    data = {}
+    deadline = time.time() + 180
+    while time.time() < deadline:
+        data = _get(base, f"/api/runs/{run['run_id']}/fixes")
+        if data["job"] and data["job"]["status"] in ("done", "failed"):
+            break
+        time.sleep(0.5)
+    j = data["job"]
+    assert j["status"] == "done", j.get("error")
+    assert j["mode"] == "apply"
+    assert j["applied"] >= 2, "STR31/CWE-197/CWE-1284 至少两条应写入"
+    assert j["rounds"] >= 1
+    fs = j["final_stats"]
+    assert fs["remaining_error"] < 6, "自动修复后 error 应下降"
+    assert fs["applied_total"] == j["applied"]
+
+    # 源文件已被真实修改
+    sensor = (ws / "src" / "sensor.c").read_text(encoding="utf-8")
+    assert "strncpy" in sensor, "STR31 补丁应已写入"
+    assert "uint16_t gain" in sensor, "CWE-197 类型拓宽应已写入"
+    comm = (ws / "src" / "comm.c").read_text(encoding="utf-8")
+    assert "%15s" in comm, "CWE-1284 限宽补丁应已写入"
+
+    # 备份存在且内容为修复前版本
+    backup = Path(j["backup_dir"])
+    assert backup.exists()
+    bak_sensor = (backup / "src" / "sensor.c").read_text(encoding="utf-8")
+    assert "strncpy" not in bak_sensor and "strcpy" in bak_sensor
+
+    # 原始 examples 目录不受影响
+    orig = (src_root / "src" / "sensor.c").read_text(encoding="utf-8")
+    assert "strncpy" not in orig

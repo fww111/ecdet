@@ -464,28 +464,42 @@ async function renderFixes(el) {
       <div class="desc">LLM 生成补丁 → 静态重扫 + gcc 语法验证闭环，未通过验证的补丁不会出现在采纳列表</div></div></div>
     ${runs.length ? "" : `<div class="card">${emptyGuide()}</div>`}
     <div class="card" ${runs.length ? "" : 'style="display:none"'}>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px">
-        <select id="fx-run" onchange="loadFixes()" style="max-width:240px">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+        <select id="fx-run" onchange="loadFixes()" style="max-width:200px">
           ${runs.map(r => `<option value="${r.id}" ${r.id===alertsRun?"selected":""}>
             运行 #${r.id}</option>`).join("")}
         </select>
-        <button class="btn" id="fx-go" onclick="startFix()">⚙ 一键修复（自动目标）</button>
+        <select id="fx-mode" style="max-width:260px">
+          <option value="suggest">仅生成建议（不改文件）</option>
+          <option value="apply">⚙ 自动修复（写入源文件并迭代）</option>
+        </select>
+        <button class="btn" id="fx-go" onclick="startFix()">⚙ 开始修复</button>
         <span class="muted" id="fx-job"></span>
       </div>
       <div class="muted" style="margin-bottom:10px">
-        自动目标 = 人工确认 + LLM 真缺陷 + 动态 PoC；要指定条目请到
-        <a class="link" href="#/alerts">告警中心</a> 勾选后「修复选中」。
-        <b>修复只生成并验证补丁，不改动工程原文件</b>——「已采纳」表示补丁通过了验证，可自行审阅后应用。</div>
+        自动目标 = 高危可修复规则（确认/LLM 真缺陷/动态 PoC）；要指定条目请到
+        <a class="link" href="#/alerts">告警中心</a> 勾选后「修复选中」。<br>
+        <b id="fx-mode-note">当前模式：仅生成建议——补丁不落盘，原文件不变。</b>
+        自动修复模式会<b style="color:var(--orange)">直接写入源文件</b>（先自动备份），
+        每轮写入后全工程重扫，剩余相关告警进入下一轮直至收敛，并给出验收统计。
+        提交后到 <a class="link" href="#/alerts">告警中心</a> 刷新查看最新结果。</div>
+      <div id="fx-final"></div>
       <div id="fx-list"></div>
     </div>`;
   if (runs.length) { alertsRun = alertsRun || runs[0].id; loadFixes(); }
+  $("fx-mode").addEventListener("change", () => {
+    $("fx-mode-note").innerHTML = $("fx-mode").value === "apply"
+      ? "当前模式：<b style='color:var(--orange)'>自动修复</b>——验证通过的补丁将直接写入源文件（已自动备份）。"
+      : "当前模式：仅生成建议——补丁不落盘，原文件不变。";
+  });
 }
 
 async function startFix() {
   const runId = $("fx-run").value;
   $("fx-go").disabled = true;
   try {
-    await api("POST", `/api/runs/${runId}/fix`);
+    await api("POST", `/api/runs/${runId}/fix`,
+              { mode: $("fx-mode").value });
     toast("修复任务已提交，后台执行中…");
     pollFixJob(runId);
   } catch (e) { toast("✗ " + e.message, true); $("fx-go").disabled = false; }
@@ -512,8 +526,10 @@ function renderFixPanel(runId, data) {
   const job = data.job;
   const el = $("fx-list");
   const jobEl = $("fx-job");
+  const finEl = $("fx-final");
   if (job && ["pending", "running"].includes(job.status)) {
-    jobEl.innerHTML = `<span class="spin"></span> 修复执行中…`;
+    jobEl.innerHTML = `<span class="spin"></span> 修复执行中…（${
+      job.mode === "apply" ? "自动修复模式，写入源文件" : "仅生成建议"}）`;
     $("fx-go").disabled = true;
     clearTimeout(renderFixPanel._t);
     renderFixPanel._t = setTimeout(() => loadFixes(), 2000);
@@ -523,15 +539,29 @@ function renderFixPanel(runId, data) {
       ? `上次：采纳 ${job.accepted} / 拒绝 ${job.rejected}`
       : (job && job.status === "failed" ? `上次失败：${job.error || ""}` : "");
   }
+  if (finEl) {
+    const fs = job && job.final_stats;
+    finEl.innerHTML = (job && job.status === "done" && fs) ? `
+      <div style="background:var(--green-soft);border:1px solid transparent;
+           border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px">
+        <b>验收扫描（修复后全工程）</b>：残留告警 ${fs.remaining_total}
+        （error ${fs.remaining_error} / warning ${fs.remaining_warning}）·
+        执行轮数 ${fs.rounds} · 累计写入 ${fs.applied_total} 处
+        ${job.backup_dir ? `· 原文件备份：${esc(job.backup_dir)}` : ""}
+      </div>` : "";
+  }
   if (!data.proposals.length) {
-    el.innerHTML = `<div class="empty">尚无修复建议。确认告警后点「⚙ 一键修复」；
-      LLM 判定的真缺陷（TRUE_POSITIVE）与动态 PoC 告警会自动纳入修复目标。</div>`;
+    el.innerHTML = `<div class="empty">尚无修复建议。到
+      <a class="link" href="#/alerts">告警中心</a> 勾选告警后「修复选中」，
+      或点「开始修复」走自动目标。</div>`;
     return;
   }
   el.innerHTML = data.proposals.map(p => `
     <div style="border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-        <span class="badge ${p.verified ? 'done' : 'failed'}">${p.verified ? "✓ 已采纳（验证通过）" : "✗ 已拒绝"}</span>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+        ${p.applied ? '<span class="badge done">✓ 已写入源文件</span>'
+          : p.verified ? '<span class="badge done">✓ 已采纳（验证通过）</span>'
+          : '<span class="badge failed">✗ 已拒绝</span>'}
         <b>${esc(p.rule_id)}</b>
         <span class="path">${esc(p.path)}:${p.line}</span>
         ${p.func ? `<span class="muted">函数 ${esc(p.func)}</span>` : ""}

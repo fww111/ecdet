@@ -244,7 +244,10 @@ class WebUI:
             alert_ids = data.get("alert_ids") or None
             if alert_ids and not isinstance(alert_ids, list):
                 return h._json(400, {"error": "alert_ids 须为数组"})
-            job_id = self.runner.submit_fix(run_id, alert_ids)
+            mode = data.get("mode", "suggest")
+            if mode not in ("suggest", "apply"):
+                return h._json(400, {"error": "mode 须为 suggest 或 apply"})
+            job_id = self.runner.submit_fix(run_id, alert_ids, mode=mode)
             return h._json(200, {"job_id": job_id})
 
         return h._json(404, {"error": "not found"})

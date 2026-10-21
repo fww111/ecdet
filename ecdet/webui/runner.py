@@ -17,7 +17,9 @@ from ecdet.l3_analysis.engine import (
     collect_sources,
     run_all_engines,
 )
+from ecdet.l3_analysis.builtin_rules.checks import FILE_RULES
 from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
+from ecdet.l4_llm.fixer import apply_patch
 from ecdet.l4_llm.triage import triage_alerts
 from ecdet.l5_report import aggregate, build_compliance_records, render_html_report
 from ecdet.webui.store import Store
@@ -129,11 +131,12 @@ class ScanRunner:
         self._queue.put({"kind": "scan", "id": run_id})
         return run_id
 
-    def submit_fix(self, run_id: int,
-                   alert_ids: list[int] | None = None) -> int:
+    def submit_fix(self, run_id: int, alert_ids: list[int] | None = None,
+                   mode: str = "suggest") -> int:
         job_id = self.store.add_fix_job(run_id, alert_ids)
+        self.store.set_fix_job(job_id, "pending", mode=mode)
         self._queue.put({"kind": "fix", "id": job_id, "run_id": run_id,
-                         "alert_ids": alert_ids})
+                         "alert_ids": alert_ids, "mode": mode})
         return job_id
 
     def _worker(self) -> None:
@@ -144,7 +147,8 @@ class ScanRunner:
                     self._execute(task["id"])
                 else:
                     self._execute_fixes(task["id"], task["run_id"],
-                                        alert_ids=task.get("alert_ids"))
+                                        alert_ids=task.get("alert_ids"),
+                                        mode=task.get("mode", "suggest"))
             except Exception as e:  # noqa: BLE001 —— 任务隔离，失败入状态
                 if task["kind"] == "scan":
                     self.store.set_run_status(task["id"], "failed",
@@ -245,39 +249,28 @@ class ScanRunner:
 
     def _execute_fixes(self, job_id: int, run_id: int,
                        alert_ids: list[int] | None = None,
-                       max_targets: int = 8) -> None:
+                       mode: str = "suggest",
+                       max_targets: int = 8, max_rounds: int = 3) -> None:
+        """修复闭环，两种模式：
+
+        suggest（默认）：仅生成并验证补丁，不落盘，原文件字节级不变；
+        apply（自动修复）：验证通过的补丁写入源文件，随后全工程重扫，
+          剩余相关告警进入下一轮继续修，直至收敛/无进展/轮次上限；
+          首次写入前自动备份全部 C/H 文件。
+        """
+        from ecdet.l2_ir.model import Alert, Location, Severity, Provenance
+        from ecdet.l3_analysis.builtin_rules.checks import (
+            build_file_facts, finalize_facts)
+        from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
+        from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
+        import difflib
+
         store = self.store
-        store.set_fix_job(job_id, "running")
+        store.set_fix_job(job_id, "running", mode=mode)
         run = store.get_run(run_id)
         project = store.get_project(run["project_id"])
         workspace = Path(project["workspace"])
 
-        if alert_ids:
-            # 定向修复：只修用户勾选的告警
-            wanted = set(alert_ids)
-            candidates = [a for a in store.list_alerts(run_id, limit=1000)
-                          if a["id"] in wanted]
-        else:
-            # 自动目标：人工确认 或 LLM 判真缺陷（动态 PoC 一并纳入）
-            candidates = []
-            for a in store.list_alerts(run_id, limit=1000):
-                tri = a.get("triage") or {}
-                if a["status"] == "confirmed" \
-                        or tri.get("verdict") == "TRUE_POSITIVE" \
-                        or a["engine"] == "dynamic":
-                    candidates.append(a)
-            candidates = candidates[:max_targets]
-        if not candidates:
-            store.set_fix_job(job_id, "failed",
-                              error="无可修复目标（勾选告警，或先确认/启用分诊）")
-            return
-
-        from ecdet.l2_ir.model import Alert, Location, Severity
-        from ecdet.l3_analysis.builtin_rules.checks import (
-            build_file_facts, finalize_facts)
-        from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
-
-        # 修复走补丁格式输出：mock 用修复专用客户端，real 用设置端点
         cfg = store.get_settings()
         if cfg.get("llm_mode") == "real":
             fix_client = llm_client_from_settings(store)
@@ -285,40 +278,187 @@ class ScanRunner:
             fix_client = MockFixClient()
         proposer = FixProposer(fix_client)
         verifier = FixVerifier(workspace, use_compiler=True)
+        all_rule_ids = {r.rule_id for r in BUILTIN_RULES}
 
-        need = sorted({a["path"].replace("\\", "/") for a in candidates})
-        sources: dict[str, str] = {}
-        facts = []
-        for rel in need:
-            p = workspace / rel
-            if p.exists():
-                text = p.read_text(encoding="utf-8", errors="replace")
-                sources[rel] = text
-                facts.append(build_file_facts(rel, text))
-        ctx = finalize_facts(facts)
+        def rescan_facts():
+            files = collect_sources(workspace, extra_skip=set())
+            facts = [build_file_facts(
+                rel.as_posix(),
+                (workspace / rel).read_text(encoding="utf-8",
+                                            errors="replace"))
+                for rel in files if rel.as_posix().endswith((".c", ".h"))]
+            return facts, finalize_facts(facts)
 
-        accepted = rejected = 0
-        for a in candidates:
-            alert = Alert(rule_id=a["rule_id"], engine=a["engine"],
-                          severity=Severity(a["severity"]),
-                          message=a["message"],
-                          location=Location(path=a["path"], line=a["line"]))
-            proposal = proposer.propose(alert, ctx)
-            src = sources.get(a["path"].replace("\\", "/"))
-            if not proposal.fail_reason and src is not None:
-                proposal = verifier.verify(proposal, ctx, src)
-            if proposal.verified:
-                accepted += 1
+        def scan_alerts(facts, ctx):
+            """按当前生效规则重扫，返回 fresh 告警（L2 模型）。"""
+            out = []
+            seen = {}
+            for rid, fn in FILE_RULES.items():
+                if rid in all_rule_ids:
+                    seen.setdefault(fn, set()).add(rid)
+            for f in facts:
+                for fn, rids in seen.items():
+                    out.extend(fn(f, ctx, rids))
+            return out
+
+        backup_dir = ""
+        if mode == "apply":
+            backup_dir = self._backup_sources(workspace, job_id)
+            store.set_fix_job(job_id, "running", backup_dir=backup_dir)
+
+        total_accepted = total_rejected = total_applied = 0
+        rounds_done = 0
+        # 用户勾选按 (规则, 文件) 记录——行号随修复漂移，不按行匹配。
+        # alert_ids 为告警库主键，先映射为 (rule_id, path)。
+        selected: set[tuple[str, str]] = set()
+        if alert_ids:
+            wanted = set(alert_ids)
+            for a in store.list_alerts(run_id, limit=1000):
+                if a["id"] in wanted:
+                    selected.add((a["rule_id"], a["path"].replace("\\", "/")))
+
+        for round_no in range(1, max_rounds + 1):
+            facts, ctx = rescan_facts()
+            verifier._prepare(ctx)          # 每轮刷新 include 目录
+            fresh = scan_alerts(facts, ctx)
+
+            candidates = []
+            if selected:
+                for a in fresh:
+                    key = (a.rule_id, a.location.path.replace("\\", "/"))
+                    if key in selected:
+                        candidates.append(a)
             else:
-                rejected += 1
-            store.add_fix(
-                run_id=run_id, alert_id=a["id"], rule_id=a["rule_id"],
-                path=a["path"], line=a["line"], func=proposal.func_name,
-                verified=proposal.verified,
-                fail_reason=proposal.fail_reason,
-                explanation=proposal.explanation, diff=proposal.diff,
-                job_id=job_id)
-        store.set_fix_job(job_id, "done", accepted=accepted, rejected=rejected)
+                for a in fresh:
+                    if a.severity == Severity.ERROR and (
+                            a.provenance == Provenance.DETECTED
+                            or a.engine == "dynamic") and (
+                            a.rule_id in AUTO_FIXABLE):
+                        candidates.append(a)
+            candidates = candidates[:max_targets]
+            if not candidates:
+                break
+
+            # 同文件按行降序处理，避免前面补丁使后面行号漂移
+            candidates.sort(key=lambda a: (a.location.path, -a.location.line))
+            applied_this_round = 0
+
+            for a in candidates:
+                proposal = proposer.propose(a, ctx)
+                if proposal.fail_reason:
+                    total_rejected += 1
+                    store.add_fix(run_id=run_id, alert_id=None,
+                                  rule_id=a.rule_id, path=a.location.path,
+                                  line=a.location.line,
+                                  func=proposal.func_name, verified=False,
+                                  fail_reason=proposal.fail_reason,
+                                  explanation=proposal.explanation or "",
+                                  diff="", job_id=job_id)
+                    continue
+                rel = a.location.path.replace("\\", "/")
+                src_path = workspace / rel
+                current = src_path.read_text(encoding="utf-8",
+                                             errors="replace")
+                modified = apply_patch(current, proposal.func_start,
+                                       proposal.func_end,
+                                       proposal.patched_code)
+
+                # 验证：内存应用后全文件规则重扫（该规则告警消失）
+                facts_new = [build_file_facts(rel, modified)]
+                ctx_new = finalize_facts(facts_new)
+                remaining = scan_alerts(facts_new, ctx_new)
+                alert_gone = not any(
+                    x.rule_id == a.rule_id
+                    and x.location.path.replace("\\", "/") == rel
+                    for x in remaining)
+                ok_compile = True
+                if verifier._gcc:
+                    ok_compile, _ = verifier._compile_check(rel, modified)
+                verified = alert_gone and ok_compile
+
+                diff = "\n".join(difflib.unified_diff(
+                    current.splitlines(), modified.splitlines(),
+                    fromfile=f"a/{rel}", tofile=f"b/{rel}", lineterm=""))
+                if not verified:
+                    total_rejected += 1
+                    store.add_fix(run_id=run_id, alert_id=None,
+                                  rule_id=a.rule_id, path=a.location.path,
+                                  line=a.location.line,
+                                  func=proposal.func_name, verified=False,
+                                  fail_reason="重扫后原告警仍在或语法检查未过",
+                                  explanation=proposal.explanation,
+                                  diff=diff, job_id=job_id)
+                    continue
+
+                total_accepted += 1
+                was_applied = False
+                if mode == "apply":
+                    src_path.write_text(modified, encoding="utf-8")
+                    total_applied += 1
+                    applied_this_round += 1
+                    was_applied = True
+                store.add_fix(run_id=run_id, alert_id=None,
+                              rule_id=a.rule_id, path=a.location.path,
+                              line=a.location.line,
+                              func=proposal.func_name, verified=True,
+                              fail_reason="", explanation=proposal.explanation,
+                              diff=diff, job_id=job_id, applied=was_applied)
+
+            rounds_done = round_no
+            store.set_fix_job(job_id, "running", rounds=rounds_done,
+                              applied=total_applied)
+            if mode != "apply" or applied_this_round == 0:
+                break           # 建议模式单轮；apply 无进展即收敛
+
+        # 验收扫描：修复后的全工程残留告警
+        final_files = collect_sources(workspace, extra_skip=set())
+        target = AnalysisTarget(root=workspace, files=final_files)
+        final_alerts, _ = run_all_engines(target)
+        final_stats = {
+            "remaining_total": len(final_alerts),
+            "remaining_error": sum(1 for a in final_alerts
+                                   if a.severity == Severity.ERROR),
+            "remaining_warning": sum(1 for a in final_alerts
+                                     if a.severity == Severity.WARNING),
+            "rounds": rounds_done,
+            "applied_total": total_applied,
+        }
+        store.set_fix_job(job_id, "done", accepted=total_accepted,
+                          rejected=total_rejected, rounds=rounds_done,
+                          applied=total_applied, final_stats=final_stats,
+                          backup_dir=backup_dir)
+
+    def _backup_sources(self, workspace: Path, job_id: int) -> str:
+        """首写前备份全部 C/H 文件（保留相对结构），返回备份目录。"""
+        backup = self.data_dir / "backups" / f"job_{job_id}"
+        if backup.exists():
+            return str(backup)
+        for p in workspace.rglob("*"):
+            if p.suffix.lower() in (".c", ".h") and not any(
+                    s in p.parts for s in
+                    {".git", "build", "ecdet_build", "ecdet_reports"}):
+                rel = p.relative_to(workspace)
+                dst = backup / rel
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(p, dst)
+        return str(backup)
+
+
+AUTO_FIXABLE = {
+    "CERT C STR31-C", "CERT C ARR30-C", "ECDET-CWE-197",
+    "ECDET-CWE-1284", "ECDET-CWE-242", "CERT C FIO30-C",
+}
+
+
+def _run_file_rules(facts, ctx, active):
+    out = []
+    seen = {}
+    for rid, fn in FILE_RULES.items():
+        if rid in active:
+            seen.setdefault(fn, set()).add(rid)
+    for fn, rids in seen.items():
+        out.extend(fn(facts, ctx, rids))
+    return out
 
 
 def llm_client_from_settings(store: Store):
