@@ -47,6 +47,23 @@ uv run ecdet triage out/results.sarif --project examples/svd_demo -o out
 
 幻觉抑制三道闸：输出不可解析 JSON → NEEDS_REVIEW；引用行号越界/指向注释/缺告警行 → 降级；LLM 调用失败 → NEEDS_REVIEW。
 
+## 增量分析（方案 3.3.6）
+
+大规模工程场景下，深度分析可以嵌入每日集成而非一次性离线行为：
+
+```bash
+# 影响集：变更文件 → include 反向闭包 → 调用图反向闭包
+uv run ecdet impact <工程> --changed src/sensor.c          # 查看影响集
+uv run ecdet scan <工程> --changed src/sensor.c            # 增量扫描（仅影响集内文件）
+
+# 告警基线：差分出 新增/已解决/持续，仅新增告警需要进入 LLM 研判
+uv run ecdet scan <工程> --save-baseline -o out            # 首扫存基线
+uv run ecdet scan <工程> --baseline out/baseline.json -o out
+uv run ecdet triage out/results.sarif --only-new out/baseline.json --mock
+```
+
+局限（MVP）：告警指纹含行号，代码移动会使告警计为"新增+已解决"，上下文哈希缓解留待后续。
+
 ## L4 修复建议与验证闭环（阶段三后半，P5）
 
 `ecdet fix` 对分诊后的 TRUE_POSITIVE 告警生成函数级补丁，并以 **ToolLoopVerify** 三道验证把关（方案 3.3.5）：
@@ -76,6 +93,27 @@ uv run python scripts/run_eval.py --corpus tests/fixtures/eval_corpus \
 ```
 
 在示例语料上的消融结果（报告填充方案表 3-4 模板）：A1 去 LLM 精确率 44%→100%（LLM 过滤 10 条误报），A2 去硬件语义召回 100%→25%（P2 建模净贡献）。
+
+### Juliet 基准评测（方案 3.4.1 → 3.5 打通）
+
+```bash
+# 离线自检（检出率管线 + 语料导出→评测框架 全链路）
+uv run python scripts/fetch_juliet.py --selftest
+
+# 联网下载后：导出语料 → 消融评测（juliet 配置屏蔽不适配切片语料的工程级规则）
+uv run python scripts/fetch_juliet.py --download --export-corpus --limit 300
+uv run python scripts/run_eval.py --corpus data/juliet/corpus \
+    --gt data/juliet/gt.jsonl --profile juliet --out eval_juliet --with-baselines
+```
+
+## 容器化部署（阶段五试点准备）
+
+```bash
+docker build -t ecdet:latest .
+docker run --rm -v /path/to/firmware:/work ecdet:latest scan /work
+```
+
+镜像内置 cppcheck 基线引擎；LLM 分诊通过 `ECODET_LLM_BASE_URL` 环境变量指向宿主 vLLM 服务。
 
 ## 数据集 GHSA 在线抓取（阶段三后半，P6）
 
@@ -155,6 +193,7 @@ SVD 文件可通过 `--svd <path>` 指定，缺省自动发现工程内 `*.svd`�
 - [x] 2026 Q4 阶段一：构建复现工具链 + MISRA 子集规则引擎 MVP + Juliet 接入
 - [x] 2027 Q1 阶段二（提前实施）：SVD/ISR/RTOS 硬件语义建模（P2）、抽象解释常量传播（P4 机制）、SARIF 聚合、GJB 主题映射、ESBMC 适配器
 - [x] 2027 Q2 阶段三（提前实施）：L4 LLM 分诊层（P5）+ 自建数据集采集管线（P6）+ 修复建议验证闭环 + GHSA 在线抓取
-- [x] 2027 Q3 阶段四（提前实施）：消融评测框架（A0-A3 + 外部基线，表 3-4 报告产出）
-- [ ] 阶段四后半：Juliet/Toyota ITC 全量基准评测成稿、CBMC/二进制扩展预研
+- [x] 2027 Q3 阶段四（提前实施）：消融评测框架（A0-A3 + 外部基线，表 3-4 报告产出）、Juliet 基准评测管线打通、增量分析（3.3.6）
+- [x] 阶段五准备：Docker 容器化封装（内置 cppcheck 基线）
+- [ ] 阶段四后半：Juliet/Toyota ITC 全量基准评测成稿（联网下载后即可运行）、CBMC/二进制扩展预研
 - [ ] 2027 Q4 阶段五：试点部署与迭代

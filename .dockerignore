@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+*.egg-info/
+
+# 产物与数据
+ecdet_reports/
+ecdet_build/
+eval_out/
+data/
+*.sarif
+baseline.json
+
+# 文档与版本库（体积大且与镜像无关）
+.git/
+.zcode/
+*.docx
+*.pdf
+tests/

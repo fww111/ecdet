@@ -230,3 +230,23 @@ def test_isr_not_flagged_as_single_tu():
     alerts = _run_file("void EXTI0_IRQHandler(void) { }",
                        rules={"MISRA C:2012 8.7"})
     assert alerts == []
+
+
+def test_rule_implicit_decl_header_prototype_resolved():
+    """回归：include 目标曾因 PPLine.text 遮蔽而解析失败（原型被视为不可见）。
+
+    本地头文件中声明的函数不应再报 17.3。
+    """
+    header = "int sensor_read(void);\n"
+    src = '#include "sensor.h"\nint main(void) { return sensor_read(); }\n'
+    h_facts = build_file_facts("sensor.h", header)
+    c_facts = build_file_facts("main.c", src)
+    ctx = finalize_facts([h_facts, c_facts])
+    alerts = ctx_rule17(ctx)
+    assert alerts == [], alerts
+
+
+def ctx_rule17(ctx):
+    from ecdet.l3_analysis.builtin_rules.checks import PROJECT_RULES
+    fn = PROJECT_RULES["MISRA C:2012 17.3"]
+    return fn(ctx, {"MISRA C:2012 17.3"})

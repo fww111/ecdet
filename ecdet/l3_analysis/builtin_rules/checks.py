@@ -778,12 +778,17 @@ def check_implicit_decl(ctx: ProjectContext, active: set[str]) -> list[Alert]:
 
 
 def _includes_transitive(f: FileFacts, ctx: ProjectContext) -> set[str]:
-    """本文件 include 的工程头文件中声明的函数名（一层展开，简化不递归）。"""
+    """本文件 include 的工程头文件中声明的函数名（一层展开，简化不递归）。
+
+    PPLine.text 的引号内容已被遮蔽，包含目标须从原始行提取。
+    """
     declared: set[str] = set()
     for p in f.lex.pp_lines:
         if p.directive != "include":
             continue
-        m = re.search(r'[<"]([^">]+)[">]', p.text)
+        raw_line = (f.lex.source_lines[p.line - 1]
+                    if p.line - 1 < len(f.lex.source_lines) else "")
+        m = re.search(r'#\s*include\s*"([^"]+)"', raw_line)
         if not m:
             continue
         inc = m.group(1).replace("\\", "/")
