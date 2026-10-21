@@ -73,6 +73,7 @@ def build_sarif(alerts: list[Alert], rules: list[RuleMeta], tool_version: str = 
                 "cwe": a.cwe,
                 "provenance": a.provenance.value,
                 "gb_level": a.severity.to_cn_level(),
+                **({"triage": a.triage} if a.triage else {}),
             },
         }
         if a.evidence:
@@ -164,6 +165,7 @@ def load_sarif(path: str | Path) -> tuple[list[Alert], list[RuleMeta]]:
                     provenance=Provenance(props.get("provenance", "suspected")),
                     evidence=evidence,
                     fingerprint=res.get("partialFingerprints", {}).get("ecdet/v1", ""),
+                    triage=props.get("triage"),
                 )
             )
     return alerts, list(rules_meta.values())

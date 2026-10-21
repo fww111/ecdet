@@ -1,40 +1,18 @@
-"""L4 LLM 增强层 —— 阶段三（2027 Q2）实施，本阶段预留接口。
+"""L4 LLM 增强层（方案 3.3.5，对应 P5）。
 
-规划（方案 3.3.5）：
-  - 上下文裁剪：告警函数 + 深度 2 调用闭包 + 类型/宏，按 token 预算截取；
-  - A-RAG：置信度触发检索（MISRA/CERT 条款、CWE 描述、芯片手册、历史案例）；
-  - 幻觉抑制：结构化 JSON 输出 + 证据行号程序化核对，未核对通过降级 SUSPECTED；
-  - 验证闭环：修复建议经编译 + 静态 + CBMC 验证（方案 3.3.5）；
-  - 本地部署：vLLM 承载开源权重，数据不出域。
+告警分诊管线：上下文裁剪 → LLM 首判（结构化 JSON）→ 低置信触发 RAG 重判
+→ 证据行号程序化核对（未通过降级 NEEDS_REVIEW）→ 结论回写告警。
+
+幻觉抑制三件套：
+  1. 强制结构化 JSON 输出，解析失败一律 NEEDS_REVIEW；
+  2. evidence_lines 必须落在告警函数行区间内且包含告警行本身，否则降级；
+  3. 修复建议（阶段三后半）必须经编译+静态验证闭环后采纳。
+
+部署：OpenAI 兼容接口（vLLM/Ollama/LM Studio），数据不出域；
+分级调用由调用方配置（分诊用轻量模型、疑难用强模型）。
 """
 
-from __future__ import annotations
+from ecdet.l4_llm.triage import TriageRunner, TriageVerdict
+from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
 
-from dataclasses import dataclass
-
-from ecdet.l2_ir.model import Alert
-
-
-@dataclass
-class TriageResult:
-    """LLM 分诊结论（阶段三返回结构预留）。"""
-
-    verdict: str                 # TRUE_POSITIVE / FALSE_POSITIVE / SUSPECTED
-    confidence: float
-    reason: str
-    verified_lines: list[int]
-
-
-class LlmTriage:
-    """告警分诊接口。阶段一/二返回未研判状态，保持 L5 兼容。"""
-
-    def available(self) -> bool:
-        return False
-
-    def triage(self, alert: Alert, context_budget: int = 4096) -> TriageResult:
-        return TriageResult(
-            verdict="SUSPECTED",
-            confidence=0.0,
-            reason="L4 LLM 层未启用（阶段三实施）",
-            verified_lines=[],
-        )
+__all__ = ["TriageRunner", "TriageVerdict", "MockLlmClient", "OpenAICompatClient"]

@@ -139,6 +139,8 @@ def _build_stats(clusters: list[AggregatedAlert], meta_index: dict[str, RuleMeta
     by_rule = Counter(c.primary.rule_id for c in clusters)
     by_prov = Counter(c.provenance.value for c in clusters)
     by_cwe = Counter(cwe for c in clusters for cwe in c.cwes)
+    by_triage = Counter((c.primary.triage or {}).get("verdict", "untriaged")
+                        for c in clusters)
     return {
         "total": len(clusters),
         "error": by_sev.get("error", 0),
@@ -148,6 +150,7 @@ def _build_stats(clusters: list[AggregatedAlert], meta_index: dict[str, RuleMeta
         "by_rule": dict(by_rule),
         "by_provenance": dict(by_prov),
         "by_cwe": dict(by_cwe),
+        "by_triage": dict(by_triage),
         "provenance_ratio": (by_prov.get("proven", 0) / len(clusters)) if clusters else 0.0,
     }
 

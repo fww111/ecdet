@@ -47,6 +47,9 @@ tr:hover td { background:#f8fafc; }
 .badge.prov-proven { background:#dafbe1; color:var(--green); }
 .badge.prov-detected { background:#ddf4ff; color:#0969da; }
 .badge.prov-suspected { background:#fff1e5; color:#bc4c00; }
+.badge.tri-true_positive { background:#dafbe1; color:var(--green); }
+.badge.tri-false_positive { background:#ffebe9; color:var(--red); }
+.badge.tri-needs_review { background:#fff8c5; color:#9a6700; }
 .badge.rule { background:#f0f3f6; color:var(--ink); }
 .path { font-family:Consolas,monospace; font-size:12px; }
 .evidence { margin-top:4px; color:var(--muted); font-size:12px; }
@@ -97,7 +100,7 @@ def render_html_report(result: AggregationResult,
     parts.append("<section><h2>结论可证明性分布</h2><table>"
                  "<tr><th>级别</th><th>含义</th><th>数量</th><th>占比</th></tr>")
     prov_desc = {
-        "proven": ("Proven", "健全引擎数学证明（阶段二引入抽象解释/模型检查后生效）"),
+        "proven": ("Proven", "健全引擎数学证明（抽象解释/模型检查）"),
         "detected": ("Detected", "引擎检出且证据核对确认"),
         "suspected": ("Suspected", "疑似告警，需 LLM/人工评审"),
     }
@@ -108,6 +111,23 @@ def render_html_report(result: AggregationResult,
         parts.append(f"<tr><td><span class='badge prov-{k}'>{name}</span></td>"
                      f"<td>{desc}</td><td>{n}</td><td>{pct}</td></tr>")
     parts.append("</table></section>")
+
+    # LLM 分诊结果（L4）
+    tri = s.get("by_triage", {})
+    if tri and set(tri) != {"untriaged"}:
+        parts.append("<section><h2>LLM 分诊结果（L4，证据行号核对后）</h2><table>"
+                     "<tr><th>判定</th><th>含义</th><th>数量</th></tr>")
+        tri_desc = {
+            "TRUE_POSITIVE": ("真缺陷", "确认为真实告警"),
+            "FALSE_POSITIVE": ("误报", "结合上下文判定为误报"),
+            "NEEDS_REVIEW": ("待复核", "证据不足/核对未通过/输出不可解析"),
+        }
+        for k in ("TRUE_POSITIVE", "FALSE_POSITIVE", "NEEDS_REVIEW"):
+            if k in tri:
+                name, desc = tri_desc[k]
+                parts.append(f"<tr><td><span class='badge tri-{k.lower()}'>{name}</span></td>"
+                             f"<td>{desc}</td><td>{tri[k]}</td></tr>")
+        parts.append("</table></section>")
 
     cwe_rows = "".join(
         f"<tr><td>{_esc(c)}</td><td>{n}</td></tr>"
@@ -144,13 +164,22 @@ def render_html_report(result: AggregationResult,
             + "</li>"
             for e in a.evidence)
         evidence_html = f"<div class='evidence'><ul>{ev_lines}</ul></div>" if ev_lines else ""
+        tri_html = ""
+        if a.triage:
+            tv = a.triage.get("verdict", "")
+            tmap = {"TRUE_POSITIVE": "真缺陷", "FALSE_POSITIVE": "误报",
+                    "NEEDS_REVIEW": "待复核"}
+            tri_html = (f"<br><span class='badge tri-{tv.lower()}'>"
+                        f"LLM:{tmap.get(tv, tv)}({a.triage.get('confidence', 0):.2f}"
+                        f"{'✓' if a.triage.get('verified') else '!'})</span>"
+                        f"<div class='evidence'>{_esc(a.triage.get('reason', ''))}</div>")
         parts.append(
             f"<tr><td>{i}</td><td>{loc}</td>"
             f"<td><span class='badge {a.severity.value}'>{a.severity.value}</span><br>"
             f"<span class='badge prov-{c.provenance.value}'>{c.provenance.value}</span></td>"
             f"<td><span class='badge rule'>{_esc(c.primary.rule_id)}</span></td>"
             f"<td>{cwes}</td>"
-            f"<td>{_esc(a.message)}{evidence_html}</td>"
+            f"<td>{_esc(a.message)}{evidence_html}{tri_html}</td>"
             f"<td>{_esc('、'.join(c.engines))}</td></tr>"
         )
     parts.append("</table></section>")
