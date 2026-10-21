@@ -156,7 +156,8 @@ class FixProposer:
 
 
 class MockFixClient:
-    """确定性 Mock：STR31 给正确补丁；ARR30 给无效补丁；其余原样返回。"""
+    """确定性 Mock：对可确定性修复的规则给出正确补丁，
+    其余原样返回（真实修复能力来自设置页配置的真实端点）。"""
 
     def complete(self, system: str, user: str) -> str:
         rule = ""
@@ -174,6 +175,27 @@ class MockFixClient:
                 "patched_function": patched,
                 "explanation": "将无界 strcpy 改为限长 strncpy 并补终止符"},
                 ensure_ascii=False)
+        if rule == "ECDET-CWE-197":
+            # 类型拓宽：溢出的定宽初始化升级到能表示字面量的类型
+            patched = re.sub(
+                r"u?int(8|16)_t(\s+\w+\s*=\s*)(\d+)",
+                lambda m: self._widen(m.group(1), m.group(2), m.group(3)),
+                func)
+            if patched != func:
+                return json.dumps({
+                    "patched_function": patched,
+                    "explanation": "初始化值超出定宽类型，拓宽类型（uint8→uint16→uint32）"},
+                    ensure_ascii=False)
+        if rule == "ECDET-CWE-1284":
+            # scanf %s → 以函数内首个缓冲区长度-1 限宽
+            buf = re.search(r"char\s+(\w+)\s*\[\s*(\d+)\s*\]", func)
+            if buf and "%s" in func:
+                width = max(int(buf.group(2)) - 1, 1)
+                patched = func.replace("%s", f"%{width}s")
+                return json.dumps({
+                    "patched_function": patched,
+                    "explanation": f"为 %s 限定最大宽度 %{width}s（按缓冲区大小）"},
+                    ensure_ascii=False)
         if rule == "CERT C ARR30-C":
             return json.dumps({
                 "patched_function": func,      # 无效补丁：原样返回
@@ -183,6 +205,16 @@ class MockFixClient:
             "patched_function": func,
             "explanation": "维持原实现（Mock：无变化路径）"},
             ensure_ascii=False)
+
+    @staticmethod
+    def _widen(cur_bits: str, tail: str, value: str) -> str:
+        v = int(value)
+        for bits, tname in ((16, "uint16_t"), (32, "uint32_t"), (64, "uint64_t")):
+            if v <= (1 << bits) - 1:
+                if bits <= int(cur_bits):
+                    return f"uint{cur_bits}{tail}{value}"
+                return f"{tname}{tail}{value}"
+        return f"uint64{tail}{value}"
 
 
 class FixVerifier:

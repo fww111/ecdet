@@ -88,6 +88,12 @@ class Store:
                 "ALTER TABLE alerts ADD COLUMN evidence TEXT",
                 "ALTER TABLE fix_jobs ADD COLUMN param TEXT",
                 "ALTER TABLE fixes ADD COLUMN job_id INTEGER",
+                "ALTER TABLE fix_jobs ADD COLUMN mode TEXT",
+                "ALTER TABLE fix_jobs ADD COLUMN rounds INTEGER",
+                "ALTER TABLE fix_jobs ADD COLUMN applied INTEGER",
+                "ALTER TABLE fix_jobs ADD COLUMN final_stats TEXT",
+                "ALTER TABLE fix_jobs ADD COLUMN backup_dir TEXT",
+                "ALTER TABLE fixes ADD COLUMN applied INTEGER",
             ):
                 try:
                     self._conn.execute(alter)
@@ -297,13 +303,14 @@ class Store:
     def add_fix(self, run_id: int, alert_id: int | None, rule_id: str,
                 path: str, line: int, func: str, verified: bool,
                 fail_reason: str, explanation: str, diff: str,
-                job_id: int | None = None) -> int:
+                job_id: int | None = None, applied: bool = False) -> int:
         cur = self._exec(
             "INSERT INTO fixes(run_id, alert_id, rule_id, path, line, func, "
-            "verified, fail_reason, explanation, diff, created_at, job_id) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            "verified, fail_reason, explanation, diff, created_at, job_id, "
+            "applied) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (run_id, alert_id, rule_id, path, line, func,
-             int(verified), fail_reason, explanation, diff, _now(), job_id))
+             int(verified), fail_reason, explanation, diff, _now(), job_id,
+             int(applied)))
         return int(cur.lastrowid)
 
     def list_fixes(self, run_id: int,
@@ -341,14 +348,22 @@ class Store:
         return int(cur.lastrowid)
 
     def set_fix_job(self, job_id: int, status: str, error: str | None = None,
-                    accepted: int | None = None,
-                    rejected: int | None = None) -> None:
+                    accepted: int | None = None, rejected: int | None = None,
+                    mode: str | None = None, rounds: int | None = None,
+                    applied: int | None = None, final_stats: dict | None = None,
+                    backup_dir: str | None = None) -> None:
         finished = status in ("done", "failed")
         self._exec(
             "UPDATE fix_jobs SET status=?, error=?, accepted=?, rejected=?, "
-            "finished_at=? WHERE id=?",
-            (status, error, accepted, rejected,
-             _now() if finished else None, job_id))
+            "mode=COALESCE(?,mode), rounds=COALESCE(?,rounds), "
+            "applied=COALESCE(?,applied), "
+            "final_stats=COALESCE(?,final_stats), "
+            "backup_dir=COALESCE(?,backup_dir), "
+            "finished_at=CASE WHEN ? THEN ? ELSE finished_at END WHERE id=?",
+            (status, error, accepted, rejected, mode, rounds, applied,
+             json.dumps(final_stats, ensure_ascii=False) if final_stats
+             else None, backup_dir, finished, _now() if finished else None,
+             job_id))
 
     def latest_fix_job(self, run_id: int) -> dict | None:
         row = self._exec(
@@ -358,4 +373,6 @@ class Store:
             return None
         d = dict(row)
         d["param"] = json.loads(d["param"]) if d.get("param") else None
+        d["final_stats"] = (json.loads(d["final_stats"])
+                            if d.get("final_stats") else None)
         return d
