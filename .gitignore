@@ -16,3 +16,6 @@ compile_commands.json
 data/juliet/
 uv.lock
 .zcode/
+
+# Web 控制台数据
+webui_data/
