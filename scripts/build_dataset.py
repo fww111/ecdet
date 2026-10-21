@@ -27,6 +27,7 @@ import random
 import re
 import subprocess
 import sys
+import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -35,6 +36,67 @@ from ecdet.l3_analysis.builtin_rules.cstruct import parse_functions
 
 FIX_PATTERNS = ("CVE-", "GHSA-", "security", "vulnerab", "overflow", "out-of-bound")
 SPLIT_RATIOS = (0.6, 0.2, 0.2)
+
+# GitHub Security Advisory 抓取（方案 3.4.3 之 1 的在线通道）
+GHSA_API = "https://api.github.com/repos/{slug}/security-advisories"
+GHSA_SEV_MAP = {"critical": "超危", "high": "高危", "medium": "中危", "low": "低危"}
+
+
+def fetch_ghsa_advisories(repo_slug: str, token: str | None = None,
+                          per_page: int = 100,
+                          _opener=None) -> list[dict]:
+    """抓取仓库的 GHSA 安全通告（最佳努力，需外网；_opener 供测试注入）。
+
+    返回精简条目：ghsa / cve / severity（GB/T 口径）/ summary / published /
+    cwes。REST 通告对象缺 CWE 时回填 CWE-OTHER，人工标注环节补齐。
+    """
+    opener = _opener or urllib.request.urlopen
+    url = f"{GHSA_API.format(slug=repo_slug)}?per_page={per_page}"
+    headers = {"Accept": "application/vnd.github+json",
+               "User-Agent": "ecdet-dataset/0.1"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, headers=headers)
+    with opener(req, timeout=60) as resp:
+        items = json.loads(resp.read().decode("utf-8"))
+    out = []
+    for it in items:
+        cwes = [c.get("cwe_id") for c in (it.get("cwes") or [])
+                if c.get("cwe_id")] or ["CWE-OTHER"]
+        out.append({
+            "ghsa": it.get("ghsa_id", ""),
+            "cve": it.get("cve_id") or "",
+            "severity": GHSA_SEV_MAP.get((it.get("severity") or "").lower(), "中危"),
+            "summary": (it.get("summary") or "")[:200],
+            "published": (it.get("published_at") or "")[:10],
+            "cwes": cwes,
+        })
+    return out
+
+
+def ghsa_to_advisories(repo_path: Path, items: list[dict]) -> list[Advisory]:
+    """GHSA 条目 → 数据集 Advisory：以 CVE 号在 git log 中定位修复提交。"""
+    advisories: list[Advisory] = []
+    for it in items:
+        if not it.get("cve"):
+            continue
+        try:
+            sha = _git(Path(repo_path), "log", f"--grep={it['cve']}", "-i",
+                       "--format=%H", "-n", "1").strip()
+        except RuntimeError:
+            sha = ""
+        if not sha:
+            print(f"  [跳过] {it['cve']} 未在 git log 中定位到修复提交")
+            continue
+        advisories.append(Advisory(
+            cve=it["cve"],
+            cwe=it["cwes"][0],
+            fix_commit=sha,
+            date=it.get("published") or "1970-01-01",
+            severity_gb=it.get("severity", "中危"),
+            summary=it.get("summary", ""),
+        ))
+    return advisories
 
 
 @dataclass
@@ -306,13 +368,42 @@ def write_dataset(samples: list[Sample], stats: dict, manifest: Manifest,
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="自建嵌入式漏洞数据集采集管线")
-    ap.add_argument("--manifest", required=True, help="清单 JSON（仓库/许可/通告）")
+    ap.add_argument("--manifest", help="清单 JSON（仓库/许可/通告）")
+    ap.add_argument("--fetch-ghsa", metavar="OWNER/REPO",
+                    help="在线抓取仓库 GHSA 通告并与 git log 对齐后写清单")
+    ap.add_argument("--repo", help="本地仓库路径（与 --fetch-ghsa 搭配）")
+    ap.add_argument("--token", help="GitHub Token（缺省 env GITHUB_TOKEN）")
+    ap.add_argument("--license", default="UNKNOWN", help="仓库许可证登记")
     ap.add_argument("--out", default="data/dataset", help="输出目录")
     ap.add_argument("--pair-ratio", type=int, default=10, help="正常:漏洞配对比（默认 10）")
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args(argv)
 
-    manifest = load_manifest(Path(args.manifest))
+    import os
+    if args.fetch_ghsa:
+        if not args.repo:
+            ap.error("--fetch-ghsa 需要 --repo 指向本地克隆")
+            return 2
+        print(f"抓取 {args.fetch_ghsa} 的 GHSA 通告 …")
+        items = fetch_ghsa_advisories(
+            args.fetch_ghsa, token=args.token or os.environ.get("GITHUB_TOKEN"))
+        advisories = ghsa_to_advisories(Path(args.repo), items)
+        manifest = Manifest(repo=args.repo, license=args.license,
+                            advisories=advisories)
+        manifest_path = Path(args.out) / "manifest.json"
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(
+            {"repo": manifest.repo, "license": manifest.license,
+             "advisories": [asdict(a) for a in advisories]},
+            ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"清单已写入 {manifest_path}（通告 {len(advisories)} 条）")
+    elif args.manifest:
+        manifest_path = Path(args.manifest)
+    else:
+        ap.error("需要 --manifest 或 --fetch-ghsa")
+        return 2
+
+    manifest = load_manifest(manifest_path)
     samples, stats = build_samples(manifest, args.pair_ratio, args.seed)
     write_dataset(samples, stats, manifest, Path(args.out))
     print(json.dumps(stats, ensure_ascii=False, indent=2))

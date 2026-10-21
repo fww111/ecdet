@@ -143,8 +143,9 @@ def check_isr_race(ctx: ProjectContext, hw: HwContext,
                            f"任务访问：{sorted(fn for _, fn in task_refs[g])}")],
             ))
         if want_race:
-            # 逐函数找出落在临界区区间之外的引用行
+            # 逐函数找出落在临界区区间之外的引用行；告警定位于首个无保护访问行
             unprotected: list[str] = []
+            first_site: tuple[str, int] | None = None
             for f2 in ctx.facts:
                 for func in f2.functions:
                     if (f2.path, func.name) not in task_refs[g]:
@@ -153,15 +154,17 @@ def check_isr_race(ctx: ProjectContext, hw: HwContext,
                     if bad_lines:
                         unprotected.append(f"{f2.path}:{func.name}"
                                            f"(L{',L'.join(map(str, sorted(bad_lines)))})")
-            if unprotected:
+                        if first_site is None:
+                            first_site = (f2.path, min(bad_lines))
+            if unprotected and first_site is not None:
                 out.append(_alert(
                     "ECDET-ISR-RACE", Severity.WARNING,
                     f"全局变量 {g} 被 ISR（{sorted(isr_refs[g])[0]}）与任务上下文共享，"
                     f"且存在临界区区间之外的访问，存在竞争",
-                    gpath, gline, "CWE-362",
+                    first_site[0], first_site[1], "CWE-362",
                     [_evidence(gpath, gline, "code",
-                               f"无保护访问：{', '.join(unprotected)}；"
-                               "需以临界区或互斥量覆盖全部访问")],
+                               f"声明于 {gpath}:{gline}；无保护访问："
+                               f"{', '.join(unprotected)}；需以临界区或互斥量覆盖全部访问")],
                 ))
     return out
 

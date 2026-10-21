@@ -1,6 +1,6 @@
 [project]
 name = "ecdet"
-version = "0.3.0"
+version = "0.4.0"
 description = "嵌入式软件代码缺陷与安全漏洞检测系统（Embedded Code Defect & Security Detection Toolkit）"
 readme = "README.md"
 requires-python = ">=3.11"

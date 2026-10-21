@@ -15,8 +15,10 @@ from build_dataset import (  # noqa: E402
     Advisory,
     build_samples,
     extract_functions,
+    fetch_ghsa_advisories,
     find_fix_commits,
     fingerprint_text,
+    ghsa_to_advisories,
     load_manifest,
     write_dataset,
 )
@@ -168,6 +170,64 @@ def test_find_fix_commits(demo_repo):
     subjects = [f["subject"] for f in fixes]
     assert any("CVE-2024-1234" in s for s in subjects)
     assert any("GHSA" in s for s in subjects)
+
+
+# ---------------- GHSA 在线抓取（注入式 opener，无网络） ----------------
+
+class _FakeOpener:
+    """模拟 urllib.urlopen：返回预置 GHSA JSON。"""
+
+    def __init__(self, payload):
+        self.payload = payload
+        self.request = None
+
+    def __call__(self, req, timeout=0):
+        self.request = req
+        import io
+        return io.BytesIO(json.dumps(self.payload).encode("utf-8"))
+
+
+GHSA_PAYLOAD = [
+    {
+        "ghsa_id": "GHSA-xxxx-yyyy",
+        "cve_id": "CVE-2024-1234",
+        "severity": "HIGH",
+        "summary": "buffer overflow in sensor_set_name",
+        "published_at": "2024-03-01T00:00:00Z",
+        "cwes": [{"cwe_id": "CWE-120", "name": "Classic Buffer Overflow"}],
+    },
+    {
+        "ghsa_id": "GHSA-zzzz-0000",
+        "cve_id": None,                      # 无 CVE 映射 → 应被跳过
+        "severity": "LOW",
+        "summary": "weak random",
+        "published_at": "2024-05-01T00:00:00Z",
+        "cwes": [],
+    },
+]
+
+
+def test_fetch_ghsa_parses_and_maps():
+    opener = _FakeOpener(GHSA_PAYLOAD)
+    items = fetch_ghsa_advisories("acme/rtos", token="t0k", _opener=opener)
+    assert "api.github.com/repos/acme/rtos" in opener.request.full_url
+    assert opener.request.headers["Authorization"] == "Bearer t0k"
+    assert len(items) == 2
+    assert items[0]["cve"] == "CVE-2024-1234"
+    assert items[0]["severity"] == "高危"          # GB/T 口径映射
+    assert items[0]["cwes"] == ["CWE-120"]
+    assert items[1]["cwes"] == ["CWE-OTHER"]       # 缺 CWE 回填
+
+
+def test_ghsa_to_advisories_aligns_git(demo_repo):
+    repo, fix1, _ = demo_repo
+    items = [it for it in fetch_ghsa_advisories(
+        "acme/rtos", _opener=_FakeOpener(GHSA_PAYLOAD))]
+    advisories = ghsa_to_advisories(repo, items)
+    assert len(advisories) == 1                    # 无 CVE 条目被跳过
+    adv = advisories[0]
+    assert adv.fix_commit == fix1                  # CVE 定位到修复提交
+    assert adv.cwe == "CWE-120" and adv.severity_gb == "高危"
 
 
 # ---------------- 集成：样本构建 ----------------

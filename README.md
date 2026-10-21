@@ -45,7 +45,47 @@ export ECODET_LLM_MODEL=Qwen2.5-Coder-7B-Instruct
 uv run ecdet triage out/results.sarif --project examples/svd_demo -o out
 ```
 
-幻觉抑制三道闸：输出不可解析 JSON → NEEDS_REVIEW；引用行号越界/指向注释/缺告警行 → 降级；LLM 调用失败 → NEEDS_REVIEW。修复建议验证闭环（编译+静态+CBMC）在阶段三后半接入。
+幻觉抑制三道闸：输出不可解析 JSON → NEEDS_REVIEW；引用行号越界/指向注释/缺告警行 → 降级；LLM 调用失败 → NEEDS_REVIEW。
+
+## L4 修复建议与验证闭环（阶段三后半，P5）
+
+`ecdet fix` 对分诊后的 TRUE_POSITIVE 告警生成函数级补丁，并以 **ToolLoopVerify** 三道验证把关（方案 3.3.5）：
+
+1. **静态重扫**：补丁应用后原告警必须消除，且不得引入新的 error 级告警；
+2. **gcc 语法检查**：`-fsyntax-only -std=gnu89`（gcc 可用时自动启用）；
+3. 通过验证才产出统一 diff 补丁与修复记录，未通过一律拒绝并记录原因。
+
+```bash
+uv run ecdet triage out/results.sarif --project <工程> --mock -o out
+uv run ecdet fix out/results.sarif --project <工程> --mock -o out
+# 产物：out/fixes/*.patch（统一 diff）+ out/fixes/fixes.json（采纳/拒绝与理由）
+```
+
+## 对比评测与消融实验（阶段四，方案 3.5）
+
+`scripts/run_eval.py` 实现方案 3.5.2 指标体系与 3.5.3 消融设计：
+
+- **指标**：函数级 Precision/Recall/F1（主口径）+ 告警级计数、每千行耗时、可证明性比例、LLM 误报过滤量；
+- **消融**：A0 完整系统 / A1 去 LLM / A2 去硬件语义 / A3 去 RAG（A4 去验证闭环作用于修复验收率）；
+- **基线**：cppcheck / clang-tidy 检测到安装即对比（方案 3.5.1 四基线的可用子集）。
+
+```bash
+uv run python scripts/run_eval.py --corpus tests/fixtures/eval_corpus \
+    --vuln-funcs "buf_copy_bad,TIM6_IRQHandler,gpio_ro_write,unprotected_reader" \
+    --svd tests/fixtures/eval_corpus/chip.svd --out eval_out --with-baselines
+```
+
+在示例语料上的消融结果（报告填充方案表 3-4 模板）：A1 去 LLM 精确率 44%→100%（LLM 过滤 10 条误报），A2 去硬件语义召回 100%→25%（P2 建模净贡献）。
+
+## 数据集 GHSA 在线抓取（阶段三后半，P6）
+
+```bash
+export GITHUB_TOKEN=ghp_xxx
+uv run python scripts/build_dataset.py --fetch-ghsa owner/repo \
+    --repo path/to/local/clone --license Apache-2.0 --out data/dataset
+```
+
+抓取仓库安全通告 → CVSS 分级映射 GB/T 30279 → 以 CVE 号在 git log 定位修复提交 → 进入既有六步管线（切片/去重/时间划分）。
 
 ## 自建嵌入式漏洞数据集管线（阶段三，P6）
 
@@ -114,7 +154,7 @@ SVD 文件可通过 `--svd <path>` 指定，缺省自动发现工程内 `*.svd`�
 
 - [x] 2026 Q4 阶段一：构建复现工具链 + MISRA 子集规则引擎 MVP + Juliet 接入
 - [x] 2027 Q1 阶段二（提前实施）：SVD/ISR/RTOS 硬件语义建模（P2）、抽象解释常量传播（P4 机制）、SARIF 聚合、GJB 主题映射、ESBMC 适配器
-- [x] 2027 Q2 阶段三（提前实施）：L4 LLM 分诊层（P5，Mock 全路径可测 + OpenAI 兼容端点接入）、自建数据集采集管线（P6）
-- [ ] 阶段三后半：LLM 修复建议生成与编译/静态/CBMC 验证闭环、数据集在线抓取规模化
-- [ ] 2027 Q3 阶段四：四基线对比评测与合规报告
+- [x] 2027 Q2 阶段三（提前实施）：L4 LLM 分诊层（P5）+ 自建数据集采集管线（P6）+ 修复建议验证闭环 + GHSA 在线抓取
+- [x] 2027 Q3 阶段四（提前实施）：消融评测框架（A0-A3 + 外部基线，表 3-4 报告产出）
+- [ ] 阶段四后半：Juliet/Toyota ITC 全量基准评测成稿、CBMC/二进制扩展预研
 - [ ] 2027 Q4 阶段五：试点部署与迭代
