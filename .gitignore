@@ -19,3 +19,4 @@ uv.lock
 
 # Web 控制台数据
 webui_data/
+.playwright-mcp/
