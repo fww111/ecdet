@@ -20,3 +20,8 @@ uv.lock
 # Web 控制台数据
 webui_data/
 .playwright-mcp/
+
+# 文档工具的临时文件与生成工作区
+~$*
+_ppt_ref/
+projects/

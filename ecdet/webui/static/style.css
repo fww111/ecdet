@@ -76,6 +76,8 @@ tbody tr { transition:background .12s; }
 tbody tr:hover { background:#f8fafc; }
 tbody tr.click { cursor:pointer; }
 .path { font-family:Consolas,"Courier New",monospace; font-size:12px; }
+.path.clickable { color:var(--accent); cursor:pointer; }
+.path.clickable:hover { text-decoration:underline; }
 .muted { color:var(--muted); font-size:12px; }
 
 /* ---------- 徽标 ---------- */
@@ -181,3 +183,186 @@ input:focus, select:focus { outline:2px solid var(--accent-soft);
 .d-add { background:#12261a; color:#4ade80; padding:0 8px; border-radius:4px; }
 .d-del { background:#2b1517; color:#f87171; padding:0 8px; border-radius:4px; }
 .d-ctx { color:#94a3b8; padding:0 8px; }
+
+/* ============================================================
+   v1.2 —— 代码浏览 / 版本对比 / facet 筛选
+   ============================================================ */
+
+/* ---------- 侧边栏分组 ---------- */
+.nav-group { font-size:10.5px; letter-spacing:2px; color:#475569;
+             padding:12px 12px 4px; user-select:none; }
+nav a.on + .nav-group, nav .nav-group:first-child { padding-top:8px; }
+
+/* ---------- 上下文选择条（运行上下文，全页统一） ---------- */
+.ctx-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+           margin-bottom:14px; }
+.ctx-bar select { width:auto; min-width:180px; max-width:320px; }
+.ctx-bar .sep { color:var(--muted); font-size:12px; }
+.ctx-bar .grow { flex:1; }
+.snap-info { font-size:12px; color:var(--muted);
+             display:flex; gap:10px; align-items:center; }
+.snap-info b { color:var(--ink-2); }
+
+/* ---------- facet 计数 chips ---------- */
+.chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chip { border:1px solid var(--line); background:#fff; border-radius:999px;
+        padding:3px 12px; font-size:12px; cursor:pointer; color:var(--ink-2);
+        display:inline-flex; align-items:center; gap:6px; transition:all .12s; }
+.chip .n { font-weight:700; }
+.chip:hover { border-color:var(--accent); }
+.chip.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+.chip.on.error { background:var(--red); border-color:var(--red); }
+.chip.on.warning { background:var(--orange); border-color:var(--orange); }
+.chip.on.note { background:var(--blue); border-color:var(--blue); }
+.chip .cdot { width:8px; height:8px; border-radius:50%; flex:none; }
+
+/* ---------- 文件树 ---------- */
+.code-layout { display:grid; grid-template-columns:280px 1fr; gap:14px;
+               align-items:start; }
+.ftree { background:var(--surface); border:1px solid var(--line);
+         border-radius:var(--radius); padding:8px 6px; max-height:72vh;
+         overflow:auto; position:sticky; top:10px; }
+.ftree summary { cursor:pointer; list-style:none; display:flex;
+                 align-items:center; gap:6px; padding:4px 8px;
+                 border-radius:6px; font-size:12.5px; color:var(--ink-2);
+                 font-weight:600; user-select:none; }
+.ftree summary::-webkit-details-marker { display:none; }
+.ftree summary:hover { background:#f1f5f9; }
+.ftree summary .arrow { display:inline-block; transition:transform .15s;
+                        font-size:10px; color:var(--muted); }
+.ftree details[open] > summary .arrow { transform:rotate(90deg); }
+.ft-file { display:flex; align-items:center; gap:7px; padding:4px 8px 4px 24px;
+           border-radius:6px; cursor:pointer; font-size:12.5px;
+           color:var(--ink-2); white-space:nowrap; overflow:hidden;
+           text-overflow:ellipsis; }
+.ft-file:hover { background:#f1f5f9; color:var(--ink); }
+.ft-file.on { background:var(--accent-soft); color:var(--accent);
+              font-weight:600; }
+.ft-file .ft-cnt { margin-left:auto; flex:none; font-size:10.5px;
+                   font-weight:700; padding:0 7px; border-radius:999px;
+                   background:#f1f5f9; color:var(--ink-2); }
+.ft-file .ft-cnt.has-err { background:var(--red-soft); color:var(--red); }
+.ft-file .ft-cnt.has-warn { background:var(--orange-soft); color:var(--orange); }
+.ft-file.has-err { color:var(--red); }
+.ftree .ft-empty { padding:16px 10px; text-align:center; color:var(--muted);
+                   font-size:12px; }
+
+/* ---------- 代码视图 ---------- */
+.codepane { background:var(--surface); border:1px solid var(--line);
+            border-radius:var(--radius); overflow:hidden; }
+.codepane-head { display:flex; align-items:center; gap:10px;
+                 padding:9px 14px; border-bottom:1px solid var(--line);
+                 background:#f8fafc; flex-wrap:wrap; }
+.codepane-head .fp { font-family:Consolas,monospace; font-size:12.5px;
+                     font-weight:600; }
+.codepane-head .alertnav { margin-left:auto; display:flex; gap:4px;
+                           align-items:center; font-size:12px;
+                           color:var(--muted); }
+.codepane-head .alertnav button { border:1px solid var(--line);
+    background:#fff; border-radius:6px; cursor:pointer; padding:1px 8px;
+    font-size:12px; color:var(--ink-2); }
+.codepane-head .alertnav button:hover { border-color:var(--accent);
+                                        color:var(--accent); }
+.codeview { font-family:Consolas,"Courier New",monospace; font-size:12.5px;
+            line-height:1.6; overflow:auto; max-height:72vh; }
+.cv-row { display:flex; white-space:pre; }
+.cv-row:hover { background:#f8fafc; }
+.cv-no { flex:none; width:52px; text-align:right; padding:0 10px 0 6px;
+         color:#94a3b8; user-select:none; background:#f8fafc;
+         border-right:1px solid var(--line); }
+.cv-mark { flex:none; width:18px; text-align:center; user-select:none;
+           color:#cbd5e1; font-weight:700; }
+.cv-code { padding:0 14px; flex:1; }
+.cv-hit-error { background:var(--red-soft); }
+.cv-hit-warning { background:var(--orange-soft); }
+.cv-hit-note { background:var(--blue-soft); }
+.cv-hit-error .cv-no { background:var(--red); color:#fff; }
+.cv-hit-warning .cv-no { background:var(--orange); color:#fff; }
+.cv-hit-note .cv-no { background:var(--blue); color:#fff; }
+.cv-hit-error .cv-mark,
+.cv-hit-warning .cv-mark,
+.cv-hit-note .cv-mark { color:var(--ink); cursor:pointer; }
+.cv-hit.cur { outline:2px solid var(--accent); outline-offset:-2px; }
+
+/* ---------- C 语法高亮（自研 tokenizer 输出） ---------- */
+.tk-kw { color:#7c3aed; font-weight:600; }
+.tk-typ { color:#0369a1; }
+.tk-str { color:#15803d; }
+.tk-com { color:#94a3b8; font-style:italic; }
+.tk-pre { color:#b45309; }
+.tk-num { color:#be185d; }
+
+/* ---------- 版本对比 ---------- */
+.diffstat { display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+            font-size:12.5px; }
+.diffstat .ds { display:inline-flex; align-items:center; gap:5px;
+                padding:3px 10px; border-radius:999px; font-weight:700;
+                font-size:12px; }
+.ds.add { background:var(--green-soft); color:var(--green); }
+.ds.mod { background:var(--orange-soft); color:var(--orange); }
+.ds.del { background:var(--red-soft); color:var(--red); }
+.ds.new { background:var(--red-soft); color:var(--red); }
+.ds.res { background:var(--green-soft); color:var(--green); }
+.ds.unres { background:#f1f5f9; color:var(--ink-2); }
+.cmp-layout { display:grid; grid-template-columns:300px 1fr; gap:14px;
+              align-items:start; }
+.cmp-files { background:var(--surface); border:1px solid var(--line);
+             border-radius:var(--radius); padding:8px 6px; max-height:72vh;
+             overflow:auto; position:sticky; top:10px; }
+.cmp-file { display:flex; align-items:center; gap:7px; padding:5px 9px;
+            border-radius:6px; cursor:pointer; font-size:12.5px;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cmp-file:hover { background:#f1f5f9; }
+.cmp-file.on { background:var(--accent-soft); color:var(--accent);
+               font-weight:600; }
+.cmp-file .fp { font-family:Consolas,monospace; font-size:12px;
+                overflow:hidden; text-overflow:ellipsis; }
+.cmp-file .st { flex:none; font-weight:800; font-size:11px; width:14px;
+                text-align:center; }
+.cmp-file .st.add { color:var(--green); }
+.cmp-file .st.mod { color:var(--orange); }
+.cmp-file .st.del { color:var(--red); }
+.cmp-file .adelta { margin-left:auto; flex:none; font-size:10.5px;
+                    font-weight:700; padding:0 7px; border-radius:999px; }
+.adelta.plus { background:var(--red-soft); color:var(--red); }
+.adelta.minus { background:var(--green-soft); color:var(--green); }
+
+/* ---------- diff 表格（统一 / 并排共用） ---------- */
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:8px;
+       overflow:hidden; background:#fff; }
+.seg button { border:0; background:transparent; padding:4px 12px;
+              cursor:pointer; font-size:12px; color:var(--ink-2); }
+.seg button.on { background:var(--accent); color:#fff; font-weight:600; }
+.diffbox { font-family:Consolas,"Courier New",monospace; font-size:12.5px;
+           line-height:1.6; overflow:auto; max-height:72vh;
+           background:#fff; }
+.df-row { display:flex; white-space:pre; }
+.df-row .df-no { flex:none; width:46px; text-align:right; padding:0 8px 0 4px;
+                 color:#94a3b8; user-select:none; background:#f8fafc;
+                 font-size:11px; }
+.df-row .df-code { padding:0 12px; flex:1; overflow-x:auto; }
+.df-row.r-ctx .df-code { color:var(--ink-2); }
+.df-row.r-add { background:#f0fdf4; }
+.df-row.r-add .df-no:last-of-type { background:var(--green); color:#fff; }
+.df-row.r-add .df-code { color:#166534; }
+.df-row.r-del { background:#fef2f2; }
+.df-row.r-del .df-no:first-of-type { background:var(--red); color:#fff; }
+.df-row.r-del .df-code { color:#991b1b; }
+.df-row.r-mod .df-code.old { background:#fef2f2; color:#991b1b;
+                             text-decoration:line-through;
+                             text-decoration-color:#fca5a5; }
+.df-row.r-mod .df-code.new { background:#f0fdf4; color:#166534; }
+.df-mark { flex:none; width:16px; text-align:center; font-weight:800;
+           cursor:pointer; user-select:none; color:#cbd5e1; font-size:11px; }
+.df-mark.err { color:var(--red); }
+.df-mark.warn { color:var(--orange); }
+.df-mark.note { color:var(--blue); }
+.df-hunk { background:#f1f5f9; color:var(--muted); padding:1px 12px;
+           font-size:11px; user-select:none; }
+.df-skipped { padding:10px 14px; color:var(--muted); font-size:12px; }
+
+/* ---------- 对比页告警差分列表 ---------- */
+.al-diff-item { display:flex; gap:8px; align-items:center; padding:5px 8px;
+                border-radius:6px; cursor:pointer; font-size:12.5px; }
+.al-diff-item:hover { background:#f8fafc; }
+.al-diff-list { max-height:220px; overflow:auto; margin-top:6px; }

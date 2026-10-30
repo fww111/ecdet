@@ -133,6 +133,14 @@ class WebUI:
                 return h._json(200, {"job": job,
                     "proposals": self.store.list_fixes(
                         run_id, job_id=job["id"] if job else None)})
+            if parts[3] == "files" and len(parts) == 4:
+                return h._json(200, self._run_files(run_id))
+            if parts[3] == "file" and len(parts) == 4:
+                return self._run_file(h, run_id, q.get("path", ""))
+            if parts[3] == "diff" and len(parts) == 4:
+                return self._run_diff(h, run_id, q)
+            if parts[3] == "diff" and len(parts) == 5 and parts[4] == "file":
+                return self._run_diff_file(h, run_id, q)
         if parts[:2] == ["api", "summary"]:
             return h._json(200, self.store.summary())
         if parts[:2] == ["api", "alerts"] and len(parts) == 3:
@@ -147,6 +155,75 @@ class WebUI:
                 {"name": c.name, "tier": c.tier, "available": c.available,
                  "note": c.note} for c in probe_carriers()]})
         return h._json(404, {"error": "not found"})
+
+    # ---- 源码快照：代码浏览 / 版本对比 ----
+
+    def _run_files(self, run_id: int) -> dict:
+        from ecdet.webui.snapshot import load_manifest
+        m = load_manifest(self.data_dir, run_id)
+        if not m:
+            return {"snapshot": None, "files": []}
+        counts: dict[str, dict] = {}
+        for a in self.store.list_alerts(run_id, limit=5000):
+            rel = a["path"].replace("\\", "/").lstrip("./")
+            c = counts.setdefault(rel, {"alerts": 0, "error": 0})
+            c["alerts"] += 1
+            if a["severity"] == "error":
+                c["error"] += 1
+        files = []
+        for rel, meta in sorted(m["files"].items()):
+            c = counts.get(rel)
+            files.append({"path": rel, "bytes": meta["bytes"],
+                          "lines": meta["lines"],
+                          "alerts": c["alerts"] if c else 0,
+                          "errors": c["error"] if c else 0})
+        return {"snapshot": {"files": m["total_files"],
+                             "skipped": m["skipped"],
+                             "bytes": m["total_bytes"]},
+                "files": files}
+
+    def _run_file(self, h: BaseHTTPRequestHandler, run_id: int,
+                  rel: str) -> None:
+        from ecdet.webui.snapshot import file_alerts, read_snapshot_file
+        if not rel:
+            return h._json(400, {"error": "缺少 path 参数"})
+        text = read_snapshot_file(self.data_dir, run_id, rel)
+        if text is None:
+            return h._json(404, {"error": "文件不在本运行快照中"})
+        return h._json(200, {"path": rel, "lines": text.splitlines(),
+                             "alerts": file_alerts(self.store, run_id, rel)})
+
+    def _run_diff(self, h: BaseHTTPRequestHandler, run_id: int,
+                  q: dict) -> None:
+        from ecdet.webui.snapshot import diff_runs
+        try:
+            base = int(q.get("base", 0))
+        except ValueError:
+            return h._json(400, {"error": "base 须为运行 id"})
+        if base <= 0:
+            return h._json(400, {"error": "缺少 base 参数"})
+        if base == run_id:
+            return h._json(400, {"error": "基准与目标不能是同一运行"})
+        result = diff_runs(self.data_dir, self.store, base, run_id)
+        if result is None:
+            return h._json(404, {"error": "两侧运行都需有源码快照"
+                                       "（重新扫描后可用）"})
+        return h._json(200, result)
+
+    def _run_diff_file(self, h: BaseHTTPRequestHandler, run_id: int,
+                       q: dict) -> None:
+        from ecdet.webui.snapshot import diff_file
+        rel = q.get("path", "")
+        try:
+            base = int(q.get("base", 0))
+        except ValueError:
+            return h._json(400, {"error": "base 须为运行 id"})
+        if not rel or base <= 0:
+            return h._json(400, {"error": "缺少 path / base 参数"})
+        result = diff_file(self.data_dir, self.store, base, run_id, rel)
+        if result is None:
+            return h._json(404, {"error": "文件不在两侧快照中"})
+        return h._json(200, result)
 
     def handle_post(self, h: BaseHTTPRequestHandler) -> None:
         url = urlparse(h.path)

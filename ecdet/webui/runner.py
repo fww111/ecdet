@@ -238,11 +238,19 @@ class ScanRunner:
             })
         store.put_alerts(run_id, rows)
 
+        # 源码快照：定格本 run 的源文件副本（代码浏览 / 版本对比的数据基座）
+        from ecdet.webui.snapshot import create_snapshot, detect_git_commit
+        snapshot = create_snapshot(self.data_dir, run_id, workspace)
+
         stats = dict(result.stats)
         stats["build_method"] = method
         stats["warnings"] = warnings
         stats["files"] = len(files)
         stats["out_dir"] = str(out_dir)
+        stats["snapshot"] = snapshot
+        commit = detect_git_commit(workspace)
+        if commit:
+            stats["commit"] = commit
         store.set_run_status(run_id, "done", stats=stats, out_dir=str(out_dir))
 
     # ---- 一键修复（L4 修复闭环：建议生成 + ToolLoopVerify） ----
@@ -316,6 +324,11 @@ class ScanRunner:
             for a in store.list_alerts(run_id, limit=1000):
                 if a["id"] in wanted:
                     selected.add((a["rule_id"], a["path"].replace("\\", "/")))
+        # 告警库主键映射：补丁记录回填 alert_id，供告警抽屉按 id 匹配展示
+        db_alert_id: dict[tuple[str, str], int] = {}
+        for a in store.list_alerts(run_id, limit=2000):
+            db_alert_id.setdefault(
+                (a["rule_id"], a["path"].replace("\\", "/")), a["id"])
 
         for round_no in range(1, max_rounds + 1):
             facts, ctx = rescan_facts()
@@ -344,10 +357,12 @@ class ScanRunner:
             applied_this_round = 0
 
             for a in candidates:
+                db_aid = db_alert_id.get(
+                    (a.rule_id, a.location.path.replace("\\", "/")))
                 proposal = proposer.propose(a, ctx)
                 if proposal.fail_reason:
                     total_rejected += 1
-                    store.add_fix(run_id=run_id, alert_id=None,
+                    store.add_fix(run_id=run_id, alert_id=db_aid,
                                   rule_id=a.rule_id, path=a.location.path,
                                   line=a.location.line,
                                   func=proposal.func_name, verified=False,
@@ -381,7 +396,7 @@ class ScanRunner:
                     fromfile=f"a/{rel}", tofile=f"b/{rel}", lineterm=""))
                 if not verified:
                     total_rejected += 1
-                    store.add_fix(run_id=run_id, alert_id=None,
+                    store.add_fix(run_id=run_id, alert_id=db_aid,
                                   rule_id=a.rule_id, path=a.location.path,
                                   line=a.location.line,
                                   func=proposal.func_name, verified=False,
@@ -397,7 +412,7 @@ class ScanRunner:
                     total_applied += 1
                     applied_this_round += 1
                     was_applied = True
-                store.add_fix(run_id=run_id, alert_id=None,
+                store.add_fix(run_id=run_id, alert_id=db_aid,
                               rule_id=a.rule_id, path=a.location.path,
                               line=a.location.line,
                               func=proposal.func_name, verified=True,

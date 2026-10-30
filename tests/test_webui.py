@@ -382,6 +382,11 @@ def test_targeted_fix_by_alert_ids(ui):
     assert len(data["proposals"]) == 2, "只应生成勾选的 2 条建议"
     assert {p["rule_id"] for p in data["proposals"]} ==         {"CERT C STR31-C", "CERT C ARR30-C"}
 
+    # v1.2：补丁记录回填 alert_id，告警抽屉按 id 匹配展示
+    str31_fix = next(p for p in data["proposals"]
+                     if p["rule_id"] == "CERT C STR31-C")
+    assert str31_fix["alert_id"] == str31["id"]
+
     # 原文件一个字节都不能变（修复只生成补丁不落盘）
     assert target_file.read_bytes() == before
 
@@ -440,3 +445,110 @@ def test_apply_mode_writes_and_converges(ui):
     # 原始 examples 目录不受影响
     orig = (src_root / "src" / "sensor.c").read_text(encoding="utf-8")
     assert "strncpy" not in orig
+
+
+# ---------------- V1.2：源码快照 / 代码浏览 / 版本对比 ----------------
+
+
+def _zip_project(src_root: Path) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        for f in src_root.rglob("*"):
+            if f.is_file() and f.suffix in (".c", ".h", ".txt"):
+                zf.writestr(f.relative_to(src_root).as_posix(),
+                            f.read_text(encoding="utf-8"))
+    return buf.getvalue()
+
+
+def test_snapshot_skip_guard(tmp_path):
+    """快照护栏：只收 C/H、超限单文件跳过、manifest 记录 sha256。"""
+    from ecdet.webui.snapshot import (MAX_FILE_BYTES, create_snapshot,
+                                      load_manifest)
+    proj = tmp_path / "proj"
+    (proj / "src").mkdir(parents=True)
+    (proj / "src" / "ok.c").write_text("int x;\n", encoding="utf-8")
+    (proj / "src" / "big.c").write_text("x" * (MAX_FILE_BYTES + 1))
+    (proj / "src" / "note.txt").write_text("not source", encoding="utf-8")
+    s = create_snapshot(tmp_path, 1, proj)
+    assert s["files"] == 1 and s["skipped"] == 1
+    m = load_manifest(tmp_path, 1)
+    assert "src/ok.c" in m["files"]
+    assert "src/big.c" not in m["files"]
+    assert m["files"]["src/ok.c"]["lines"] == 1
+
+
+def test_snapshot_files_and_file_api(ui):
+    """扫描后快照可浏览：files 含告警计数；file 返回整文件与告警行；
+    非 manifest 路径 404（防穿越）。"""
+    _, base = ui
+    reg = _post(base, "/api/projects?name=snapdemo",
+                raw=_zip_project(EXAMPLES / "demo_rtos"),
+                ctype="application/zip")
+    run = _post(base, "/api/runs", {"project_id": reg["project_id"]})
+    done = _wait_run(base, run["run_id"])
+    assert done["status"] == "done"
+    assert done["stats"].get("snapshot", {}).get("files", 0) >= 1
+
+    data = _get(base, f"/api/runs/{run['run_id']}/files")
+    assert data["snapshot"]["files"] >= 1
+    paths = {f["path"] for f in data["files"]}
+    assert "src/sensor.c" in paths
+    sensor = next(f for f in data["files"] if f["path"] == "src/sensor.c")
+    assert sensor["alerts"] >= 1
+
+    body = _get(base,
+                f"/api/runs/{run['run_id']}/file?path=src%2Fsensor.c")
+    assert len(body["lines"]) > 10
+    assert body["alerts"], "sensor.c 应携带告警标注"
+    assert all(a["line"] >= 1 for a in body["alerts"])
+
+    for bad in ("../../ecdet_web.db", "nope/ghost.c"):
+        try:
+            _get(base, f"/api/runs/{run['run_id']}/file?path={bad}")
+            raise AssertionError("非法 path 应返回 404")
+        except urllib.error.HTTPError as e:
+            assert e.code == 404
+
+
+def test_diff_api_between_runs(ui):
+    """两 run 对比：新增文件 + 新增告警（STR31）→ 文件级与行级 diff。"""
+    _, base = ui
+    reg = _post(base, "/api/projects?name=diffdemo",
+                raw=_zip_project(EXAMPLES / "demo_rtos"),
+                ctype="application/zip")
+    ws = Path(reg["workspace"])
+    run1 = _post(base, "/api/runs", {"project_id": reg["project_id"]})
+    _wait_run(base, run1["run_id"])
+
+    (ws / "extra.c").write_text(
+        "#include <string.h>\n#include <stdio.h>\n"
+        "void extra_copy(const char *src) {\n    char buf[8];\n"
+        "    (void)src;\n"
+        "    strcpy(buf, \"0123456789abcdef0123456789abcdef\");\n"
+        "    printf(\"%s\\n\", buf);\n}\n",
+        encoding="utf-8")
+    run2 = _post(base, "/api/runs", {"project_id": reg["project_id"]})
+    _wait_run(base, run2["run_id"])
+
+    d = _get(base,
+             f"/api/runs/{run2['run_id']}/diff?base={run1['run_id']}")
+    s = d["summary"]
+    assert s["added"] == 1 and s["modified"] == 0
+    assert s["alerts_new"] >= 1
+    assert any(f["path"] == "extra.c" and f["status"] == "added"
+               for f in d["files"])
+    assert "CERT C STR31-C" in {a["rule_id"] for a in d["alerts_new"]}
+
+    fd = _get(base,
+              f"/api/runs/{run2['run_id']}/diff/file"
+              f"?base={run1['run_id']}&path=extra.c")
+    assert fd["status"] == "added"
+    assert fd["rows"] and all(r["t"] == "add" for r in fd["rows"])
+    assert any(a["rule_id"] == "CERT C STR31-C" for a in fd["new_alerts"])
+
+    # 基准与目标相同 → 400
+    try:
+        _get(base, f"/api/runs/{run2['run_id']}/diff?base={run2['run_id']}")
+        raise AssertionError("同 run 对比应返回 400")
+    except urllib.error.HTTPError as e:
+        assert e.code == 400
