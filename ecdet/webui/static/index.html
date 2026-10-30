@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ecdet 控制台 · 嵌入式代码缺陷与安全漏洞检测</title>
-<link rel="stylesheet" href="/static/style.css?v=1.1.0">
+<link rel="stylesheet" href="/static/style.css?v=1.2.0">
 </head>
 <body>
   <aside class="sidebar">
@@ -14,18 +14,27 @@
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         <path d="M9 12l2 2 4-4" stroke="#4ade80"/>
       </svg>
-      <div><span class="t">ecdet</span><span class="v">v1.1 · 双通道 · 多智能体</span></div>
+      <div><span class="t">ecdet</span><span class="v">v1.2 · 双通道 · 多智能体</span></div>
     </div>
     <nav>
+      <div class="nav-group">分析</div>
       <a href="#/overview" data-route="overview">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
         总览</a>
-      <a href="#/projects" data-route="projects">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        工程管理</a>
       <a href="#/runs" data-route="runs">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>
         扫描运行</a>
+      <div class="nav-group">工程与代码</div>
+      <a href="#/projects" data-route="projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        工程管理</a>
+      <a href="#/code" data-route="code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></svg>
+        代码浏览</a>
+      <a href="#/compare" data-route="compare">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6M18 15v-3a3 3 0 0 0-3-3H9"/></svg>
+        版本对比</a>
+      <div class="nav-group">结果与处置</div>
       <a href="#/alerts" data-route="alerts">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
         告警中心</a>
@@ -64,6 +73,6 @@
   </div>
 
   <div id="toast"></div>
-<script src="/static/app.js?v=1.1.0"></script>
+<script src="/static/app.js?v=1.2.0"></script>
 </body>
 </html>

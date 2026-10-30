@@ -144,6 +144,15 @@ uv run ecdet serve --port 8600     # 打开 http://127.0.0.1:8600
 
 扫描参数：行业 profile / SVD / LLM 分诊 Mock 或真实端点 / 动态通道开关；后台任务队列串行执行、进行中任务自动轮询；HTML 报告与 SARIF 可下载；动态载体可用性披露。纯标准库实现（ThreadingHTTPServer + SQLite + 原生 JS/CSS，零外链、离线可用），无新增第三方依赖。
 
+## 代码浏览与版本对比（v1.2，SonarQube Code / GitHub diff 式）
+
+以"文件为中心"重构前端信息架构：侧边栏按 **分析 / 工程与代码 / 结果与处置** 三组重组为七页，新增两页——
+
+- **代码浏览**（SonarQube Code 页式）：每次扫描完成自动定格**源码快照**（`ecdet/webui/snapshot.py`，C/H 文件按 run 存 `snapshots/<run_id>/` + manifest 哈希清单，path 直引工程同样快照，修复改写不再破坏历史视图）；左侧文件树按告警数着色，右侧整文件代码视图（自研 C 语法高亮）+ 告警行整行高亮 + gutter 标记（点击即开告警抽屉）+ 文件内告警 ↑↓ 导航；
+- **版本对比**（GitHub Files changed + CodeChecker 告警差分）：任选两次运行——文件级变更（manifest 哈希比对，新增/修改/删除）+ 告警差分三态（New / Resolved / Unresolved，基于告警指纹）；单文件 diff 支持统一/并排切换、双侧行号、行内词级高亮、diff 行边的新增告警标记；
+- **告警中心**：severity facet 计数 chips 一键筛选；详情抽屉新增"代码上下文（本运行快照）"块（告警行 ±5 行渲染，可跳转代码浏览）；
+- 新增 API：`/api/runs/{id}/files`、`/file`、`/diff`、`/diff/file`（manifest 白名单防路径穿越）；修复补丁记录回填 `alert_id`（告警抽屉补丁匹配此前恒失效的缺陷一并修复）。
+
 ## 一键修复与大模型接入（v1.0）
 
 - **修复建议页**：对已完成运行点「⚙ 一键修复」——对人工确认 / LLM 判真缺陷 / 动态 PoC 三类告警批量生成补丁，经 ToolLoopVerify（静态重扫 + gcc 语法检查）验证后展示 diff（采纳/拒绝与原因），告警详情抽屉同步显示对应补丁；
@@ -237,6 +246,7 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 - [x] **V1.2 新增范围（P7 / 3.3.5-3.3.7）**：动态分析引擎（激励建模 + harness 闭环 + oracle 三类 + PoC 可复现）、运行时监控（Suspected→Detected 裁决）、六智能体编排（`ecdet orchestrate`，结构化交接 + 分层路由 + 人工复核闸门 + 单智能体降级）、消融 A5/A6 与动态贡献率指标
 - [x] Web 控制台：工程三源注册（路径/zip/Git）+ 扫描任务队列 + 告警浏览/人工复核状态流转（零依赖）
 - [x] Web 一键修复（补丁 diff 展示 + 验证闭环）+ 前端大模型设置（API Key 存本机、测试连接）
+- [x] Web 代码浏览 + 版本对比（v1.2）：运行级源码快照、整文件代码视图（C 高亮 + 告警行标注）、两 run 文件 diff 与告警 New/Resolved 差分、告警抽屉代码上下文
 - [x] 阶段五准备：Docker 容器化封装（内置 cppcheck 基线）
 - [ ] 阶段四后半：Juliet/Toyota ITC 全量基准成稿（联网下载后即可运行）、Unicorn/Renode 仿真载体接入（三级吞吐-保真梯度中档与高档）、LLM harness 生成接入动态测试智能体
 - [ ] 2027 Q4 阶段五：试点部署与迭代（真机接入与仿真保真度校准）
