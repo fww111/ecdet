@@ -25,3 +25,15 @@ webui_data/
 ~$*
 _ppt_ref/
 projects/
+
+# 对接准备：第三方测试工程与扫描产物（不入库）
+projects/
+out_cfe/
+webui_data_video/
+webui_dbg/
+webui_dbg2/
+.playwright-mcp/
+demo_video/frame_*.png
+
+# 软著申请材料（隐私，不入库）
+软著/
