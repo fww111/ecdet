@@ -374,14 +374,6 @@ def check_volatile_rmw(ctx: ProjectContext, hw: HwContext,
     return out
 
 
-_BITFIELD_LINE_RE = re.compile(
-    r"\b(?P<type>(?:(?:unsigned|signed)\s+)?"
-    r"(?:char|short(?:\s+int)?|int|long(?:\s+long)?|_Bool|BOOL|"
-    r"u?int(?:8|16|32|64)_t))\s+"
-    r"(?P<name>[A-Za-z_]\w*)\s*:\s*(?P<width>\d+)\s*;"
-)
-
-
 def _int_value(text: str) -> int | None:
     try:
         base = 16 if text.lower().startswith("0x") else 8 if text.startswith("0") \
@@ -391,32 +383,193 @@ def _int_value(text: str) -> int | None:
         return None
 
 
+def _match_brace(tokens: list, open_idx: int) -> int:
+    """返回与 open_idx 处括号配对的闭括号下标（支持 () [] {}）。"""
+    pairs = {"(": ")", "[": "]", "{": "}"}
+    if open_idx >= len(tokens) or tokens[open_idx].kind != "punct":
+        return -1
+    open_v = tokens[open_idx].value
+    closer = pairs.get(open_v)
+    if closer is None:
+        return -1
+    depth = 0
+    for j in range(open_idx, len(tokens)):
+        tk = tokens[j]
+        if tk.kind != "punct":
+            continue
+        if tk.value == open_v:
+            depth += 1
+        elif tk.value == closer:
+            depth -= 1
+            if depth == 0:
+                return j
+    return -1
+
+
+def _bitfield_signed(type_text: str) -> bool:
+    t = type_text.lstrip()
+    return not (t.startswith("unsigned") or t.startswith("u")
+                or t.startswith("UINT"))
+
+
+def _extract_bitfield(toks: list, start: int, end: int,
+                      fields: dict) -> None:
+    """从一条声明 token 段提取 `NAME : WIDTH` 位域成员。"""
+    for idx in range(start, end - 1):
+        if (toks[idx].kind == "ident" and toks[idx + 1].kind == "punct"
+                and toks[idx + 1].value == ":" and toks[idx + 2].kind == "number"):
+            width = _int_value(toks[idx + 2].value)
+            if width is None or width <= 0:
+                continue
+            type_words = [tt.value for tt in toks[start:idx]
+                          if tt.value not in ("struct", "union", "enum")
+                          and tt.kind in ("keyword", "ident")]
+            type_text = " ".join(type_words)
+            fields[toks[idx].value] = (width, _bitfield_signed(type_text),
+                                       type_text)
+
+
+def _parse_struct_bitfields(toks: list, start: int, end: int) -> dict:
+    """解析结构体 body token 区间 [start, end] 内的位域成员。"""
+    fields: dict = {}
+    seg_start = start
+    k = start
+    while k <= end:
+        tk = toks[k]
+        if tk.kind == "punct" and tk.value == ";":
+            _extract_bitfield(toks, seg_start, k, fields)
+            seg_start = k + 1
+        elif tk.kind == "punct" and tk.value == "{":
+            inner = _match_brace(toks, k)
+            if inner != -1:
+                k = inner
+                seg_start = k + 1
+        k += 1
+    return fields
+
+
+def _collect_struct_defs(toks: list, bitfields: dict, type_names: set) -> None:
+    """收集 `struct TAG { ... }` 定义（含 typedef 别名）到位域表。"""
+    n = len(toks)
+    i = 0
+    while i < n:
+        t = toks[i]
+        if t.kind != "keyword" or t.value != "struct":
+            i += 1
+            continue
+        j = i + 1
+        tag = None
+        if j < n and toks[j].kind == "ident":
+            tag = toks[j].value
+            j += 1
+        if j >= n or toks[j].kind != "punct" or toks[j].value != "{":
+            i = j if j < n else i + 1   # 前向声明/变量声明，交变量收集处理
+            continue
+        close = _match_brace(toks, j)
+        if close == -1:
+            i = j + 1
+            continue
+        fields = _parse_struct_bitfields(toks, j + 1, close)
+        names = []
+        if tag:
+            names.append(tag)
+        k = close + 1
+        while k < n and toks[k].value != ";":
+            if toks[k].kind == "ident":
+                names.append(toks[k].value)
+            k += 1
+        for nm in names:
+            type_names.add(nm)
+            slot = bitfields.setdefault(nm, {})
+            for member, val in fields.items():
+                slot.setdefault(member, val)
+        i = k + 1
+
+
+def _collect_struct_vars(toks: list, type_names: set, var_tags: dict) -> None:
+    """收集 `struct TAG var` / `TAG var` 变量声明 → 变量名 → 结构体类型名。"""
+    n = len(toks)
+    i = 0
+    while i < n:
+        t = toks[i]
+        tag = None
+        j = i
+        if t.kind == "keyword" and t.value == "struct":
+            j = i + 1
+            if j < n and toks[j].kind == "ident":
+                tag = toks[j].value
+                j += 1
+            if j < n and toks[j].kind == "punct" and toks[j].value == "{":
+                i = j
+                continue
+        elif t.kind == "ident" and t.value in type_names:
+            tag = t.value
+            j = i + 1
+            if j < n and toks[j].kind == "punct" and toks[j].value == "{":
+                i = j
+                continue
+        else:
+            i += 1
+            continue
+        if tag is None:
+            i += 1
+            continue
+        while j < n and toks[j].kind == "punct" and toks[j].value == "*":
+            j += 1
+        k = j
+        while k < n:
+            tk = toks[k]
+            if tk.kind == "ident":
+                var_tags[tk.value] = tag
+            elif tk.kind == "punct" and tk.value in (";", "="):
+                break
+            k += 1
+        i = k + 1
+
+
+def _struct_bitfield_model(facts: list) -> tuple[dict, dict]:
+    """返回 (bitfields, var_tags)：位域表与变量→结构体类型映射。"""
+    bitfields: dict = {}
+    type_names: set = set()
+    for f in facts:
+        _collect_struct_defs(f.lex.tokens, bitfields, type_names)
+    var_tags: dict = {}
+    for f in facts:
+        _collect_struct_vars(f.lex.tokens, type_names, var_tags)
+    return bitfields, var_tags
+
+
 def check_bitfield_overflow(ctx: ProjectContext, hw: HwContext,
                             active: set[str]) -> list[Alert]:
-    """ECDET-HW-BITFIELD：位域常量赋值超出声明位宽。"""
+    """ECDET-HW-BITFIELD：位域成员常量赋值超出声明位宽。
+
+    仅识别 `obj.member = 常量` / `obj->member = 常量`，并按 obj 的实际
+    结构体类型解析 member 位宽；同名普通变量或不同结构体同名字段不会误报。
+    """
     if "ECDET-HW-BITFIELD" not in active:
         return []
-    fields: dict[str, tuple[int, bool, str]] = {}
-    for f in ctx.facts:
-        for line in f.lex.clean_lines:
-            for m in _BITFIELD_LINE_RE.finditer(line):
-                t = m.group("type")
-                signed = not (t.startswith("unsigned") or t.startswith("u")
-                              or t.startswith("UINT"))
-                fields.setdefault(m.group("name"),
-                                  (int(m.group("width")), signed, t))
+    bitfields, var_tags = _struct_bitfield_model(ctx.facts)
     out: list[Alert] = []
     for f in ctx.facts:
         for func in f.functions:
             toks = func.tokens
             for i, t in enumerate(toks):
-                if t.kind != "ident" or t.value not in fields:
+                if t.kind != "ident" or i + 4 >= len(toks):
                     continue
-                if i + 2 >= len(toks) or toks[i + 1].value != "=" \
-                        or toks[i + 2].kind != "number":
+                if toks[i + 1].kind != "punct" or toks[i + 1].value not in (".", "->"):
                     continue
-                width, signed, ftype = fields[t.value]
-                value = _int_value(toks[i + 2].value)
+                if toks[i + 2].kind != "ident":
+                    continue
+                if toks[i + 3].value != "=" or toks[i + 4].kind != "number":
+                    continue
+                tag = var_tags.get(t.value)
+                if tag is None:
+                    continue
+                spec = bitfields.get(tag, {}).get(toks[i + 2].value)
+                if spec is None:
+                    continue
+                width, signed, ftype = spec
+                value = _int_value(toks[i + 4].value)
                 if value is None:
                     continue
                 lo, hi = (-(1 << (width - 1)), (1 << (width - 1)) - 1) if signed \
@@ -425,11 +578,12 @@ def check_bitfield_overflow(ctx: ProjectContext, hw: HwContext,
                     continue
                 out.append(_alert(
                     "ECDET-HW-BITFIELD", Severity.WARNING,
-                    f"位域 {t.value}（{ftype}:{width}）被赋常量 {value}，"
-                    f"超出可表示范围 {lo}..{hi}，高位被截断",
-                    f.path, toks[i + 2].line, "CWE-197",
-                    [_evidence(f.path, toks[i + 2].line, "code",
-                               f"{t.value} = {toks[i + 2].value}，位宽 {width}")],
+                    f"位域 {t.value}.{toks[i + 2].value}（{ftype}:{width}）被赋常量 "
+                    f"{value}，超出可表示范围 {lo}..{hi}，高位被截断",
+                    f.path, toks[i + 4].line, "CWE-197",
+                    [_evidence(f.path, toks[i + 4].line, "code",
+                               f"{t.value}.{toks[i + 2].value} = {toks[i + 4].value}，"
+                               f"位宽 {width}")],
                     provenance=Provenance.SUSPECTED,
                 ))
     return out

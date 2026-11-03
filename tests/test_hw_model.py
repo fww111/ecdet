@@ -318,3 +318,38 @@ def test_bitfield_in_range_ok(tmp_path):
     """
     alerts, _ = _run(src, tmp_path, with_svd=False)
     assert [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"] == []
+
+
+def test_bitfield_same_name_local_var_not_flagged(tmp_path):
+    """同名普通局部变量不是结构体成员，不应误报。"""
+    src = """
+    struct S { unsigned int mode : 3; };
+    void f(void) { int mode = 0; mode = 10; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"] == []
+
+
+def test_bitfield_same_name_different_structs(tmp_path):
+    """不同结构体同名字段按各自位宽判断，宽的在界内不误报。"""
+    src = """
+    struct A { int x : 3; };
+    struct B { int x : 5; };
+    struct A a; struct B b;
+    void f(void) { a.x = 8; b.x = 8; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    bits = [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"]
+    assert len(bits) == 1
+    assert "a.x" in bits[0].message
+    assert "int:3" in bits[0].message
+
+
+def test_bitfield_pointer_member(tmp_path):
+    src = """
+    struct S { unsigned int flag : 3; };
+    void f(struct S *p) { p->flag = 8; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    bits = [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"]
+    assert len(bits) == 1

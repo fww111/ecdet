@@ -464,3 +464,61 @@ def test_rule_goto_forward_ok():
     alerts = _run_file("void f(void) { goto end; end: ; }",
                        rules={"MISRA C:2012 15.2"})
     assert alerts == []
+
+
+# ---------------- 代码评审回归（PR #2 留言） ----------------
+
+def test_rule_memcpy_int_array_in_bounds_ok():
+    """int 数组字节容量 = 元素数 × 4，8 字节拷贝不越界。"""
+    src = "void f(void) { int src[4]; int dst[4]; memcpy(dst, src, 8); }"
+    alerts = _run_file(src, rules={"MISRA C:2012 21.17"})
+    assert alerts == []
+
+
+def test_rule_memcpy_uint16_array_oob():
+    """uint16_t 数组字节容量 = 元素数 × 2，5 字节拷贝越界。"""
+    src = "void f(void) { uint16_t src[2]; uint8_t dst[8]; memcpy(dst, src, 5); }"
+    alerts = _run_file(src)
+    assert "MISRA C:2012 21.17" in _rule_ids(alerts)
+
+
+def test_rule_local_pointer_qual_cast():
+    src = 'void f(void) { const char *s = "x"; char *p = (char *)s; (void)p; }'
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.8" in _rule_ids(alerts)
+
+
+def test_rule_global_pointer_qual_cast():
+    src = 'const int *gp; void f(void) { int *p = (int *)gp; (void)p; }'
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.8" in _rule_ids(alerts)
+
+
+def test_rule_local_ptr_to_int():
+    src = "unsigned int f(void) { char *p = 0; return (unsigned int)p; }"
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.4" in _rule_ids(alerts)
+
+
+def test_rule_const_expr_precedence_no_false_positive():
+    """乘法优先级高于加法：2000000000 + 1000000000 * 0 不溢出。"""
+    alerts = _run_file("int f(void) { int x = 2000000000 + 1000000000 * 0; return x; }",
+                       rules={"CERT C INT32-C", "CERT C INT30-C", "ECDET-CWE-190"})
+    assert alerts == []
+
+
+def test_rule_const_expr_precedence_real_overflow():
+    """1 + 2 * 2000000000 = 4000000001，超出 int32。"""
+    alerts = _run_file("int f(void) { int x = 1 + 2 * 2000000000; return x; }")
+    assert "CERT C INT32-C" in _rule_ids(alerts)
+
+
+def test_rule_const_expr_paren_overflow():
+    alerts = _run_file("int f(void) { int x = (2000000000 + 1000000000) * 0; return x; }")
+    assert "CERT C INT32-C" in _rule_ids(alerts)
+
+
+def test_rule_static_local_addr_not_flagged():
+    src = "int *f(void) { static int x; return &x; }"
+    alerts = _run_file(src, rules={"MISRA C:2012 18.6", "ECDET-CWE-562"})
+    assert alerts == []

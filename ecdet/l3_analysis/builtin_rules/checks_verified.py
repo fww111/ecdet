@@ -29,6 +29,7 @@ from ecdet.l3_analysis.builtin_rules.ectypes import (
     INT64,
     EssentialType,
     build_type_table,
+    resolve_type,
     usual_arith,
 )
 
@@ -54,7 +55,7 @@ _DECL_PTR_RE = re.compile(
 )
 
 _LOCAL_DECL_RE = re.compile(
-    r"(?:^|[;{}(,])\s*(?:(?:static|const|volatile|register|extern)\s+)*"
+    r"(?:^|[;{}(,])\s*(?P<storage>(?:(?:static|const|volatile|register|extern)\s+)*)"
     r"(?P<type>(?:(?:unsigned|signed)\s+)?"
     r"(?:void|char|short(?:\s+int)?|int|long(?:\s+long)?(?:\s+int)?|float|double|_Bool"
     r"|u?int(?:8|16|32|64)_t|BOOL|[A-Za-z_]\w*_t|[A-Za-z_]\w*_TypeDef))"
@@ -188,8 +189,9 @@ def _pointer_vars(f: FileFacts) -> dict[str, tuple[str, set[str]]]:
         if not text or text.startswith("#"):
             continue
         for m in _DECL_PTR_RE.finditer(text):
-            base_words = f"{m.group('pre')} {m.group('base')}"
-            add(m.group("name"), base_words)
+            # 保留声明中的星号，避免局部/全局指针被 add() 丢弃
+            type_text = f"{m.group('pre')} {m.group('base')} {m.group('stars')}"
+            add(m.group("name"), type_text)
     return out
 
 
@@ -200,8 +202,12 @@ def _local_names(f: FileFacts, func) -> set[str]:
             continue
         text = f.lex.clean_lines[line - 1]
         for m in _LOCAL_DECL_RE.finditer(text):
-            if m.group("type") not in ("void", "float", "double"):
-                names.add(m.group("name"))
+            if m.group("type") in ("void", "float", "double"):
+                continue
+            storage = m.group("storage") or ""
+            if "static" in storage or "extern" in storage:
+                continue      # 静态/外部存储期对象，函数返回后地址仍有效
+            names.add(m.group("name"))
     return names
 
 
@@ -279,6 +285,8 @@ def check_pointer_cast(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
     for func in f.functions:
         toks = func.tokens
         for operand, inner, target_ptr, target_base, target_quals in _cast_sites(func):
+            if not target_ptr and target_base == "void":
+                continue      # (void)expr 仅为丢弃结果，非指针/整数转换
             tok = toks[operand]
             src_base = src_quals = None
             if tok.kind == "ident" and tok.value in ptrs:
@@ -331,52 +339,134 @@ def check_pointer_cast(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
     return out
 
 
+def _eval_const_expr(toks: list, i: int) -> tuple[int, object] | None:
+    """递归下降求值常量算术表达式（+-* 与括号，支持一元正负号）。
+
+    返回 (end_idx, err)；err 为 None 或 (op_token, op_sym, result_value, et)。
+    按 C 运算符优先级（* 高于 +-）求值，每个二元运算后以 usual_arith 结果
+    类型检查是否溢出/回绕，取首次溢出。
+    """
+    n = len(toks)
+    pos = [i]
+    err = [None]
+
+    def cur():
+        return toks[pos[0]] if pos[0] < n else None
+
+    def parse_factor():
+        t = cur()
+        if t is None:
+            return None
+        if t.kind == "punct" and t.value in ("-", "+"):
+            sign = -1 if t.value == "-" else 1
+            pos[0] += 1
+            sub = parse_factor()
+            if sub is None:
+                return None
+            return (sign * sub[0], sub[1])
+        if t.kind == "number":
+            et = _literal_c_type(t.value)
+            v = _num(t.value)
+            if et is None or v is None:
+                return None
+            pos[0] += 1
+            return (v, et)
+        if t.kind == "punct" and t.value == "(":
+            pos[0] += 1
+            sub = parse_expr()
+            if sub is None:
+                return None
+            if cur() is None or cur().value != ")":
+                return None
+            pos[0] += 1
+            return sub
+        return None
+
+    def parse_term():
+        left = parse_factor()
+        if left is None:
+            return None
+        lv, le = left
+        while cur() is not None and cur().kind == "punct" and cur().value == "*":
+            op = cur()
+            pos[0] += 1
+            right = parse_factor()
+            if right is None:
+                return None
+            rv, re_ = right
+            et = usual_arith(le, re_)
+            result = lv * rv
+            if err[0] is None and _check_chain(et.bits, et.signed, result):
+                err[0] = (op, "*", result, et)
+            lv, le = result, et
+        return (lv, le)
+
+    def parse_expr():
+        left = parse_term()
+        if left is None:
+            return None
+        lv, le = left
+        while cur() is not None and cur().kind == "punct" and cur().value in ("+", "-"):
+            op = cur()
+            pos[0] += 1
+            right = parse_term()
+            if right is None:
+                return None
+            rv, re_ = right
+            et = usual_arith(le, re_)
+            result = lv + rv if op.value == "+" else lv - rv
+            if err[0] is None and _check_chain(et.bits, et.signed, result):
+                err[0] = (op, op.value, result, et)
+            lv, le = result, et
+        return (lv, le)
+
+    value = parse_expr()
+    if value is None:
+        return None
+    return pos[0], err[0]
+
+
 def check_constant_overflow(f: FileFacts, ctx: ProjectContext,
                             active: set[str]) -> list[Alert]:
-    """ECDET-CWE-190 + CERT INT30-C/INT32-C：常量算术链溢出/回绕。
+    """ECDET-CWE-190 + CERT INT30-C/INT32-C：常量算术溢出/回绕。
 
-    只折叠"相邻常量 + - *"链（如 `2000000000 + 1000000000`），
-    跨括号/宏/变量的表达式留给 Clang 常量传播。
+    只对"完全由整型字面量 + - * ( ) 构成"的表达式按优先级求值并检测
+    溢出；跨宏/变量/除法的表达式留给 Clang 常量传播，避免误报。
     """
     out: list[Alert] = []
     toks = f.lex.tokens
+    n = len(toks)
     i = 0
-    while i < len(toks):
-        first = _literal_c_type(toks[i].value) if toks[i].kind == "number" else None
-        value = _num(toks[i].value) if first is not None else None
-        if first is None or value is None:
+    while i < n:
+        t = toks[i]
+        is_num = t.kind == "number"
+        is_unary = (t.kind == "punct" and t.value in ("-", "+") and i + 1 < n
+                    and (toks[i + 1].kind == "number"
+                         or (toks[i + 1].kind == "punct" and toks[i + 1].value == "(")))
+        if not is_num and not is_unary:
             i += 1
             continue
-        et = first
-        start = toks[i]
-        j = i
-        while j + 2 < len(toks) and toks[j + 1].value in ("+", "-", "*") \
-                and toks[j + 2].kind == "number":
-            rhs_et = _literal_c_type(toks[j + 2].value)
-            rhs = _num(toks[j + 2].value)
-            if rhs_et is None or rhs is None:
-                break
-            op = toks[j + 1].value
-            combined = usual_arith(et, rhs_et)
-            result = value + rhs if op == "+" else value - rhs if op == "-" else value * rhs
-            if _check_chain(combined.bits, combined.signed, result):
-                candidates = (["CERT C INT32-C", "ECDET-CWE-190"] if combined.signed
-                              else ["CERT C INT30-C", "ECDET-CWE-190"])
-                rid = _pick_rule(active, candidates)
-                if rid:
-                    kind = "有符号溢出" if combined.signed else "无符号回绕"
-                    out.append(_alert(
-                        rid, Severity.WARNING,
-                        f"常量表达式 {start.value} {op} {toks[j + 2].value} 发生{kind}",
-                        f.path, toks[j + 1].line, "CWE-190",
-                        [_evidence(f.path, toks[j + 1].line, "code",
-                                   f"结果 {result} 超出 {combined.label()}范围")],
-                    ))
-                j += 2
-                break
-            value, et = result, combined
-            j += 2
-        i = j + 1 if j > i else i + 1
+        r = _eval_const_expr(toks, i)
+        if r is None:
+            i += 1
+            continue
+        end, err = r
+        if err is not None:
+            op_tok, op_sym, result, et = err
+            candidates = (["CERT C INT32-C", "ECDET-CWE-190"] if et.signed
+                          else ["CERT C INT30-C", "ECDET-CWE-190"])
+            rid = _pick_rule(active, candidates)
+            if rid:
+                kind = "有符号溢出" if et.signed else "无符号回绕"
+                out.append(_alert(
+                    rid, Severity.WARNING,
+                    f"常量表达式经 {op_sym} 运算后结果为 {result}，"
+                    f"超出 {et.label()} 范围，发生{kind}",
+                    f.path, op_tok.line, "CWE-190",
+                    [_evidence(f.path, op_tok.line, "code",
+                               f"结果 {result} 超出 {et.label()} 范围")],
+                ))
+        i = end if end > i else i + 1
     return out
 
 
@@ -731,25 +821,42 @@ def check_pp_stringize(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
     return out
 
 
+def _array_element_bytes(a) -> int | None:
+    """数组元素字节数；struct/union/指针/未知类型返回 None（保守跳过）。"""
+    if "*" in a.type_text:
+        return None
+    et = resolve_type(a.type_text)
+    if et is None:
+        return None
+    return et.bits // 8
+
+
 def check_copy_source_bounds(f: FileFacts, ctx: ProjectContext,
                              active: set[str]) -> list[Alert]:
-    """MISRA 21.17：memcpy/memmove 常量长度超过源数组大小（越界读）。"""
+    """MISRA 21.17：memcpy/memmove 字节长度超过源数组字节容量（越界读）。"""
     out: list[Alert] = []
-    sizes = {a.name: a.size for a in f.arrays if a.size > 0}
+    capacities: dict[str, int] = {}
+    for a in f.arrays:
+        if a.size <= 0:
+            continue
+        element_bytes = _array_element_bytes(a)
+        if element_bytes is None:
+            continue      # 未知元素类型保守跳过，避免把元素数误当字节数
+        capacities[a.name] = a.size * element_bytes
     for idx, line in enumerate(f.lex.clean_lines, start=1):
         if line.strip().startswith("#"):
             continue
         for m in _MEMCPY_SRC_RE.finditer(line):
             src, n = m.group("src"), int(m.group("size"))
-            size = sizes.get(src)
-            if size is None or n <= size:
+            cap = capacities.get(src)
+            if cap is None or n <= cap:
                 continue
             out.append(_alert(
                 "MISRA C:2012 21.17", Severity.ERROR,
-                f"从数组 {src}[{size}] 拷贝 {n} 字节，越界读取",
+                f"从数组 {src}（字节容量 {cap}）拷贝 {n} 字节，越界读取",
                 f.path, idx, "CWE-125",
                 [_evidence(f.path, idx, "code",
-                           f"源数组 {src} 大小 {size}，拷贝长度 {n}")],
+                           f"源数组 {src} 字节容量 {cap}，拷贝长度 {n}")],
             ))
     return out
 
