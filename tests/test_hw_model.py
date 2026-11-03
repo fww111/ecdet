@@ -208,3 +208,113 @@ def test_vector_table_isr_identified(tmp_path):
     ctx = finalize_facts(facts)
     hw = build_hw_context(ctx, None)
     assert "WWDG_IRQHandler" in hw.isr_names
+
+
+# ---------------- 缺口核验批次：硬件语义新增检查 ----------------
+
+def test_isr_non_fromisr_variant(tmp_path):
+    """xSemaphoreGive 非阻塞，但在 ISR 中应改用 FromISR 版本。"""
+    src = "void TIM2_IRQHandler(void) { xSemaphoreGive(0); }"
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    blocks = [a for a in alerts if a.rule_id == "ECDET-ISR-BLOCK"]
+    assert len(blocks) == 1
+    assert "非 FromISR 版本" in blocks[0].message
+    assert "xSemaphoreGiveFromISR" in blocks[0].message
+
+
+def test_isr_fromisr_variant_ok(tmp_path):
+    src = "void TIM2_IRQHandler(void) { xSemaphoreGiveFromISR(0, 0); }"
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-ISR-BLOCK"] == []
+
+
+def test_critical_pair_unmatched_enter(tmp_path):
+    src = "void task(void) { taskENTER_CRITICAL(); }"
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    pairs = [a for a in alerts if a.rule_id == "ECDET-HW-CRITICAL-PAIR"]
+    assert len(pairs) == 1
+    assert "未退出" in pairs[0].message
+
+
+def test_critical_pair_unmatched_exit(tmp_path):
+    src = "void task(void) { taskEXIT_CRITICAL(); }"
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    pairs = [a for a in alerts if a.rule_id == "ECDET-HW-CRITICAL-PAIR"]
+    assert len(pairs) == 1
+    assert "没有进入" in pairs[0].message
+
+
+def test_critical_pair_balanced_ok(tmp_path):
+    src = """
+    void task(void) {
+        taskENTER_CRITICAL();
+        taskEXIT_CRITICAL();
+    }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-HW-CRITICAL-PAIR"] == []
+
+
+def test_isr_async_unsafe(tmp_path):
+    src = """
+    void TIM2_IRQHandler(void) {
+        (void)printf("isr");
+        free(0);
+    }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    heap = [a for a in alerts if a.rule_id == "ECDET-HW-ISR-HEAP"]
+    names = " ".join(a.message for a in heap)
+    assert "printf" in names and "free" in names
+
+
+def test_isr_async_safe_ok(tmp_path):
+    src = "void TIM2_IRQHandler(void) { uint32_t x = 0; (void)x; }"
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-HW-ISR-HEAP"] == []
+
+
+def test_volatile_rmw_in_task(tmp_path):
+    src = """
+    volatile uint32_t g_cnt;
+    void TIM2_IRQHandler(void) { g_cnt = 1u; }
+    void task(void) { g_cnt++; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    rmw = [a for a in alerts if a.rule_id == "ECDET-HW-VOLATILE-RMW"]
+    assert len(rmw) == 1
+    assert "g_cnt" in rmw[0].message
+
+
+def test_volatile_rmw_in_critical_ok(tmp_path):
+    src = """
+    volatile uint32_t g_cnt;
+    void TIM2_IRQHandler(void) { g_cnt = 1u; }
+    void task(void) {
+        taskENTER_CRITICAL();
+        g_cnt++;
+        taskEXIT_CRITICAL();
+    }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-HW-VOLATILE-RMW"] == []
+
+
+def test_bitfield_overflow(tmp_path):
+    src = """
+    struct S { unsigned int flag : 3; };
+    void f(void) { struct S s; s.flag = 8; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    bits = [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"]
+    assert len(bits) == 1
+    assert "超出可表示范围" in bits[0].message
+
+
+def test_bitfield_in_range_ok(tmp_path):
+    src = """
+    struct S { unsigned int flag : 3; };
+    void f(void) { struct S s; s.flag = 7; }
+    """
+    alerts, _ = _run(src, tmp_path, with_svd=False)
+    assert [a for a in alerts if a.rule_id == "ECDET-HW-BITFIELD"] == []

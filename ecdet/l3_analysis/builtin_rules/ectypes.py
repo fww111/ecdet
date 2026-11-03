@@ -173,6 +173,8 @@ def build_type_table(lex, func_lines: set[int],
     table: dict[str, EssentialType] = {}
     for func in (functions or []):
         for pname, ptype in zip(func.params, func.param_types):
+            if "*" in ptype:
+                continue      # 指针参数不参与整型基本类型表
             et = resolve_type(ptype)
             if et is not None:
                 table.setdefault(pname, et)

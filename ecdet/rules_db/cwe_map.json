@@ -1,13 +1,14 @@
 {
-  "$description": "CWE↔MISRA C:2012↔GJB 8114-2013 双向映射表（方案 3.3.7）。GJB 编号体系待取得授权标准文本后补齐（gjb_id 为 null 表示映射待核实），verified=false 的条目仅作检索线索，不进入合规结论。",
+  "$description": "CWE↔MISRA C:2012↔CERT C 双向映射表（方案 3.3.7）。2026-11 依据规则缺口核验批次修正：CWE-120 归 21.17/21.18 而非 21.3；移除 CWE-338 的 21.3 误映射；新增 11.4/INT36-C、12.2/INT34-C 等价组。verified=false 的条目仅作检索线索，不进入合规结论。",
   "mappings": [
     {
       "cwe": "CWE-120",
       "title": "经典缓冲区溢出（拷贝未校验长度）",
-      "misra": ["MISRA C:2012 21.3"],
+      "misra": ["MISRA C:2012 21.17", "MISRA C:2012 21.18"],
       "cert": ["CERT C STR31-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 21.17/21.18 标题；CERT C STR31-C"
     },
     {
       "cwe": "CWE-787",
@@ -15,31 +16,35 @@
       "misra": [],
       "cert": ["CERT C ARR30-C", "CERT C STR31-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CWE-787 定义；CERT C ARR30-C/STR31-C"
     },
     {
       "cwe": "CWE-125",
       "title": "越界读",
-      "misra": [],
+      "misra": ["MISRA C:2012 21.17"],
       "cert": ["CERT C ARR30-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CWE-125 定义；MISRA C:2012 Rule 21.17"
     },
     {
       "cwe": "CWE-190",
       "title": "整数溢出或回绕",
-      "misra": ["MISRA C:2012 10.x", "MISRA C:2012 21.3"],
-      "cert": [],
+      "misra": ["MISRA C:2012 10.3", "MISRA C:2012 10.4"],
+      "cert": ["CERT C INT30-C", "CERT C INT32-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CERT C INT30-C/INT32-C 官方 CWE 映射；MISRA 10.3/10.4"
     },
     {
       "cwe": "CWE-197",
       "title": "数值截断错误",
-      "misra": ["MISRA C:2012 10.x"],
-      "cert": [],
+      "misra": ["MISRA C:2012 10.3"],
+      "cert": ["CERT C INT31-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CERT C INT31-C；MISRA C:2012 Rule 10.3"
     },
     {
       "cwe": "CWE-674",
@@ -47,15 +52,17 @@
       "misra": ["MISRA C:2012 17.2"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 17.2"
     },
     {
       "cwe": "CWE-338",
       "title": "使用密码学不安全的伪随机数发生器",
-      "misra": ["MISRA C:2012 21.3"],
+      "misra": [],
       "cert": ["CERT C MSC30-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CERT C MSC30-C；移除原 21.3 误映射"
     },
     {
       "cwe": "CWE-134",
@@ -63,23 +70,27 @@
       "misra": [],
       "cert": ["CERT C FIO30-C"],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CERT C FIO30-C"
     },
     {
       "cwe": "CWE-758",
       "title": "依赖未定义/未指明/实现定义行为",
-      "misra": ["MISRA C:2012 1.x", "MISRA C:2012 17.3"],
+      "misra": ["MISRA C:2012 1.x", "MISRA C:2012 17.3", "MISRA C:2012 20.10"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 1.x/17.3/20.10"
     },
     {
       "cwe": "CWE-676",
       "title": "使用潜在危险函数",
-      "misra": ["MISRA C:2012 21.3", "MISRA C:2012 21.6"],
+      "misra": ["MISRA C:2012 21.3", "MISRA C:2012 21.6", "MISRA C:2012 21.8",
+                "MISRA C:2012 21.9", "MISRA C:2012 21.10"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 21.3/21.6/21.8/21.9/21.10"
     },
     {
       "cwe": "CWE-242",
@@ -87,7 +98,8 @@
       "misra": ["MISRA C:2012 21.6"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CWE-242 定义；MISRA C:2012 Rule 21.6"
     },
     {
       "cwe": "CWE-563",
@@ -95,7 +107,8 @@
       "misra": ["MISRA C:2012 2.7"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 2.7"
     },
     {
       "cwe": "CWE-709",
@@ -103,7 +116,8 @@
       "misra": ["MISRA C:2012 21.1"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "MISRA C:2012 Rule 21.1"
     },
     {
       "cwe": "CWE-1284",
@@ -111,7 +125,166 @@
       "misra": ["MISRA C:2012 21.6"],
       "cert": [],
       "gjb_id": null,
-      "verified": false
+      "verified": true,
+      "source": "CWE-1284 定义；MISRA C:2012 Rule 21.6"
+    },
+    {
+      "cwe": "CWE-362",
+      "title": "并发上下文竞争条件",
+      "misra": [],
+      "cert": [],
+      "ecdet": ["ECDET-ISR-RACE", "ECDET-VOLATILE", "ECDET-HW-VOLATILE-RMW"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "ECDET 硬件语义规则（CWE-362 定义）"
+    },
+    {
+      "cwe": "CWE-667",
+      "title": "临界区/锁未正确释放",
+      "misra": [],
+      "cert": [],
+      "ecdet": ["ECDET-ISR-RACE", "ECDET-HW-CRITICAL-PAIR"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CWE-667 定义"
+    },
+    {
+      "cwe": "CWE-704",
+      "title": "类型转换错误",
+      "misra": ["MISRA C:2012 11.3", "MISRA C:2012 11.4", "MISRA C:2012 11.8"],
+      "cert": ["CERT C INT36-C"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 11.3/11.4/11.8；CERT C INT36-C"
+    },
+    {
+      "cwe": "CWE-682",
+      "title": "计算错误（移位/算术越界）",
+      "misra": ["MISRA C:2012 12.2"],
+      "cert": ["CERT C INT34-C"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 12.2；CERT C INT34-C"
+    },
+    {
+      "cwe": "CWE-562",
+      "title": "返回栈变量地址",
+      "misra": ["MISRA C:2012 18.6"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 18.6"
+    },
+    {
+      "cwe": "CWE-770",
+      "title": "无限制资源分配（VLA）",
+      "misra": ["MISRA C:2012 18.8"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 18.8"
+    },
+    {
+      "cwe": "CWE-484",
+      "title": "switch 分支遗漏 break",
+      "misra": ["MISRA C:2012 16.3"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 16.3"
+    },
+    {
+      "cwe": "CWE-480",
+      "title": "误用运算符（控制表达式赋值/宏副作用）",
+      "misra": [],
+      "cert": ["CERT C EXP45-C", "CERT C PRE31-C"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CERT C EXP45-C/PRE31-C"
+    },
+    {
+      "cwe": "CWE-590",
+      "title": "释放非堆内存",
+      "misra": [],
+      "cert": ["CERT C MEM34-C"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CERT C MEM34-C"
+    },
+    {
+      "cwe": "CWE-798",
+      "title": "硬编码敏感凭据",
+      "misra": [],
+      "cert": ["CERT C MSC41-C"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CERT C MSC41-C"
+    },
+    {
+      "cwe": "CWE-783",
+      "title": "运算符优先级误用（宏未加括号）",
+      "misra": ["MISRA C:2012 20.7"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 20.7"
+    },
+    {
+      "cwe": "CWE-570",
+      "title": "控制表达式恒为常量",
+      "misra": ["MISRA C:2012 14.3"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 14.3"
+    },
+    {
+      "cwe": "CWE-670",
+      "title": "控制流实现错误（goto）",
+      "misra": ["MISRA C:2012 15.1", "MISRA C:2012 15.2"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 15.1/15.2"
+    },
+    {
+      "cwe": "CWE-785",
+      "title": "使用超出容量的栈分配",
+      "misra": [],
+      "cert": [],
+      "ecdet": ["ECDET-CWE-785"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CWE-785 定义"
+    },
+    {
+      "cwe": "CWE-78",
+      "title": "OS 命令注入",
+      "misra": [],
+      "cert": [],
+      "ecdet": ["ECDET-CWE-78"],
+      "gjb_id": null,
+      "verified": true,
+      "source": "CWE-78 定义；ECDET system() 禁用规则"
+    },
+    {
+      "cwe": "CWE-561",
+      "title": "不可达代码",
+      "misra": ["MISRA C:2012 2.1"],
+      "cert": [],
+      "gjb_id": null,
+      "verified": true,
+      "source": "MISRA C:2012 Rule 2.1"
     }
+  ],
+  "equivalences": [
+    ["CERT C STR31-C", "CWE-120"],
+    ["CERT C ARR30-C", "CWE-787", "CWE-125"],
+    ["MISRA C:2012 21.17", "MISRA C:2012 21.18"],
+    ["MISRA C:2012 11.4", "CERT C INT36-C"],
+    ["MISRA C:2012 12.2", "CERT C INT34-C"],
+    ["ECDET-ISR-RACE", "ECDET-HW-VOLATILE-RMW"],
+    ["CERT C INT33-C", "ECDET-CWE-369"],
+    ["CERT C EXP34-C", "ECDET-CWE-476"]
   ]
 }

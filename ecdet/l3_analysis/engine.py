@@ -23,7 +23,7 @@ from ecdet.l3_analysis.builtin_rules.checks import (
     build_file_facts,
     finalize_facts,
 )
-from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
+from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES, canonical_rule_id
 
 # 行业配置文件：方案 3.3.3 的裁剪策略（按 Mandatory/Required/Advisory 与行业分层启停）
 INDUSTRY_PROFILES: dict[str, set[str]] = {
@@ -275,9 +275,9 @@ def collect_sources(root: Path, extra_skip: set[str] | None = None) -> list[Path
 def resolve_enabled(rules: list[RuleMeta], profile: str | None,
                     disable: list[str] | None, enable: list[str] | None) -> set[str]:
     """解析行业配置 + 显式启停 → 生效规则集。"""
-    disabled = set(INDUSTRY_PROFILES.get(profile or "", set()))
-    disabled.update(disable or [])
-    enabled_extra = set(enable or [])
+    disabled = {canonical_rule_id(r) for r in INDUSTRY_PROFILES.get(profile or "", set())}
+    disabled.update(canonical_rule_id(r) for r in (disable or []))
+    enabled_extra = {canonical_rule_id(r) for r in (enable or [])}
     return {r.rule_id for r in rules if r.enabled_by_default and
             r.rule_id not in disabled} | enabled_extra
 

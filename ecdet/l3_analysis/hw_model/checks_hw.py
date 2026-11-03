@@ -210,7 +210,11 @@ def _unprotected_ref_lines(func, var: str, hw: HwContext) -> list[int]:
 
 def check_isr_blocking(ctx: ProjectContext, hw: HwContext,
                        active: set[str]) -> list[Alert]:
-    """ECDET-ISR-BLOCK：ISR 中调用阻塞 / 非 FromISR 安全 API。"""
+    """ECDET-ISR-BLOCK（含缺口清单别名 ECDET-HW-FROMISR）。
+
+    除阻塞 API 外，只要该 API 存在 FromISR 变体（如 xSemaphoreGive），
+    在 ISR 中直接调用非 FromISR 版本同样不安全，一并报告。
+    """
     if "ECDET-ISR-BLOCK" not in active:
         return []
     out: list[Alert] = []
@@ -220,16 +224,213 @@ def check_isr_blocking(ctx: ProjectContext, hw: HwContext,
                 continue
             for callee, line in func.calls_in_body():
                 api = hw.blocking_apis.get(callee)
-                if api is None or not api.is_blocking:
+                if api is None:
                     continue
+                if not api.is_blocking and api.isr_safe_variant is None:
+                    continue
+                kind = "阻塞" if api.is_blocking else "非 FromISR 版本"
                 hint = f"，应改用 {api.isr_safe_variant}" if api.isr_safe_variant \
                     else "，ISR 上下文应轮询或置标志由任务处理"
                 out.append(_alert(
                     "ECDET-ISR-BLOCK", Severity.ERROR,
-                    f"ISR {func.name} 中调用阻塞 API {callee}(){hint}",
+                    f"ISR {func.name} 中调用{kind} API {callee}(){hint}",
                     f.path, line, "CWE-676",
                     [_evidence(f.path, line, "api",
-                               f"{callee} 为阻塞调用（RTOS 语义标注表）")],
+                               f"{callee} 为{kind}调用（RTOS 语义标注表）")],
+                ))
+    return out
+
+
+def check_critical_pair(ctx: ProjectContext, hw: HwContext,
+                        active: set[str]) -> list[Alert]:
+    """ECDET-HW-CRITICAL-PAIR：临界区进入/退出未配对。"""
+    if "ECDET-HW-CRITICAL-PAIR" not in active:
+        return []
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            stack: list[int] = []
+            for t in func.tokens:
+                if t.kind != "ident":
+                    continue
+                if t.value in hw.critical_enter:
+                    stack.append(t.line)
+                elif t.value in hw.critical_exit:
+                    if not stack:
+                        out.append(_alert(
+                            "ECDET-HW-CRITICAL-PAIR", Severity.ERROR,
+                            f"函数 {func.name} 中退出临界区但此前没有进入操作",
+                            f.path, t.line, "CWE-667",
+                            [_evidence(f.path, t.line, "api", "多余的退出临界区调用")],
+                        ))
+                    else:
+                        stack.pop()
+            for line in stack:
+                out.append(_alert(
+                    "ECDET-HW-CRITICAL-PAIR", Severity.ERROR,
+                    f"函数 {func.name} 进入临界区后未退出，中断可能长期被关闭",
+                    f.path, line, "CWE-667",
+                    [_evidence(f.path, line, "api", "缺失配对的退出临界区调用")],
+                ))
+    return out
+
+
+# ISR 中非 async-safe 的库函数（堆、stdio、字符串分词、进程/环境等）
+_ASYNC_UNSAFE = {
+    "malloc", "calloc", "realloc", "free",
+    "printf", "fprintf", "sprintf", "snprintf", "vprintf", "vsprintf",
+    "vsnprintf", "puts", "putchar", "scanf", "sscanf", "fopen", "fclose",
+    "fread", "fwrite", "fflush", "setbuf", "setvbuf",
+    "strtok", "strerror", "getenv", "setlocale", "system",
+    "exit", "abort", "atexit", "_Exit", "quick_exit",
+    "qsort", "bsearch", "rand", "srand", "time", "localtime", "gmtime",
+}
+
+
+def check_isr_async_unsafe(ctx: ProjectContext, hw: HwContext,
+                           active: set[str]) -> list[Alert]:
+    """ECDET-HW-ISR-HEAP：ISR 中调用非 async-safe 函数。"""
+    if "ECDET-HW-ISR-HEAP" not in active:
+        return []
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            if func.name not in hw.isr_names:
+                continue
+            for callee, line in func.calls_in_body():
+                if callee not in _ASYNC_UNSAFE:
+                    continue
+                out.append(_alert(
+                    "ECDET-HW-ISR-HEAP", Severity.ERROR,
+                    f"ISR {func.name} 中调用非 async-safe 函数 {callee}()",
+                    f.path, line, "CWE-676",
+                    [_evidence(f.path, line, "api",
+                               f"{callee}() 不保证中断上下文可重入/安全")],
+                ))
+    return out
+
+
+_COMPOUND_OPS = {"+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="}
+
+
+def _is_rmw(toks, i: int, name: str) -> bool:
+    nxt = toks[i + 1].value if i + 1 < len(toks) else ""
+    prv = toks[i - 1].value if i > 0 else ""
+    if nxt in ("++", "--") or prv in ("++", "--") or nxt in _COMPOUND_OPS:
+        return True
+    if nxt == "=":
+        for k in range(i + 2, min(i + 6, len(toks))):
+            if toks[k].kind == "ident" and toks[k].value == name:
+                return True
+    return False
+
+
+def check_volatile_rmw(ctx: ProjectContext, hw: HwContext,
+                       active: set[str]) -> list[Alert]:
+    """ECDET-HW-VOLATILE-RMW：共享 volatile 变量的非原子读改写。"""
+    if "ECDET-HW-VOLATILE-RMW" not in active:
+        return []
+    globals_info: dict[str, tuple[str, int, bool]] = {}
+    for f in ctx.facts:
+        for gname, gline, _static in f.global_vars:
+            decl = f.lex.source_lines[gline - 1] if gline - 1 < len(f.lex.source_lines) else ""
+            globals_info.setdefault(gname, (f.path, gline, "volatile" in decl))
+    isr_refs: dict[str, set[str]] = {}
+    task_refs: dict[str, set[tuple[str, str]]] = {}
+    for f in ctx.facts:
+        for func in f.functions:
+            if func.name == "main":
+                continue
+            refs = {t.value for t in func.tokens if t.kind == "ident"}
+            for g in refs & globals_info.keys():
+                if func.name in hw.isr_names:
+                    isr_refs.setdefault(g, set()).add(func.name)
+                else:
+                    task_refs.setdefault(g, set()).add((f.path, func.name))
+    out: list[Alert] = []
+    for g in sorted(set(isr_refs) & set(task_refs)):
+        gpath, gline, is_volatile = globals_info[g]
+        if not is_volatile:
+            continue
+        for f in ctx.facts:
+            for func in f.functions:
+                if (f.path, func.name) not in task_refs[g]:
+                    continue
+                intervals = _critical_intervals(func, hw)
+                for i, t in enumerate(func.tokens):
+                    if t.kind != "ident" or t.value != g or not _is_rmw(func.tokens, i, g):
+                        continue
+                    if any(lo <= t.line <= hi for lo, hi in intervals):
+                        continue
+                    out.append(_alert(
+                        "ECDET-HW-VOLATILE-RMW", Severity.WARNING,
+                        f"volatile 共享变量 {g} 在临界区外执行读改写（自增/复合赋值），"
+                        "操作本身非原子",
+                        f.path, t.line, "CWE-362",
+                        [_evidence(gpath, gline, "code",
+                                   f"ISR 写：{sorted(isr_refs[g])}；任务 RMW 未受保护")],
+                    ))
+                    break
+    return out
+
+
+_BITFIELD_LINE_RE = re.compile(
+    r"\b(?P<type>(?:(?:unsigned|signed)\s+)?"
+    r"(?:char|short(?:\s+int)?|int|long(?:\s+long)?|_Bool|BOOL|"
+    r"u?int(?:8|16|32|64)_t))\s+"
+    r"(?P<name>[A-Za-z_]\w*)\s*:\s*(?P<width>\d+)\s*;"
+)
+
+
+def _int_value(text: str) -> int | None:
+    try:
+        base = 16 if text.lower().startswith("0x") else 8 if text.startswith("0") \
+            and len(text) > 1 and text.isdigit() else 10
+        return int(text.rstrip("uUlL"), base)
+    except ValueError:
+        return None
+
+
+def check_bitfield_overflow(ctx: ProjectContext, hw: HwContext,
+                            active: set[str]) -> list[Alert]:
+    """ECDET-HW-BITFIELD：位域常量赋值超出声明位宽。"""
+    if "ECDET-HW-BITFIELD" not in active:
+        return []
+    fields: dict[str, tuple[int, bool, str]] = {}
+    for f in ctx.facts:
+        for line in f.lex.clean_lines:
+            for m in _BITFIELD_LINE_RE.finditer(line):
+                t = m.group("type")
+                signed = not (t.startswith("unsigned") or t.startswith("u")
+                              or t.startswith("UINT"))
+                fields.setdefault(m.group("name"),
+                                  (int(m.group("width")), signed, t))
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            toks = func.tokens
+            for i, t in enumerate(toks):
+                if t.kind != "ident" or t.value not in fields:
+                    continue
+                if i + 2 >= len(toks) or toks[i + 1].value != "=" \
+                        or toks[i + 2].kind != "number":
+                    continue
+                width, signed, ftype = fields[t.value]
+                value = _int_value(toks[i + 2].value)
+                if value is None:
+                    continue
+                lo, hi = (-(1 << (width - 1)), (1 << (width - 1)) - 1) if signed \
+                    else (0, (1 << width) - 1)
+                if lo <= value <= hi:
+                    continue
+                out.append(_alert(
+                    "ECDET-HW-BITFIELD", Severity.WARNING,
+                    f"位域 {t.value}（{ftype}:{width}）被赋常量 {value}，"
+                    f"超出可表示范围 {lo}..{hi}，高位被截断",
+                    f.path, toks[i + 2].line, "CWE-197",
+                    [_evidence(f.path, toks[i + 2].line, "code",
+                               f"{t.value} = {toks[i + 2].value}，位宽 {width}")],
+                    provenance=Provenance.SUSPECTED,
                 ))
     return out
 
@@ -239,4 +440,8 @@ HW_RULES = {
     "ECDET-ISR-RACE": check_isr_race,
     "ECDET-VOLATILE": check_isr_race,
     "ECDET-ISR-BLOCK": check_isr_blocking,
+    "ECDET-HW-CRITICAL-PAIR": check_critical_pair,
+    "ECDET-HW-ISR-HEAP": check_isr_async_unsafe,
+    "ECDET-HW-VOLATILE-RMW": check_volatile_rmw,
+    "ECDET-HW-BITFIELD": check_bitfield_overflow,
 }

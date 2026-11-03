@@ -29,7 +29,7 @@ uv run pytest                              # 运行测试（包含真实分析�
 ```
 目标工程 ──L1 构建复现──> compile_commands.json
    │                        │
-   │              ┌── L3 静态通道：CodeChecker + 自研规则（28 条）+ 硬件语义（P2）+ 抽象解释（P4）
+   │              ┌── L3 静态通道：CodeChecker + 自研规则（65 条）+ 硬件语义（P2）+ 抽象解释（P4）
    │              └── L3 动态通道：激励建模 → harness 闭环 → 原生/仿真执行 → PoC oracle（P7）
    └──源码直扫──────────────┤
                             ▼
@@ -223,16 +223,22 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 
 `ecdet orchestrate` 实现方案 3.3.7 六类智能体的确定性编排（LangGraph 状态机 MVP）：规划 → 静态通道 → 分诊并行扇出 → 动态通道 → 运行时监控裁决 → 修复验证闭环 → 高危人工复核闸门 → L5 聚合。采纳边界：LLM 负责编排与语义推理，**不作最终裁决**；成本控制含分层路由（note 级不过 LLM）与结构化交接（AgentState）；`--single-agent` 为 A6 消融/降级形态。
 
-## 内置规则集（30 条）
+## 内置规则集（65 条）
 
-- **MISRA C:2012 子集**（17 条）：2.5 / 7.2 / 8.7 / 8.9 / **10.3** / **10.4** / 13.5 / 14.2 / 15.2 / 15.5 / 16.4 / 16.6 / 17.2 / 17.3 / 21.1 / 21.3 / 21.6
-- **CERT C 子集**（5 条）：PRE31-C / MSC30-C / STR31-C / ARR30-C / FIO30-C
-- **ECDET 缺陷规则**（4 条）：CWE-242（gets）/ CWE-197（字面量截断）/ CWE-1284（scanf %s 无界）/ CWE-563（未使用参数）
-- **ECDET 硬件语义规则**（4 条，阶段二新增，P2）：
+> 2026-11 依据 [issue #1](https://github.com/fww111/ecdet/issues/1) 完成规则缺口核验：对 63 条候选规则逐条核对标准编号/CWE，与既有规则去重后补入“确认缺失且 token 级可判定”的规则，并修正 15.1/15.2、20.7/PRE31-C、21.3/21.7/21.8 等编号勘误。核验结论、判定边界与启用方式见 [规则核验说明](docs/rules-verification.md)。
+
+- **MISRA C:2012 子集**（38 条）：2.1 / 2.5 / 6.1 / 7.2 / 8.5 / 8.7 / 8.9 / **10.3** / **10.4** / 11.3 / 11.4 / 11.8 / 12.2 / 13.5 / 13.6 / 14.2 / 14.3 / 15.1 / 15.2 / 15.5 / 16.3 / 16.4 / 16.6 / 17.2 / 17.3 / 18.6 / 18.8 / 20.7 / 20.8 / 20.10 / 21.1 / 21.3 / 21.6 / 21.7 / 21.8 / 21.9 / 21.10 / 21.17
+- **CERT C 子集**（12 条）：PRE31-C / MSC30-C / STR31-C / ARR30-C / FIO30-C / INT30-C / INT32-C / INT34-C / INT36-C / EXP45-C / MEM34-C / MSC41-C
+- **ECDET 缺陷规则**（7 条）：CWE-242（gets）/ CWE-197（字面量截断）/ CWE-1284（scanf %s 无界）/ CWE-563（未使用参数）/ CWE-190（常量算术溢出）/ CWE-785（超大栈帧）/ CWE-78（system 命令执行）
+- **ECDET 硬件语义规则**（8 条，P2）：
   - `ECDET-MMIO-ACCESS`：写只读 / 读只写寄存器（基于 CMSIS-SVD 语义库，`PERIPH->REG` 与直接地址解引用两种形态）
   - `ECDET-ISR-RACE`：ISR 与任务共享全局变量且访问落在临界区区间之外（按行区间判定保护）
   - `ECDET-VOLATILE`：ISR 共享变量未声明 volatile
-  - `ECDET-ISR-BLOCK`：ISR 中调用阻塞 API（FreeRTOS/RT-Thread/CMSIS-OS2 语义标注表，提示 FromISR 变体）
+  - `ECDET-ISR-BLOCK`：ISR 中调用阻塞或非 FromISR 版本 API（别名 `ECDET-HW-FROMISR`；FreeRTOS/RT-Thread/CMSIS-OS2 语义标注表）
+  - `ECDET-HW-CRITICAL-PAIR`：临界区进入/退出未配对
+  - `ECDET-HW-ISR-HEAP`：ISR 中调用非 async-safe 函数（堆分配、stdio、strtok 等）
+  - `ECDET-HW-VOLATILE-RMW`：共享 volatile 变量在临界区外执行非原子读改写
+  - `ECDET-HW-BITFIELD`：位域常量赋值超出声明位宽
 
 Clang Static Analyzer、Clang-Tidy、Cppcheck 由 CodeChecker 统一调度；ESBMC 检测到安装时独立接入。
 

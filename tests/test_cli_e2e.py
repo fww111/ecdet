@@ -26,7 +26,7 @@ def test_scan_demo_rtos(tmp_path, capsys):
     assert "CERT C ARR30-C" in rule_ids          # s_history[8]
     assert "ECDET-CWE-197" in rule_ids           # uint8_t gain = 300
     assert "MISRA C:2012 17.2" in rule_ids       # sensor_filter 递归
-    assert "MISRA C:2012 15.2" in rule_ids       # goto
+    assert "MISRA C:2012 15.1" in rule_ids       # goto
     assert "CERT C FIO30-C" in rule_ids          # printf(s_mode_name)
     assert "CERT C MSC30-C" in rule_ids          # rand()
     assert "ECDET-CWE-1284" in rule_ids          # scanf %s
