@@ -5,8 +5,8 @@
 新增 / 已解决 / 持续三类，仅新增告警进入 L4 研判，使深度分析可以
 嵌入每日集成而非一次性离线行为。
 
-局限（MVP）：指纹含行号，告警因代码移动而漂移时计为"新增+已解决"
-（CodeChecker 以上下文哈希缓解，留待阶段五）。
+CodeChecker 告警使用原生上下文哈希；内置规则指纹仍含行号。
+基线 v2 保存文件范围，部分扫描不会将未复扫告警算作已解决。
 """
 
 from __future__ import annotations
@@ -55,8 +55,10 @@ def compute_impact_set(root: str | Path, changed: list[str]) -> ImpactSet:
     # 全工程事实（一次构建，供 include 图与调用图共用）
     paths: list[str] = []
     for p in sorted(root.rglob("*")):
-        if p.suffix.lower() in (".c", ".h") and not any(
-                s in p.parts for s in (".git", "build", "ecdet_build", ".venv")):
+        if p.suffix.lower() in (".c", ".h", ".cc", ".cpp", ".cxx", ".c++",
+                                ".hh", ".hpp", ".hxx") and not any(
+                s in p.relative_to(root).parts for s in
+                (".git", "build", "ecdet_build", ".venv", "ecdet_reports")):
             paths.append(p.relative_to(root).as_posix())
     facts = [build_file_facts(rel, (root / rel).read_text(encoding="utf-8",
                                                           errors="replace"))
@@ -111,7 +113,7 @@ def compute_impact_set(root: str | Path, changed: list[str]) -> ImpactSet:
             callees.update(name for name, _ in func.calls_in_body())
         file_calls[_norm(f.path)] = callees
 
-    frontier = {a for a in affected if a.endswith(".c") or a.endswith(".h")}
+    frontier = set(affected)
     while frontier:
         nxt: set[str] = set()
         for caller, callees in file_calls.items():
@@ -135,14 +137,27 @@ def compute_impact_set(root: str | Path, changed: list[str]) -> ImpactSet:
 # ---------------------------------------------------------------------------
 
 
-def save_baseline(alerts: list[Alert], path: str | Path) -> Path:
+def save_baseline(alerts: list[Alert], path: str | Path, *,
+                  previous: dict | None = None,
+                  scanned_paths: set[str] | None = None) -> Path:
     """保存当前告警指纹为基线（方案 3.3.6：CodeChecker 式存储）。"""
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "fingerprints": sorted({a.ensure_fingerprint() for a in alerts}),
-        "count": len(alerts),
-    }
+    rows = {a.ensure_fingerprint(): a.to_dict() for a in alerts}
+    locations = {fp: row["location"]["path"] for fp, row in rows.items()}
+    fingerprints = set(rows)
+    if previous and scanned_paths is not None:
+        old_locations = previous.get("fingerprint_locations", {})
+        unscanned = {fp for fp in previous.get("fingerprints", [])
+                     if old_locations.get(fp) not in scanned_paths}
+        fingerprints |= unscanned
+        locations.update({fp: old_locations[fp] for fp in unscanned if fp in old_locations})
+        for row in previous.get("alerts", []):
+            if row.get("fingerprint") in unscanned:
+                rows.setdefault(row["fingerprint"], row)
+    payload = {"version": 2, "fingerprints": sorted(fingerprints),
+               "count": len(fingerprints), "fingerprint_locations": locations,
+               "alerts": list(rows.values())}
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2),
                    encoding="utf-8")
     return out
@@ -160,14 +175,18 @@ class BaselineDiff:
     new: list[Alert] = field(default_factory=list)
     persisting: list[Alert] = field(default_factory=list)
     resolved_count: int = 0
+    unscanned_count: int = 0
 
     @property
     def summary(self) -> str:
-        return (f"新增 {len(self.new)} / 已解决 {self.resolved_count} / "
+        text = (f"新增 {len(self.new)} / 已解决 {self.resolved_count} / "
                 f"持续 {len(self.persisting)}")
+        return text + (f" / 未复扫 {self.unscanned_count}" if self.unscanned_count else "")
 
 
-def diff_baseline(old_fps: set[str], alerts: list[Alert]) -> BaselineDiff:
+def diff_baseline(old_fps: set[str], alerts: list[Alert], *,
+                  baseline: dict | None = None,
+                  scanned_paths: set[str] | None = None) -> BaselineDiff:
     """基线差分：指纹在基线中为持续，不在为新增；旧指纹未命中即已解决。
 
     仅新增告警需要进入 L4 研判（方案 3.3.6）。
@@ -176,5 +195,11 @@ def diff_baseline(old_fps: set[str], alerts: list[Alert]) -> BaselineDiff:
     persisting: list[Alert] = []
     for a in alerts:
         (persisting if a.ensure_fingerprint() in old_fps else new).append(a)
-    resolved = max(0, len(old_fps) - len(persisting))
-    return BaselineDiff(new=new, persisting=persisting, resolved_count=resolved)
+    current = {a.ensure_fingerprint() for a in alerts}
+    scope = old_fps
+    if scanned_paths is not None:
+        locations = (baseline or {}).get("fingerprint_locations", {})
+        scope = {fp for fp in old_fps if locations.get(fp) in scanned_paths} | (old_fps & current)
+    return BaselineDiff(new=new, persisting=persisting,
+                        resolved_count=len(scope - current),
+                        unscanned_count=len(old_fps - scope))

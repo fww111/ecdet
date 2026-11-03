@@ -56,20 +56,24 @@ def test_metrics_perfect():
     assert m["func_fn"] == 0, "A0 应检出全部漏洞函数（含动态通道）"
     assert m["func_fp"] == 0, "Mock 分诊应过滤 utility_helper 的 8.7 误报"
     assert m["precision"] == 1.0 and m["recall"] == 1.0
-    # 动态贡献：除零/空指针由动态通道独家检出
-    assert set(m["dynamic_only_funcs"]) >= {"scale_value", "read_selected"}
+    # CodeChecker 已能静态检出条件空指针，动态贡献按实际未覆盖函数计算。
+    assert "clangsa" in run.analysis_metadata["executed_analyzers"]
+    assert "read_selected" not in m["dynamic_only_funcs"]
+    assert "scale_value" in m["dynamic_only_funcs"]
+    assert any(a.engine == "codechecker" and a.location.path == "vuln_dyn.c"
+               for a in run.alerts)
     assert m["dynamic_contribution"] > 0
 
 
 def test_ablation_a5_no_dynamic_misses_dyn_defects():
-    """A5（去动态通道）：静态不可判定的除零/空指针漏检 → 召回下降。"""
+    """A5：CodeChecker 保留空指针覆盖，去动态后仍缺少未约束参数除零。"""
     gt = _gt()
     run = run_ecdet_config(CORPUS, AblationConfig("A5 去动态通道",
                                                   use_dynamic=False),
                            svd_path=CORPUS / "chip.svd")
     m = compute_metrics(run.alerts, gt)
     assert "scale_value" not in m["dynamic_only_funcs"]
-    assert m["func_fn"] >= 2, "去动态通道后应漏检动态专项漏洞函数"
+    assert m["func_fn"] == 1, "当前静态引擎只缺少未约束参数除零的实测覆盖"
     assert m["recall"] < 1.0
 
 

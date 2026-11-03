@@ -18,7 +18,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-SNAPSHOT_EXTS = {".c", ".cc", ".cpp", ".h", ".hpp"}
+SNAPSHOT_EXTS = {".c", ".cc", ".cpp", ".cxx", ".c++", ".h", ".hh", ".hpp", ".hxx"}
 SKIP_DIRS = {".git", "build", "ecdet_build", "ecdet_reports", ".venv",
              "__pycache__", "node_modules", "out", ".vs", ".vscode"}
 MAX_FILE_BYTES = 1_000_000      # 单文件上限 1MB
@@ -66,7 +66,8 @@ def create_snapshot(data_dir: str | Path, run_id: int,
     entries: dict[str, dict] = {}
     skipped = 0
     total_bytes = 0
-    for p in sorted(workspace.rglob("*")):
+    from ecdet.l3_analysis.engine import project_files
+    for p in sorted(project_files(workspace, SKIP_DIRS)):
         if not p.is_file() or p.suffix.lower() not in SNAPSHOT_EXTS:
             continue
         if any(s in p.parts for s in SKIP_DIRS):

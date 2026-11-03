@@ -2,9 +2,22 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from ecdet.l3_analysis.engine import AnalysisTarget, BuiltinEngine
 from ecdet.webui.runner import ScanRunner
 from ecdet.webui.store import Store
+
+
+@pytest.fixture(autouse=True)
+def isolate_codechecker_from_web_contract_tests(monkeypatch):
+    """Exercise real builtin rules and repair gates without an external tool run.
+
+    CodeChecker execution and native fix replay have their own acceptance tests.
+    These cases verify missing compiler, protected review, and selection behavior.
+    """
+    monkeypatch.setattr('ecdet.l3_analysis.engine.CodeCheckerEngine.rules',lambda self:[])
+    monkeypatch.setattr('ecdet.l3_analysis.engine.CodeCheckerEngine.run',lambda self,target,enabled:[])
 
 
 def prepare(tmp_path, source):

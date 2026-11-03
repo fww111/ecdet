@@ -19,8 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ecdet.l2_ir.model import Alert
-from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
-from ecdet.l3_analysis.engine import AnalysisTarget, BuiltinEngine
+from ecdet.l3_analysis.engine import AnalysisTarget, collect_sources, run_all_engines
 from ecdet.l4_llm.client import MockLlmClient
 from ecdet.l4_llm.triage import triage_alerts
 
@@ -130,12 +129,11 @@ class ToolRun:
     triage_counts: dict = field(default_factory=dict)
     available: bool = True
     llm_budget: dict = field(default_factory=dict)
+    analysis_metadata: dict = field(default_factory=dict)
 
 
 def _corpus_files(corpus: Path) -> list[Path]:
-    return [p.relative_to(corpus) for p in sorted(corpus.rglob("*"))
-            if p.suffix.lower() in (".c", ".h")
-            and not any(s in p.parts for s in SKIP_DIRS)]
+    return collect_sources(corpus, extra_skip=SKIP_DIRS)
 
 
 def _kloc(corpus: Path) -> float:
@@ -152,17 +150,18 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
                      rag_conf_threshold: float = 0.6) -> ToolRun:
     """跑一个消融配置：扫描 →（可选）分诊过滤误报 → 计时与统计。"""
     files = _corpus_files(corpus)
-    enabled = {r.rule_id for r in BUILTIN_RULES}
-    if not config.use_hw:
-        enabled -= HW_RULE_IDS
-    if config.profile:
-        from ecdet.l3_analysis.engine import INDUSTRY_PROFILES
-        enabled -= INDUSTRY_PROFILES.get(config.profile, set())
     svd = svd_path if config.use_hw else None
 
     t0 = time.perf_counter()
     target = AnalysisTarget(root=corpus, files=files, svd_path=svd)
-    alerts = BuiltinEngine().run(target, enabled)
+    alerts, _ = run_all_engines(target, profile=config.profile or None,
+                                disable=sorted(HW_RULE_IDS) if not config.use_hw else None)
+    manifest_path = corpus.resolve() / "ecdet_reports" / "codechecker" / "latest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    analysis_metadata = {key: manifest.get(key) for key in
+                         ("run_id", "executed_analyzers", "ctu", "statistical_analysis")}
+    analysis_metadata["manifest"] = str(manifest_path.parent / "runs" /
+                                         manifest["run_id"] / "manifest.json")
     scan_seconds = time.perf_counter() - t0
 
     triage_counts: dict = {}
@@ -210,6 +209,7 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
         provenance_ratio=(n_prov / len(alerts)) if alerts else 0.0,
         triage_counts=triage_counts,
         llm_budget=call_budget.snapshot(),
+        analysis_metadata=analysis_metadata,
     )
 
 

@@ -1,5 +1,5 @@
 /* 评测语料：硬件语义类漏洞样例（P2 消融验证） */
-#include <stdint.h>
+#include "eval_platform.h"
 
 #define GPIOA ((GPIO_TypeDef *) 0x40020000)
 

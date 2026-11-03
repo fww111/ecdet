@@ -234,6 +234,7 @@ def test_memory_only_context_source_is_explicit(tmp_path):
     verifier._gcc='fake'
     verifier._compile_check=lambda *args:(True,'')
     item=verifier.verify(item,ctx,SOURCE)
-    assert item.verified,item.fail_reason
+    assert not item.verified
+    assert item.validation['native_replay']['status']=='UNSUPPORTED'
     assert item.validation['snapshot']['sources']['memory_only.c']=='context-memory'
     assert item.validation['snapshot']['sources']['m.c']=='disk'

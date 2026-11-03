@@ -136,6 +136,9 @@ def aggregate(alerts: list[Alert], rule_metas: list[RuleMeta]) -> AggregationRes
 def _build_stats(clusters: list[AggregatedAlert], meta_index: dict[str, RuleMeta]) -> dict:
     by_sev = Counter(c.max_severity.value for c in clusters)
     by_engine = Counter(e for c in clusters for e in c.engines)
+    by_analyzer = Counter(name for c in clusters for name in {
+        a.properties.get("codechecker", {}).get("analyzer_name")
+        for a in c._all_alerts} if name)
     by_rule = Counter(c.primary.rule_id for c in clusters)
     by_prov = Counter(c.provenance.value for c in clusters)
     by_cwe = Counter(cwe for c in clusters for cwe in c.cwes)
@@ -147,6 +150,7 @@ def _build_stats(clusters: list[AggregatedAlert], meta_index: dict[str, RuleMeta
         "warning": by_sev.get("warning", 0),
         "note": by_sev.get("note", 0),
         "by_engine": dict(by_engine),
+        "by_analyzer": dict(by_analyzer),
         "by_rule": dict(by_rule),
         "by_provenance": dict(by_prov),
         "by_cwe": dict(by_cwe),
@@ -174,12 +178,15 @@ def build_compliance_records(result: AggregationResult) -> list[ComplianceRecord
     records: list[ComplianceRecord] = []
     for meta in result.rule_metas:
         n = counts.get(meta.rule_id, 0)
+        status = "compliant" if n == 0 else "deviation"
+        if meta.standard == "CodeChecker" and n == 0:
+            status = "no_findings" if meta.properties.get("analyzed") else "not_evaluated"
         records.append(
             ComplianceRecord(
                 rule_id=meta.rule_id,
                 category=meta.category,
                 title=meta.title_zh,
-                status="compliant" if n == 0 else "deviation",
+                status=status,
                 violation_count=n,
                 gjb_topic=gjb.get(meta.rule_id, ""),
             )

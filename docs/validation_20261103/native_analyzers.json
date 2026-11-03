@@ -1,0 +1,68 @@
+{
+  "codechecker_version": "6.29.1",
+  "manual_cc_analyzer_bin_supplied": false,
+  "input_path_order": [
+    "mingw64/bin",
+    "xpack-arm-none-eabi-gcc-15.2.1-1.1/bin",
+    "llvm-mingw-20261020-ucrt-x86_64/bin"
+  ],
+  "analyzers": [
+    {
+      "name": "clangsa",
+      "version": "23.1.4",
+      "basename": "clang-23.exe",
+      "available": true
+    },
+    {
+      "name": "clang-tidy",
+      "version": "23.1.4",
+      "basename": "clang-tidy.exe",
+      "available": true
+    },
+    {
+      "name": "cppcheck",
+      "version": "NOT FOUND",
+      "basename": null,
+      "available": false
+    },
+    {
+      "name": "gcc",
+      "version": "13.2.0",
+      "basename": "g++.exe",
+      "available": true
+    },
+    {
+      "name": "infer",
+      "version": "NOT FOUND",
+      "basename": null,
+      "available": false
+    }
+  ],
+  "unavailable_analyzers": [
+    "cppcheck",
+    "infer"
+  ],
+  "checker_counts_by_analyzer": {
+    "clang-tidy": 472,
+    "clangsa": 156,
+    "gcc": 360
+  },
+  "clangsa_checker_count": 156,
+  "clangsa_driver": {
+    "basename": "clang-23.exe",
+    "versioned_executable": true,
+    "uses_clang_23": true,
+    "direct_checker_help_returncode": 0,
+    "direct_checker_help_present": true,
+    "adapter_automatically_selected_driver": true
+  },
+  "capabilities": {
+    "ctu": false,
+    "ctu_mapping_tool_basename": null,
+    "statistical_analysis": false,
+    "statistical_analysis_reason": "LLVM 未包含 statisticsCollector/statisticsbased 插件",
+    "infer": false
+  },
+  "catalog_warning_count": 2,
+  "validation_passed": true
+}

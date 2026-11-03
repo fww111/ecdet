@@ -110,7 +110,8 @@ class Orchestrator:
         cfg = self.cfg
         state = AgentState(repo=Path(repo).resolve(), svd_path=svd_path)
         if state.svd_path is None:
-            state.svd_path = next(iter(sorted(state.repo.rglob('*.svd'))), None)
+            from ecdet.l3_analysis.engine import project_files
+            state.svd_path = next(iter(sorted(p for p in project_files(state.repo) if p.suffix.lower() == '.svd')), None)
         elif not state.svd_path.is_absolute():
             state.svd_path = state.repo / state.svd_path
         budget = LlmCallBudget(cfg.max_llm_calls)

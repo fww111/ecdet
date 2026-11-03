@@ -10,6 +10,8 @@ procedure BuildReconstruct(repo, target):
 from __future__ import annotations
 
 import json
+import os
+import shlex
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -21,6 +23,8 @@ from ecdet.l1_build.keil import parse_uvprojx
 # Keil/IAR 工程产出等价 clang 交叉命令行时使用的驱动前端
 _CROSS_DRIVER = "clang"
 _TARGET_TRIPLE_DEFAULT = "arm-none-eabi"
+_CXX_SUFFIXES = {".cc", ".cpp", ".cxx", ".c++"}
+_SOURCE_SUFFIXES = {".c", *_CXX_SUFFIXES}
 
 
 @dataclass
@@ -65,14 +69,18 @@ def reconstruct(project_root: str | Path, build_cmd: str | None = None,
 
     if build_cmd:
         return _via_intercept(root, out, build_cmd)
+    if (root / "compile_commands.json").is_file():
+        return _finish_from_ccdb(root / "compile_commands.json", "existing-ccdb",
+                                 BuildReconResult(method="existing-ccdb"))
     if (root / "CMakeLists.txt").exists():
         return _via_cmake(root, out)
     if (root / "Makefile").exists() or (root / "makefile").exists():
         return _via_makefile(root, out)
-    uvprojx = sorted(root.rglob("*.uvprojx"))
+    from ecdet.l3_analysis.engine import project_files
+    uvprojx = sorted(p for p in project_files(root) if p.suffix.lower() == ".uvprojx")
     if uvprojx:
         return _via_uvprojx(root, out, uvprojx[0])
-    ewp = sorted(root.rglob("*.ewp"))
+    ewp = sorted(p for p in project_files(root) if p.suffix.lower() == ".ewp")
     if ewp:
         return _via_ewp(root, out, ewp[0])
     return _via_directory_scan(root, out)
@@ -110,12 +118,26 @@ def _via_cmake(root: Path, out: Path) -> BuildReconResult:
 
 def _via_intercept(root: Path, out: Path, build_cmd: str) -> BuildReconResult:
     res = BuildReconResult(method=f"intercept:{build_cmd}")
+    codechecker = shutil.which("CodeChecker") or shutil.which("codechecker")
+    if codechecker and os.name != "nt":
+        ccdb = out / "compile_commands.json"
+        proc = subprocess.run(
+            [codechecker, "log", "--build", build_cmd, "--output", str(ccdb)],
+            cwd=str(root), capture_output=True, text=True, timeout=1800,
+            encoding="utf-8", errors="replace",
+        )
+        (out / "codechecker-build.log").write_text(proc.stdout + proc.stderr,
+                                                   encoding="utf-8")
+        if proc.returncode == 0 and ccdb.is_file():
+            return _finish_from_ccdb(ccdb, "codechecker-log", res)
+        res.warnings.append(f"CodeChecker 构建记录失败（退出码 {proc.returncode}），"
+                            f"日志：{out / 'codechecker-build.log'}")
     bear = shutil.which("bear")
     if bear is None:
         res.warnings.append("本机未安装 bear，无法拦截构建，退化为源码直扫")
         return _carry_warnings(_via_directory_scan(root, out), res)
     proc = subprocess.run(
-        ["bear", "--", *build_cmd.split()],
+        ["bear", "--", *shlex.split(build_cmd, posix=os.name != "nt")],
         cwd=str(root), capture_output=True, text=True, timeout=1800,
         encoding="utf-8", errors="replace",
     )
@@ -133,7 +155,10 @@ def _via_intercept(root: Path, out: Path, build_cmd: str) -> BuildReconResult:
 
 def _via_makefile(root: Path, out: Path) -> BuildReconResult:
     res = BuildReconResult(method="makefile-scan")
-    if shutil.which("bear") is not None and shutil.which("make") is not None:
+    can_record = (shutil.which("bear") is not None or
+                  (os.name != "nt" and (shutil.which("CodeChecker") or
+                                         shutil.which("codechecker"))))
+    if can_record and shutil.which("make") is not None:
         intercepted = _via_intercept(root, out, "make")
         if intercepted.commands:
             return intercepted
@@ -152,9 +177,10 @@ def _scan_makefile_flags(root: Path) -> tuple[list[str], list[str]]:
     import re
     for m in re.finditer(r"-I\s*([^\s]+)", text):
         p = m.group(1).strip("'\"")
-        includes.append((root / p).resolve().as_posix() if not Path(p).is_absolute() else p)
-    for m in re.finditer(r"-D\s*([A-Za-z_][\w]*)", text):
-        defines.append(m.group(1))
+        resolved = (root / p).resolve().as_posix() if not Path(p).is_absolute() else p
+        includes.append(f"-I{resolved}")
+    for m in re.finditer(r"-D\s*([A-Za-z_][\w]*(?:=[^\s]+)?)", text):
+        defines.append("-D" + m.group(1))
     return includes, defines
 
 
@@ -201,21 +227,28 @@ def _via_ewp(root: Path, out: Path, proj: Path) -> BuildReconResult:
 # 通道 5：源码目录直扫（零人工干预兜底）
 # ---------------------------------------------------------------------------
 
-_SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache__"}
+_SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache__",
+              ".venv", "ecdet_reports"}
 
 
 def _via_directory_scan(root: Path, out: Path) -> BuildReconResult:
+    from ecdet.l3_analysis.engine import project_files
     res = BuildReconResult(method="directory-scan")
     # 以根目录与各源文件所在目录为包含路径，可覆盖绝大多数小型裸机工程
     includes = [f"-I{root.resolve().as_posix()}"]
     src_dirs = {p.parent.resolve().as_posix() for p in _iter_sources(root)}
+    src_dirs.update(p.parent.resolve().as_posix() for p in project_files(root, _SKIP_DIRS)
+                    if p.suffix.lower() in {".h", ".hh", ".hpp", ".hxx"}
+                    and not any(part in _SKIP_DIRS for part in p.relative_to(root).parts))
     includes += [f"-I{d}" for d in sorted(src_dirs)]
     return _synthesize_from_sources(root, out, res, includes, [])
 
 
 def _iter_sources(root: Path):
-    for p in root.rglob("*"):
-        if p.suffix.lower() == ".c" and not any(part in _SKIP_DIRS for part in p.parts):
+    from ecdet.l3_analysis.engine import project_files
+    for p in project_files(root, _SKIP_DIRS):
+        if p.suffix.lower() in _SOURCE_SUFFIXES and \
+                not any(part in _SKIP_DIRS for part in p.relative_to(root).parts):
             yield p
 
 
@@ -228,7 +261,8 @@ def _synthesize_from_sources(root: Path, out: Path, res: BuildReconResult,
     for rel in files:
         abs_file = (base / rel).resolve()
         file_arg = abs_file.as_posix()
-        args = ([_CROSS_DRIVER, f"--target={_TARGET_TRIPLE_DEFAULT}"]
+        driver = "clang++" if abs_file.suffix.lower() in _CXX_SUFFIXES else _CROSS_DRIVER
+        args = ([driver, f"--target={_TARGET_TRIPLE_DEFAULT}"]
                 + include_flags + define_flags + ["-c", file_arg])
         res.commands.append(
             CompileCommand(directory=base.as_posix(),
@@ -251,17 +285,21 @@ def _finish_from_ccdb(ccdb: Path, method: str, res: BuildReconResult) -> BuildRe
     except (OSError, json.JSONDecodeError) as e:
         res.warnings.append(f"编译数据库读取失败：{e}")
         return res
+    if not isinstance(entries, list) or not all(isinstance(e, dict) for e in entries):
+        res.warnings.append("编译数据库应为编译命令对象数组")
+        return res
     for e in entries:
         args = e.get("arguments")
         if args is None and e.get("command"):
-            args = e["command"].split()
+            args = shlex.split(e["command"], posix=os.name != "nt")
         res.commands.append(
             CompileCommand(directory=e.get("directory", ""),
                            file=e.get("file", ""),
                            arguments=args or [],
                            output=e.get("output", ""))
         )
-    return _write_ccdb(ccdb.parent, res)
+    res.ccdb_path = ccdb
+    return res
 
 
 def _write_ccdb(out: Path, res: BuildReconResult) -> BuildReconResult:

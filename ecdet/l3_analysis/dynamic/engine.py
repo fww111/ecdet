@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import shutil
+import os
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
@@ -143,7 +144,10 @@ class DynamicEngine:
         targets = candidates[:self.max_functions]
 
         findings: list[DynamicFinding] = []
-        with tempfile.TemporaryDirectory(prefix="ecdet_dyn_") as td:
+        # Windows may retain a crashed image after its threads have exited.
+        # A temporary-file cleanup failure must not discard the findings.
+        with tempfile.TemporaryDirectory(prefix="ecdet_dyn_",
+                                         ignore_cleanup_errors=os.name == "nt") as td:
             workdir = Path(td)
             include_dirs = _collect_include_dirs(root, facts)
             for target_rel, func in targets:

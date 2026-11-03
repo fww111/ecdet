@@ -36,6 +36,7 @@ def build_sarif(alerts: list[Alert], rules: list[RuleMeta], tool_version: str = 
                 "name": r.rule_id.replace(":", "").replace(" ", "_"),
                 "shortDescription": {"text": r.title_zh or r.rule_id},
                 "properties": {
+                    **r.properties,
                     "standard": r.standard,
                     "category": r.category,
                     "decidability": r.decidability,
@@ -53,10 +54,20 @@ def build_sarif(alerts: list[Alert], rules: list[RuleMeta], tool_version: str = 
             region["endLine"] = loc.end_line
             if loc.end_col:
                 region["endColumn"] = loc.end_col
+        if a.rule_id not in rule_index:
+            # External analyzers such as CodeChecker own their checker catalog;
+            # still define the rule in SARIF when ecdet has no static RuleMeta.
+            rule_index[a.rule_id] = len(sarif_rules)
+            sarif_rules.append({
+                "id": a.rule_id,
+                "name": a.rule_id.replace(":", "").replace(" ", "_"),
+                "shortDescription": {"text": a.rule_id},
+                "properties": {"engine": a.engine},
+                "defaultConfiguration": {"level": "warning", "enabled": True},
+            })
         fingerprints = a.ensure_fingerprint()
         result = {
             "ruleId": a.rule_id,
-            "ruleIndex": rule_index.get(a.rule_id),
             "level": _SEVERITY_TO_LEVEL[a.severity],
             "message": {"text": a.message},
             "locations": [
@@ -73,9 +84,11 @@ def build_sarif(alerts: list[Alert], rules: list[RuleMeta], tool_version: str = 
                 "cwe": a.cwe,
                 "provenance": a.provenance.value,
                 "gb_level": a.severity.to_cn_level(),
+                **({"analysis": a.properties} if a.properties else {}),
                 **({"triage": a.triage} if a.triage else {}),
             },
         }
+        result["ruleIndex"] = rule_index[a.rule_id]
         if a.evidence:
             result["properties"]["evidence"] = [
                 {
@@ -83,10 +96,28 @@ def build_sarif(alerts: list[Alert], rules: list[RuleMeta], tool_version: str = 
                     "message": e.message,
                     "path": e.location.path if e.location else None,
                     "line": e.location.line if e.location else None,
+                    "col": e.location.col if e.location else None,
+                    "end_line": e.location.end_line if e.location else None,
+                    "end_col": e.location.end_col if e.location else None,
                     "snippet": e.snippet,
                 }
                 for e in a.evidence
             ]
+        if a.engine == "codechecker":
+            steps = [e for e in a.evidence if e.kind == "code" and e.location]
+            if steps:
+                result["codeFlows"] = [{"threadFlows": [{"locations": [
+                    {"executionOrder": i + 1, "location": {
+                        "message": {"text": e.message},
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": e.location.path},
+                            "region": {"startLine": e.location.line,
+                                       "startColumn": e.location.col},
+                        },
+                    }} for i, e in enumerate(steps)
+                ]}]}]
+        elif a.properties.get("sarif_code_flows"):
+            result["codeFlows"] = a.properties["sarif_code_flows"]
         results.append(result)
 
     return {
@@ -136,6 +167,9 @@ def load_sarif(path: str | Path) -> tuple[list[Alert], list[RuleMeta]]:
                 decidability=props.get("decidability", "syntactic"),
                 title_zh=r.get("shortDescription", {}).get("text", ""),
                 cwes=props.get("cwe", []),
+                enabled_by_default=r.get("defaultConfiguration", {}).get("enabled", True),
+                properties={key: value for key, value in props.items()
+                            if key not in {"standard", "category", "decidability", "cwe"}},
             )
         for res in run.get("results", []):
             pl = res.get("locations", [{}])[0].get("physicalLocation", {})
@@ -149,10 +183,29 @@ def load_sarif(path: str | Path) -> tuple[list[Alert], list[RuleMeta]]:
             props = res.get("properties", {})
             evidence = [
                 Evidence(kind=e.get("kind", "note"), message=e.get("message", ""),
-                         location=Location(path=e["path"], line=e["line"]) if e.get("path") else None,
+                         location=Location(path=e["path"], line=e.get("line") or 1,
+                                           col=e.get("col") or 1,
+                                           end_line=e.get("end_line"),
+                                           end_col=e.get("end_col")) if e.get("path") else None,
                          snippet=e.get("snippet", ""))
                 for e in props.get("evidence", [])
             ]
+            if not evidence:
+                for flow in res.get("codeFlows", []):
+                    for thread in flow.get("threadFlows", []):
+                        for step in thread.get("locations", []):
+                            detail = step.get("location", {})
+                            physical = detail.get("physicalLocation", {})
+                            region = physical.get("region", {})
+                            uri = physical.get("artifactLocation", {}).get("uri")
+                            evidence.append(Evidence(
+                                kind="code", message=detail.get("message", {}).get("text", ""),
+                                location=Location(uri, region.get("startLine", 1),
+                                                  region.get("startColumn", 1)) if uri else None))
+            native_properties = props.get("analysis") or {}
+            if engine != "ecdet":
+                native_properties = {**native_properties, "native_sarif": props,
+                                     "sarif_code_flows": res.get("codeFlows", [])}
             alerts.append(
                 Alert(
                     rule_id=res.get("ruleId", "unknown"),
@@ -164,8 +217,10 @@ def load_sarif(path: str | Path) -> tuple[list[Alert], list[RuleMeta]]:
                     cwe=props.get("cwe"),
                     provenance=Provenance(props.get("provenance", "suspected")),
                     evidence=evidence,
-                    fingerprint=res.get("partialFingerprints", {}).get("ecdet/v1", ""),
+                    fingerprint=res.get("partialFingerprints", {}).get("ecdet/v1") or
+                    next(iter(res.get("partialFingerprints", {}).values()), ""),
                     triage=props.get("triage"),
+                    properties=native_properties,
                 )
             )
     return alerts, list(rules_meta.values())

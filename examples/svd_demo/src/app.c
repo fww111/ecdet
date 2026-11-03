@@ -10,6 +10,7 @@
  * 干净参照：ODR 读写、临界区保护访问均不告警。
  */
 #include <stdint.h>
+#include "demo_platform.h"
 
 /* 寄存器基址宏（真实的两级展开形态） */
 #define PERIPH_BASE      0x40000000UL

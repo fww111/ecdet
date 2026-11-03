@@ -238,9 +238,13 @@ class FixVerifier:
     claim behavior equivalence; dynamic replay and behavior remain explicit.
     """
 
-    def __init__(self, project_root, use_compiler: bool = True, svd_path=None):
+    def __init__(self, project_root, use_compiler: bool = True, svd_path=None,
+                 profile=None, enable=None, disable=None):
         self.root = Path(project_root).resolve()
         self.use_compiler = use_compiler
+        self.profile = profile
+        self.enable = list(enable or [])
+        self.disable = list(disable or [])
         self._gcc = shutil.which("gcc") if use_compiler else None
         self.svd_path = Path(svd_path) if svd_path else None
         if self.svd_path and not self.svd_path.is_absolute():
@@ -248,10 +252,15 @@ class FixVerifier:
         self._all_rules = set()          # 由 run 时注入
         self._include_dirs: list[Path] = []
         self._source_origins: dict[str, str] = {}
+        from ecdet.l3_analysis.codechecker_verifier import NativeFixValidator
+        self._native = NativeFixValidator(self.root, svd_path=self.svd_path,
+                                          profile=profile, enable=self.enable,
+                                          disable=self.disable)
 
     def _prepare(self, ctx: ProjectContext):
         from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
-        self._all_rules = {r.rule_id for r in BUILTIN_RULES}
+        from ecdet.l3_analysis.engine import resolve_enabled
+        self._all_rules = resolve_enabled(BUILTIN_RULES, self.profile, self.disable, self.enable)
         dirs = {self.root, self.root / "include", self.root / "inc"}
         for f in ctx.facts:
             dirs.add(self.root / Path(f.path).parent)
@@ -361,7 +370,7 @@ class FixVerifier:
     def verify(self, proposal: FixProposal, ctx: ProjectContext,
                source_text: str) -> FixProposal:
         proposal.verified = False
-        for name in ("patch_scope", "snapshot", "baseline", "static_replay", "new_errors", "compile", "dynamic_replay", "behavior"):
+        for name in ("patch_scope", "snapshot", "baseline", "static_replay", "new_errors", "compile", "native_replay", "dynamic_replay", "behavior"):
             self._step(proposal, name, "SKIPPED", "未执行")
         self._step(proposal, "behavior", "SKIPPED", "未提供业务行为回归，不声称语义等价")
         self._step(proposal, "dynamic_replay", "SKIPPED", "本验证器仅执行静态与编译检查")
@@ -385,11 +394,14 @@ class FixVerifier:
             return self._reject(proposal,"snapshot","ERROR",f"当前目标源码不可读：{type(exc).__name__}")
         if current != source_text:
             return self._reject(proposal,"snapshot","FAIL","当前磁盘源码与补丁验证快照不一致，需重新生成候选")
-        if proposal.source_engine not in {"builtin", "builtin-hw", "builtin-absint"} or proposal.rule_id not in self._all_rules:
+        builtin_source = proposal.source_engine in {"builtin", "builtin-hw", "builtin-absint"}
+        native_source = proposal.source_engine == "codechecker"
+        if not native_source and (not builtin_source or proposal.rule_id not in self._all_rules):
             return self._reject(proposal,"static_replay","UNSUPPORTED","原告警引擎或规则不可由当前验证器重放")
         svd = self.svd_path
         if svd is None:
-            candidates = [p for p in sorted(self.root.rglob("*.svd")) if not any(part in {"ecdet_build","ecdet_reports",".git"} for part in p.relative_to(self.root).parts)]
+            from ecdet.l3_analysis.engine import project_files
+            candidates = sorted(p for p in project_files(self.root) if p.suffix.lower() == ".svd")
             if len(candidates) == 1:
                 svd = candidates[0]
             elif len(candidates) > 1:
@@ -413,20 +425,22 @@ class FixVerifier:
                         and a.location.path.replace("\\", "/") == path
                         and a.engine == proposal.source_engine
                         and (a.location.line == original_line if original_line else proposal.func_start <= a.location.line <= proposal.func_end)]
-            if not original:
-                return self._reject(proposal,"baseline","FAIL","原告警未在当前引擎、位置与上下文重现")
-            self._step(proposal,"baseline","PASS",f"原告警重现{len(original)}条，来源{proposal.source_engine}")
+            if builtin_source:
+                if not original:
+                    return self._reject(proposal,"baseline","FAIL","原告警未在当前引擎、位置与上下文重现")
+                self._step(proposal,"baseline","PASS",f"原告警重现{len(original)}条，来源{proposal.source_engine}")
             modified = apply_patch(source_text, proposal.func_start, proposal.func_end, proposal.patched_code)
             sources[path] = modified
             after = self._scan(sources,svd)
         except Exception as exc:
             return self._reject(proposal,"static_replay","ERROR",f"静态重放失败：{type(exc).__name__}")
         end = proposal.func_start + len(proposal.patched_code.splitlines()) - 1
-        if any(a.rule_id == proposal.rule_id and a.engine == proposal.source_engine
+        if builtin_source and any(a.rule_id == proposal.rule_id and a.engine == proposal.source_engine
                and a.location.path.replace("\\", "/") == path
                and proposal.func_start <= a.location.line <= end for a in after):
             return self._reject(proposal,"static_replay","FAIL","原告警在补丁后仍存在，拒绝")
-        self._step(proposal,"static_replay","PASS","完整内置引擎重扫，原告警已消除")
+        if builtin_source:
+            self._step(proposal,"static_replay","PASS","完整内置引擎重扫，原告警已消除")
         new_errors = self._error_instances(after,self._line_map(source_text,modified),path) - self._error_instances(baseline)
         if new_errors:
             return self._reject(proposal,"new_errors","FAIL",f"补丁引入新的error告警实例{sum(new_errors.values())}条")
@@ -442,6 +456,26 @@ class FixVerifier:
         if not ok:
             return self._reject(proposal,"compile","FAIL",f"编译语法检查失败：{reason}")
         self._step(proposal,"compile","PASS","编译语法检查通过")
+        memory_sources = [name for name, origin in self._source_origins.items()
+                          if origin != "disk"]
+        if memory_sources:
+            return self._reject(proposal,"native_replay","UNSUPPORTED",
+                "上下文包含仅内存存在的依赖，不能声明完整磁盘工程重放通过：" + ", ".join(sorted(memory_sources)))
+        self._native.svd_path = svd
+        try:
+            native_ok, native_reason = self._native.verify(proposal, modified)
+        except Exception as exc:
+            return self._reject(proposal,"native_replay","ERROR",f"完整静态重放异常：{type(exc).__name__}")
+        if not native_ok:
+            if native_source:
+                native_steps = getattr(self._native, "last_validation", {})
+                self._step(proposal,"baseline",native_steps.get("baseline", "SKIPPED"), native_reason)
+                self._step(proposal,"static_replay",native_steps.get("static_replay", "SKIPPED"),native_reason)
+            return self._reject(proposal,"native_replay","FAIL",native_reason)
+        self._step(proposal,"native_replay","PASS","CodeChecker与完整静态流水线已重放，原告警消失且未新增error")
+        if native_source:
+            self._step(proposal,"baseline","PASS","CodeChecker原告警已按引擎、规则和源码位置重现")
+            self._step(proposal,"static_replay","PASS","CodeChecker原告警在补丁后已消除")
         proposal.verified = True
         return proposal
 

@@ -785,8 +785,11 @@ async function loadRunsTable() {
            <a class="link" href="#" onclick="location.hash='#/code?run=${r.id}';return false;">代码</a> ·
            <a class="link" href="#" onclick="location.hash='#/compare?target=${r.id}';return false;">对比</a> ·
            <a class="link" href="/api/runs/${r.id}/report" target="_blank">HTML</a> ·
-           <a class="link" href="/api/runs/${r.id}/sarif" target="_blank">SARIF</a>`
-        : (r.error ? `<span class="muted" title="${esc(r.error)}">失败</span>` : "—");
+           <a class="link" href="/api/runs/${r.id}/sarif" target="_blank">SARIF</a> ·
+           <a class="link" href="/api/runs/${r.id}/codechecker" target="_blank">分析详情</a> ·
+           <a class="link" href="/api/runs/${r.id}/codechecker/results.sarif" target="_blank">原生报告</a>`
+        : (r.error ? `<span class="muted" title="${esc(r.error)}">失败</span> ·
+           <a class="link" href="/api/runs/${r.id}/codechecker/analyze.log" target="_blank">分析日志</a>` : "—");
       return `<tr class="click" onclick="location.hash='#/alerts?run=${r.id}'">
         <td>${r.id}</td><td>${esc(names[r.project_id] || r.project_id)}</td>
         <td><span class="badge ${r.status}">${r.status}</span></td>
@@ -978,6 +981,8 @@ async function openAlert(id) {
     <div class="kv"><b>规则</b>${esc(a.rule_id)}</div>
     <div class="kv"><b>CWE</b>${esc(a.cwe||"未标注")}</div>
     <div class="kv"><b>引擎</b>${esc(a.engine)}</div>
+    ${a.properties?.codechecker ? `<div class="kv"><b>分析器</b>${esc(a.properties.codechecker.analyzer_name||"")}</div>
+      <div class="kv"><b>原生级别</b>${esc(a.properties.codechecker.severity||"")}</div>` : ""}
     <div class="kv"><b>说明</b>${esc(a.message)}</div>
     ${ctxHtml || ""}
     ${tri}

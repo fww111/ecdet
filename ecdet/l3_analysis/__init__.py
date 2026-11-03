@@ -3,6 +3,7 @@
 from ecdet.l3_analysis.engine import (
     AnalysisTarget,
     BuiltinEngine,
+    CodeCheckerEngine,
     Engine,
     ExternalEngineAdapter,
     run_all_engines,
@@ -11,6 +12,7 @@ from ecdet.l3_analysis.engine import (
 __all__ = [
     "AnalysisTarget",
     "BuiltinEngine",
+    "CodeCheckerEngine",
     "Engine",
     "ExternalEngineAdapter",
     "run_all_engines",

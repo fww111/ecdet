@@ -90,6 +90,7 @@ class Alert:
     evidence: list[Evidence] = field(default_factory=list)
     fingerprint: str = ""                     # 聚合去重主键，空则按内容计算
     triage: Optional[dict] = None             # L4 分诊结论（verdict/confidence/reason/…）
+    properties: dict = field(default_factory=dict)  # 分析器原生元数据与修复提示
 
     def compute_fingerprint(self) -> str:
         raw = json.dumps(
@@ -137,6 +138,7 @@ class Alert:
             evidence=evs,
             fingerprint=d.get("fingerprint", ""),
             triage=d.get("triage"),
+            properties=d.get("properties") or {},
         )
 
 
@@ -151,6 +153,7 @@ class RuleMeta:
     title_zh: str                 # 中文规则描述
     cwes: list[str] = field(default_factory=list)
     enabled_by_default: bool = True
+    properties: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -165,4 +168,5 @@ class RuleMeta:
             title_zh=d.get("title_zh", ""),
             cwes=d.get("cwes", []),
             enabled_by_default=d.get("enabled_by_default", True),
+            properties=d.get("properties") or {},
         )

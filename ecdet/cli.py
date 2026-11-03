@@ -20,6 +20,7 @@ from ecdet.l2_ir import save_sarif
 from ecdet.l3_analysis.engine import (
     DEFAULT_ENGINES,
     AnalysisTarget,
+    project_files,
     all_rule_metas,
     resolve_enabled,
     run_all_engines,
@@ -33,8 +34,8 @@ _SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache
 
 def _collect_sources(root: Path) -> list[Path]:
     out = []
-    for p in sorted(root.rglob("*")):
-        if p.suffix.lower() in (".c", ".h") and \
+    for p in sorted(project_files(root, _SKIP_DIRS | {"ecdet_reports"})):
+        if p.suffix.lower() in (".c", ".h", ".cc", ".cpp", ".cxx", ".c++") and \
                 not any(s in p.parts for s in _SKIP_DIRS):
             out.append(p.relative_to(root))
     return out
@@ -49,7 +50,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
     # L1 构建复现（--no-build 跳过，直接源码扫描）
     method = "skipped"
     if not args.no_build:
-        res = reconstruct(root)
+        res = reconstruct(root, build_cmd=getattr(args, "build_command", None))
         method = res.method
         for w in res.warnings:
             print(f"[L1] 警告：{w}")
@@ -62,12 +63,14 @@ def cmd_scan(args: argparse.Namespace) -> int:
         return 2
 
     old_fps = set()
-    out_dir = Path(args.output) if args.output else root / "ecdet_reports"
+    old_baseline = {}
+    out_dir = (Path(args.output) if args.output else root / "ecdet_reports").resolve()
     if args.baseline:
         from ecdet.incremental import load_baseline_fingerprints
         bp = Path(args.baseline)
         if bp.exists():
             old_fps = load_baseline_fingerprints(bp)
+            old_baseline = json.loads(bp.read_text(encoding="utf-8"))
             print(f"[增量] 载入基线：{bp}（{len(old_fps)} 条指纹）")
         else:
             print(f"[增量] 基线文件不存在，按全量处理：{bp}")
@@ -91,16 +94,21 @@ def cmd_scan(args: argparse.Namespace) -> int:
     if args.svd:
         svd_path = Path(args.svd)
     else:
-        candidates = [p for p in sorted(root.rglob("*.svd"))
+        candidates = [p for p in sorted(p for p in project_files(root) if p.suffix.lower() == ".svd")
                       if "ecdet_build" not in p.parts]
         svd_path = candidates[0] if candidates else None
     if svd_path and not svd_path.is_absolute():
         svd_path = root / svd_path
-    target = AnalysisTarget(root=root, files=files, svd_path=svd_path)
+    target = AnalysisTarget(root=root, files=files, svd_path=svd_path,
+                            artifact_dir=out_dir / "codechecker")
     if svd_path:
         print(f"[L2] 硬件语义：尝试加载SVD {svd_path.name}（加载成功后MMIO 权限检查启用）")
-    alerts, metas = run_all_engines(target, profile=args.profile,
-                                    disable=args.disable, enable=args.enable)
+    try:
+        alerts, metas = run_all_engines(target, profile=args.profile,
+                                        disable=args.disable, enable=args.enable)
+    except RuntimeError as exc:
+        print(f"错误：静态分析失败：{exc}", file=sys.stderr)
+        return 2
 
     constraint_receipt = None
     if getattr(args, 'constraints', False):
@@ -133,8 +141,13 @@ def cmd_scan(args: argparse.Namespace) -> int:
     # 告警基线：差分 + 更新（方案 3.3.6）
     if old_fps or args.save_baseline:
         from ecdet.incremental import diff_baseline, save_baseline
-        diff = diff_baseline(old_fps, alerts)
-        base_path = save_baseline(alerts, out_dir / "baseline.json")
+        scanned_paths = ({f.as_posix() for f in files} |
+                         {s.strip().replace('\\', '/') for s in args.changed.split(',')}) \
+            if args.changed else None
+        diff = diff_baseline(old_fps, alerts, baseline=old_baseline,
+                             scanned_paths=scanned_paths)
+        base_path = save_baseline(alerts, out_dir / "baseline.json",
+                                  previous=old_baseline, scanned_paths=scanned_paths)
         if old_fps:
             print(f"[增量] 基线差分：{diff.summary}")
             for a in diff.new[:10]:
@@ -167,7 +180,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
 
 def cmd_init_ccdb(args: argparse.Namespace) -> int:
     root = Path(args.path).resolve()
-    res = reconstruct(root)
+    res = reconstruct(root, build_cmd=getattr(args, "build_command", None))
     print(f"构建复现通道：{res.method}")
     print(f"编译命令：{len(res.commands)} 条")
     if res.target_hint:
@@ -448,6 +461,7 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--enable", nargs="*", default=[], help="额外启用规则 ID")
     p_scan.add_argument("--no-build", action="store_true",
                         help="跳过 L1 构建复现，直接源码扫描")
+    p_scan.add_argument("--build-command", help="通过 CodeChecker 记录真实构建命令（Linux/macOS）")
     p_scan.add_argument("--svd", help="CMSIS-SVD 芯片描述文件（缺省自动发现工程内 *.svd）")
     p_scan.add_argument("--baseline", help="上次扫描的基线 JSON（存在则差分并仅报新增）")
     p_scan.add_argument("--save-baseline", action="store_true",
@@ -462,6 +476,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p_ccdb = sub.add_parser("init-ccdb", help="L1 构建复现")
     p_ccdb.add_argument("path", help="工程根目录")
+    p_ccdb.add_argument("--build-command", help="通过 CodeChecker 记录真实构建命令（Linux/macOS）")
     p_ccdb.set_defaults(func=cmd_init_ccdb)
 
     p_rules = sub.add_parser("rules", help="列出规则集")

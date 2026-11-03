@@ -16,6 +16,7 @@ from ecdet.l2_ir import save_sarif
 from ecdet.l3_analysis.engine import (
     AnalysisTarget,
     collect_sources,
+    project_files,
     run_all_engines,
 )
 from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
@@ -26,6 +27,7 @@ from ecdet.webui.store import Store
 
 _SKIP_DIRS = {".git", "build", "ecdet_build", "ecdet_reports", ".venv",
               "__pycache__", "node_modules"}
+_ARCHIVE_IGNORED = {".git", ".venv", "ecdet_reports", "__pycache__", "node_modules"}
 
 
 def register_project(store: Store, data_dir: Path, name: str,
@@ -84,11 +86,8 @@ def register_project(store: Store, data_dir: Path, name: str,
 
 
 def _require_sources(workspace: str) -> None:
-    files = [p for p in Path(workspace).rglob("*")
-             if p.suffix.lower() in (".c", ".h")
-             and not any(s in p.parts for s in _SKIP_DIRS)]
-    if not files:
-        raise ValueError("工程中未发现 C/H 源文件")
+    if not collect_sources(Path(workspace), extra_skip=set(_SKIP_DIRS)):
+        raise ValueError("工程中未发现 C/C++ 源文件或头文件")
 
 
 def _extract_archive(data: bytes, dest: Path) -> None:
@@ -101,14 +100,16 @@ def _extract_archive(data: bytes, dest: Path) -> None:
             with zipfile.ZipFile(marker) as zf:
                 for info in zf.infolist():
                     name = info.filename.replace("\\", "/")
-                    if name.startswith("/") or ".." in name.split("/"):
+                    parts = name.split("/")
+                    if name.startswith("/") or ".." in parts or _ARCHIVE_IGNORED.intersection(parts):
                         continue          # 防路径逃逸
                     zf.extract(info, dest)
         elif tarfile.is_tarfile(marker):
             with tarfile.open(marker) as tf:
                 safe = [m for m in tf.getmembers()
                         if not m.name.startswith("/")
-                        and ".." not in Path(m.name).parts]
+                        and ".." not in Path(m.name).parts
+                        and not _ARCHIVE_IGNORED.intersection(Path(m.name).parts)]
                 tf.extractall(dest, members=safe)
         else:
             raise ValueError("仅支持 zip / tar.gz 归档")
@@ -158,6 +159,12 @@ class ScanRunner:
                                         alert_ids=task.get("alert_ids"),
                                         mode=task.get("mode", "suggest"))
             except Exception as e:  # noqa: BLE001 —— 任务隔离，失败入状态
+                import traceback
+
+                errors = self.data_dir / "task-errors"
+                errors.mkdir(parents=True, exist_ok=True)
+                (errors / f"{task['kind']}-{task['id']}.log").write_text(
+                    traceback.format_exc(), encoding="utf-8")
                 if task["kind"] == "scan":
                     self.store.set_run_status(task["id"], "failed",
                                               error=str(e))
@@ -183,26 +190,27 @@ class ScanRunner:
             method = "skipped"
             warnings: list[str] = []
         else:
-            res = reconstruct(workspace)
+            res = reconstruct(workspace, build_cmd=params.get("build_command"))
             method = res.method
             warnings = res.warnings
 
         # L3 静态扫描
         files = collect_sources(workspace, extra_skip=set())
         if not files:
-            store.set_run_status(run_id, "failed", error="未发现 C/H 源文件")
+            store.set_run_status(run_id, "failed", error="未发现 C/C++ 源文件或头文件")
             return
         svd = params.get("svd")
         svd_path = Path(svd) if svd else None
         if svd_path is None:
-            svd_path = next(iter(sorted(workspace.rglob('*.svd'))), None)
+            svd_path = next(iter(sorted((p for p in project_files(workspace) if p.suffix.lower() == '.svd'))), None)
         if svd_path and not svd_path.is_absolute():
             svd_path = workspace / svd_path
-        target = AnalysisTarget(root=workspace, files=files, svd_path=svd_path)
+        target = AnalysisTarget(root=workspace, files=files, svd_path=svd_path,
+                                artifact_dir=out_dir / "codechecker")
         enabled_disable = params.get("disable") or []
         alerts, metas = run_all_engines(
             target, profile=params.get("profile") or None,
-            disable=list(enabled_disable))
+            disable=list(enabled_disable), enable=list(params.get("enable") or []))
 
         # L3 动态通道（可选）
         if params.get("dynamic"):
@@ -249,6 +257,7 @@ class ScanRunner:
                 "message": a.message, "cwe": a.cwe,
                 "provenance": c.provenance.value,
                 "triage": a.triage, "fingerprint": a.ensure_fingerprint(),
+                "properties": a.properties,
                 "evidence": [{"kind": e.kind, "message": e.message,
                               "path": e.location.path if e.location else "",
                               "line": e.location.line if e.location else None}
@@ -265,6 +274,9 @@ class ScanRunner:
         stats["warnings"] = warnings
         stats["files"] = len(files)
         stats["out_dir"] = str(out_dir)
+        native_manifest = out_dir / "codechecker" / "latest.json"
+        if native_manifest.is_file():
+            stats["codechecker"] = json.loads(native_manifest.read_text(encoding="utf-8"))
         stats["snapshot"] = snapshot
         commit = detect_git_commit(workspace)
         if commit:
@@ -287,9 +299,7 @@ class ScanRunner:
         from ecdet.l2_ir.model import Alert, Location, Severity, Provenance
         from ecdet.l3_analysis.builtin_rules.checks import (
             build_file_facts, finalize_facts)
-        from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
         from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient, fix_candidate_allowed
-        from ecdet.l3_analysis.engine import BuiltinEngine
         from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
 
         store = self.store
@@ -305,10 +315,21 @@ class ScanRunner:
             fix_client = MockFixClient()
         budget = LlmCallBudget(int(cfg.get('max_llm_calls', 64)))
         proposer = FixProposer(BudgetedClient(fix_client, budget, 'patch'))
-        svd = (run.get('params') or {}).get('svd')
-        svd_path = Path(svd) if svd else next(iter(sorted(workspace.rglob('*.svd'))), None)
-        verifier = FixVerifier(workspace, use_compiler=True, svd_path=svd_path)
-        all_rule_ids = {r.rule_id for r in BUILTIN_RULES}
+        params = run.get('params') or {}
+        svd_path = Path(params['svd']) if params.get('svd') else next(
+            iter(sorted((p for p in project_files(workspace) if p.suffix.lower() == '.svd'))), None)
+        if svd_path and not svd_path.is_absolute():
+            svd_path = workspace / svd_path
+        verifier = FixVerifier(workspace, use_compiler=True, svd_path=svd_path,
+                               profile=params.get("profile"), enable=params.get("enable"),
+                               disable=params.get("disable"))
+
+        def scan_project(label):
+            target = AnalysisTarget(root=workspace, files=collect_sources(workspace),
+                                    svd_path=verifier.svd_path or svd_path, artifact_dir=self.data_dir /
+                                    "fix-codechecker" / str(job_id) / label)
+            return run_all_engines(target, profile=params.get("profile"),
+                                   enable=params.get("enable"), disable=params.get("disable"))[0]
 
         def rescan_facts():
             files = collect_sources(workspace, extra_skip=set())
@@ -316,13 +337,8 @@ class ScanRunner:
                 rel.as_posix(),
                 (workspace / rel).read_text(encoding="utf-8",
                                             errors="replace"))
-                for rel in files if rel.as_posix().endswith((".c", ".h"))]
+                for rel in files]
             return facts, finalize_facts(facts)
-
-        def scan_alerts(facts, ctx):
-            """按当前生效规则重扫，返回 fresh 告警（L2 模型）。"""
-            return BuiltinEngine().run(AnalysisTarget(workspace,
-                [Path(f.path) for f in facts], verifier.svd_path or svd_path), all_rule_ids)
 
         verification = {}
         def record(proposal, alert, db_aid, applied=False):
@@ -369,7 +385,7 @@ class ScanRunner:
         for round_no in range(1, max_rounds + 1):
             facts, ctx = rescan_facts()
             verifier._prepare(ctx)          # 每轮刷新 include 目录
-            fresh = scan_alerts(facts, ctx)
+            fresh = scan_project(f"round-{round_no}")
 
             candidates = []
             if selected:
@@ -432,9 +448,7 @@ class ScanRunner:
                 break           # 建议模式单轮；apply 无进展即收敛
 
         # 验收扫描：修复后的全工程残留告警
-        final_files = collect_sources(workspace, extra_skip=set())
-        target = AnalysisTarget(root=workspace, files=final_files, svd_path=verifier.svd_path or svd_path)
-        final_alerts, _ = run_all_engines(target)
+        final_alerts = scan_project("final")
         final_stats = {
             "remaining_total": len(final_alerts),
             "remaining_error": sum(1 for a in final_alerts
@@ -452,18 +466,14 @@ class ScanRunner:
                           backup_dir=backup_dir)
 
     def _backup_sources(self, workspace: Path, job_id: int) -> str:
-        """首写前备份全部 C/H 文件（保留相对结构），返回备份目录。"""
+        """首写前备份全部 C/C++ 源文件与头文件，返回备份目录。"""
         backup = self.data_dir / "backups" / f"job_{job_id}"
         if backup.exists():
             return str(backup)
-        for p in workspace.rglob("*"):
-            if p.suffix.lower() in (".c", ".h") and not any(
-                    s in p.parts for s in
-                    {".git", "build", "ecdet_build", "ecdet_reports"}):
-                rel = p.relative_to(workspace)
-                dst = backup / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(p, dst)
+        for rel in collect_sources(workspace):
+            dst = backup / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(workspace / rel, dst)
         return str(backup)
 
 

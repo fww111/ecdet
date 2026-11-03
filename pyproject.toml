@@ -7,8 +7,8 @@ requires-python = ">=3.11"
 license = { text = "Proprietary" }
 authors = [{ name = "ecdet 项目组" }]
 keywords = ["embedded", "static-analysis", "misra", "cert-c", "gjb", "sarif", "cwe"]
-# 核心零第三方依赖：标准库实现词法/结构分析与 SARIF 读写，保证在任意构建机上即装即用。
-dependencies = []
+# CodeChecker 是 L3 静态分析主引擎；SARIF 与其余分析逻辑由 ecdet 统一编排。
+dependencies = ["codechecker>=6.29,<7"]
 
 [project.optional-dependencies]
 hardware = ["cmsis-svd==0.6"]

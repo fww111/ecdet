@@ -147,11 +147,22 @@ def test_kb_lookup():
 
 def _alerts_from(root: Path):
     """对示例工程直接跑内置引擎获取真实告警。"""
-    from ecdet.l3_analysis.engine import AnalysisTarget, BuiltinEngine
+    from ecdet.l3_analysis.engine import AnalysisTarget, BuiltinEngine, collect_sources
     from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
-    files = [p.relative_to(root) for p in sorted(root.rglob("*.c"))]
+    files = [p for p in collect_sources(root) if p.suffix.lower() == '.c']
     target = AnalysisTarget(root=root, files=files)
     return BuiltinEngine().run(target, {r.rule_id for r in BUILTIN_RULES})
+
+
+def test_mock_alert_collection_ignores_generated_verification_workspaces(tmp_path):
+    source='void log_input(char *text) { printf(text); }\n'
+    (tmp_path/'source.c').write_text(source,encoding='utf-8')
+    generated=tmp_path/'ecdet_reports/fix-verification/run/workspace'
+    generated.mkdir(parents=True)
+    (generated/'source.c').write_text(source,encoding='utf-8')
+    alerts=[a for a in _alerts_from(tmp_path) if a.rule_id=='CERT C FIO30-C']
+    assert len(alerts)==1
+    assert alerts[0].location.path=='source.c'
 
 
 def test_triage_mock_full_pipeline():
