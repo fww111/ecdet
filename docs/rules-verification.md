@@ -66,7 +66,7 @@
 | CERT EXP45-C | if/while/for 条件含赋值 | 与编译器 `-Wparentheses` 互为补充 |
 | CERT MEM34-C | `free` 取地址对象/数组/字符串字面量 | 仅直接实参形态 |
 | CERT MSC41-C | 标识符含口令/密钥关键字且赋字符串常量 | 启发式，输出 Suspected |
-| ECDET-CWE-190 / INT30-C / INT32-C | 相邻常量 `+ - *` 链溢出/回绕 | 仅常量链，跨宏/括号留给 Clang 常量传播 |
+| ECDET-CWE-190 / INT30-C / INT32-C | 常量 `+ - * / %` 与括号表达式溢出/回绕 | 遵循运算符优先级；整数除法向零截断，跨宏/变量留给 Clang 常量传播 |
 | ECDET-CWE-785 | 函数内数组栈占用 ≥ 1 KiB | 按元素类型估算，不做 sizeof 求值 |
 | MISRA 8.5（工程层） | 外部对象/函数在多个 `.c` 文件重复定义 | 多文件工程；`main` 与 static 除外 |
 

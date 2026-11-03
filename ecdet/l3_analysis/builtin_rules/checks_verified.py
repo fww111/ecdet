@@ -340,10 +340,10 @@ def check_pointer_cast(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
 
 
 def _eval_const_expr(toks: list, i: int) -> tuple[int, object] | None:
-    """递归下降求值常量算术表达式（+-* 与括号，支持一元正负号）。
+    """递归下降求值常量算术表达式（+-*/% 与括号，支持一元正负号）。
 
     返回 (end_idx, err)；err 为 None 或 (op_token, op_sym, result_value, et)。
-    按 C 运算符优先级（* 高于 +-）求值，每个二元运算后以 usual_arith 结果
+    按 C 运算符优先级（*/% 高于 +-）求值，每个二元运算后以 usual_arith 结果
     类型检查是否溢出/回绕，取首次溢出。
     """
     n = len(toks)
@@ -387,7 +387,7 @@ def _eval_const_expr(toks: list, i: int) -> tuple[int, object] | None:
         if left is None:
             return None
         lv, le = left
-        while cur() is not None and cur().kind == "punct" and cur().value == "*":
+        while cur() is not None and cur().kind == "punct" and cur().value in ("*", "/", "%"):
             op = cur()
             pos[0] += 1
             right = parse_factor()
@@ -395,9 +395,16 @@ def _eval_const_expr(toks: list, i: int) -> tuple[int, object] | None:
                 return None
             rv, re_ = right
             et = usual_arith(le, re_)
-            result = lv * rv
+            if op.value == "*":
+                result = lv * rv
+            else:
+                if rv == 0:
+                    return None  # 除零交给对应检查器，不让规则求值器异常退出。
+                # C 整数除法向零截断，不能使用 Python 对负数向下取整的 //。
+                quotient = (abs(lv) // abs(rv)) * (-1 if (lv < 0) != (rv < 0) else 1)
+                result = quotient if op.value == "/" else lv - quotient * rv
             if err[0] is None and _check_chain(et.bits, et.signed, result):
-                err[0] = (op, "*", result, et)
+                err[0] = (op, op.value, result, et)
             lv, le = result, et
         return (lv, le)
 
@@ -430,8 +437,8 @@ def check_constant_overflow(f: FileFacts, ctx: ProjectContext,
                             active: set[str]) -> list[Alert]:
     """ECDET-CWE-190 + CERT INT30-C/INT32-C：常量算术溢出/回绕。
 
-    只对"完全由整型字面量 + - * ( ) 构成"的表达式按优先级求值并检测
-    溢出；跨宏/变量/除法的表达式留给 Clang 常量传播，避免误报。
+    只对"完全由整型字面量 + - * / % ( ) 构成"的表达式按优先级求值并检测
+    溢出；跨宏/变量的表达式留给 Clang 常量传播，避免误报。
     """
     out: list[Alert] = []
     toks = f.lex.tokens

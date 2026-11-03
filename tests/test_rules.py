@@ -522,3 +522,21 @@ def test_rule_static_local_addr_not_flagged():
     src = "int *f(void) { static int x; return &x; }"
     alerts = _run_file(src, rules={"MISRA C:2012 18.6", "ECDET-CWE-562"})
     assert alerts == []
+
+
+def test_rule_const_division_precedence_no_false_positive():
+    alerts = _run_file("int f(void) { return 2000000000 + 1000000000 / 1000000000; }",
+                       rules={"CERT C INT32-C"})
+    assert alerts == []
+
+
+def test_rule_const_remainder_precedence_no_false_positive():
+    alerts = _run_file("int f(void) { return 2147483647 + 4 % 2; }",
+                       rules={"CERT C INT32-C"})
+    assert alerts == []
+
+
+def test_rule_const_division_real_overflow():
+    alerts = _run_file("int f(void) { return 2147483647 + 4 / 2; }",
+                       rules={"CERT C INT32-C"})
+    assert "CERT C INT32-C" in _rule_ids(alerts)
