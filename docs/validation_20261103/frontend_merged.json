@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "syntax_exit": 0,
+  "behavior_checks": 13,
+  "checks": {
+    "analysis_navigation": true,
+    "analysis_route": true,
+    "analysis_tool_settings": true,
+    "attachment_downloads": true,
+    "codechecker_native_links": true,
+    "codechecker_alert_metadata": true
+  },
+  "javascript_sha256": "3f64d0c60bda4db347202eafcac6592b7cc9d5ebde69f4cd2b403efde625222a",
+  "html_sha256": "5b12e5c96fb46e426cd002335433a1a5bffc96e3d9405e8369e137f876092d76",
+  "validation_kind": "Node behavior checks and read-only integration inspection; no real LLM request."
+}

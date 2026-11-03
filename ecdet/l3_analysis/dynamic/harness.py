@@ -16,6 +16,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ecdet.l3_analysis.dynamic.inputs import InputModel, param_value
+from ecdet.l3_analysis.builtin_rules.checks import build_file_facts
+from ecdet.l3_analysis.builtin_rules.ctokens import lex_c
+
+TARGET_ENTER_MARKER = "ECDET_TARGET_ENTER"
 
 _UNDEF_REF_RE = re.compile(r"undefined reference to [`'](\w+)'")
 # GCC 14+ 在编译期即将隐式函数声明判为错误，需与链接期未解析符号一并收集
@@ -33,6 +37,10 @@ class Harness:
     source: str = ""
     exe_path: Path | None = None
     stubs: list[str] = field(default_factory=list)
+    contract_source: str = ""
+    validation: dict = field(default_factory=dict)
+    fix_attempts: list[dict] = field(default_factory=list)
+    reached_target: bool = False
 
     def replay_seed(self, seed_idx: int) -> str:
         """触发第 seed_idx 组激励的命令行参数（PoC 重放）。"""
@@ -100,6 +108,8 @@ int main(int argc, char **argv) {{
     int idx = (int)(ecdet_seed % {n}u);
 {buffers}
     /* 激励：{n} 组确定性特殊值 + 散列采样{mmio_note} */
+    fputs("{TARGET_ENTER_MARKER}\\n", stderr);
+    fflush(stderr);
     volatile int ecdet_sink = {model.func.name}({args});
     (void)ecdet_sink;
     printf("ok\\n");
@@ -107,7 +117,47 @@ int main(int argc, char **argv) {{
 }}
 """
     return Harness(func_name=model.func.name, target_rel=target_rel,
-                   n_seeds=n, source=source)
+                   n_seeds=n, source=source, contract_source=source)
+
+
+def _token_values(source: str) -> list[tuple[str, str]]:
+    lex = lex_c(source, "harness.c")
+    values = []
+    for token in lex.tokens:
+        value = token.value
+        if token.kind in {"string", "char"}:
+            value = lex.source_lines[token.line - 1][token.col - 1:token.col - 1 + len(value)]
+        values.append((token.kind, value))
+    return values
+
+
+def _harness_contract(source: str, baseline: str, target: str) -> tuple[bool, str]:
+    """Protect the generated driver; repairs can change includes/types outside it."""
+    current = build_file_facts("harness.c", source)
+    original = build_file_facts("harness.c", baseline)
+    mains = [fn for fn in current.functions if fn.name == "main"]
+    expected = [fn for fn in original.functions if fn.name == "main"]
+    if len(mains) != 1 or len(expected) != 1:
+        return False, "Harness contract requires exactly one main"
+    fn, old = mains[0], expected[0]
+    text = "\n".join(current.lex.source_lines[fn.start_line - 1:fn.body_close_line])
+    old_text = "\n".join(original.lex.source_lines[old.start_line - 1:old.body_close_line])
+    if _token_values(text) != _token_values(old_text):
+        return False, "Harness contract changed main excitation or observation flow"
+    if target not in {name for name, _ in fn.calls_in_body()}:
+        return False, "Harness contract lost target call"
+    table = re.compile(r"static\s+const\s+int\s+ecdet_combo\b.*?;", re.S)
+    old_table, new_table = table.search(baseline), table.search(source)
+    if old_table is None or new_table is None or _token_values(old_table.group()) != _token_values(new_table.group()):
+        return False, "Harness contract changed excitation matrix"
+    # New macros/conditionals can silently replace or compile out a protected call.
+    protected_pp = lambda facts: [p.text.strip() for p in facts.lex.pp_lines
+                                 if p.directive != "include" or not re.fullmatch(r"include\s+<[^>]+>", p.text.strip())]
+    if protected_pp(current) != protected_pp(original):
+        return False, "Harness contract changed target includes or preprocessor control"
+    if {f.name for f in current.functions} - {f.name for f in original.functions}:
+        return False, "Harness contract introduced a replacement function"
+    return True, ""
 
 
 def compile_harness(harness: Harness, workdir: Path,
@@ -126,6 +176,14 @@ def compile_harness(harness: Harness, workdir: Path,
                 *[f"-I{d}" for d in include_dirs if d.exists()]]
     stubs: list[str] = []
     err_tail = ""
+    baseline = harness.contract_source or harness.source
+    harness.exe_path = None
+    harness.validation = {"integrity": "SKIPPED", "compile": "SKIPPED", "target_execution": "SKIPPED"}
+    valid, reason = _harness_contract(harness.source, baseline, harness.func_name)
+    if not valid:
+        harness.validation["integrity"] = "FAIL"
+        return False, reason
+    harness.validation["integrity"] = "PASS"
 
     def _try_compile() -> tuple[bool, str, str]:
         """返回 (是否成功, 完整 stderr, 错误摘要尾部)。"""
@@ -135,12 +193,15 @@ def compile_harness(harness: Harness, workdir: Path,
                                   timeout=timeout, encoding="utf-8",
                                   errors="replace")
         except (subprocess.TimeoutExpired, OSError) as e:
+            harness.validation["compile"] = "ERROR"
             return False, "", f"编译器调用异常：{e}"
         if proc.returncode == 0:
+            harness.validation["compile"] = "PASS"
             harness.exe_path = exe
             harness.stubs = stubs
             return True, "", ""
         full_err = proc.stderr or ""
+        harness.validation["compile"] = "FAIL"
         return False, full_err, full_err[-500:]
 
     for _ in range(max_fix_rounds + 1):
@@ -161,13 +222,30 @@ def compile_harness(harness: Harness, workdir: Path,
 
     # LLM 修正闭环（3.3.5：编译与执行日志回传驱动修正）
     if fixer is not None:
+        client = getattr(fixer, "client", None)
+        mode = getattr(client, "mode", "mock" if type(client).__name__.startswith("Mock") else "custom")
         for _ in range(2):
-            fixed = fixer.fix(harness.source, full_err)
-            if not fixed:
+            try:
+                fixed = fixer.fix(harness.source, full_err)
+            except Exception as exc:
+                err_tail = f"Harness model repair failed ({type(exc).__name__})"
+                harness.fix_attempts.append({"stage": "model_response", "mode": mode,
+                                             "status": "ERROR", "reason": err_tail})
                 break
+            if not fixed:
+                err_tail = getattr(fixer, "last_error", "") or err_tail
+                harness.fix_attempts.append({"stage": "model_response", "mode": mode,
+                                             "status": "ERROR", "reason": err_tail})
+                break
+            valid, reason = _harness_contract(fixed[0], _apply_stubs(baseline, stubs), harness.func_name)
+            harness.fix_attempts.append({"stage": "harness_integrity", "mode": mode,
+                                         "status": "PASS" if valid else "FAIL", "reason": reason})
+            if not valid:
+                harness.validation["integrity"] = "FAIL"
+                return False, reason
             harness.source = fixed[0]
             src.write_text(harness.source, encoding="utf-8")
-            ok, _full, err_tail = _try_compile()
+            ok, full_err, err_tail = _try_compile()
             if ok:
                 return True, ""
     return False, err_tail
@@ -180,6 +258,10 @@ def _apply_stubs(source: str, stubs: list[str]) -> str:
     （`long name();`，gnu99 合法、兼容任意实参）置于 include 之前，
     定义随声明一并前置。
     """
+    if not stubs:
+        return source
+    stubs = [name for name in stubs
+             if not re.search(r"\blong\s+" + re.escape(name) + r"\s*\([^)]*\)\s*\{", source)]
     if not stubs:
         return source
     block = "\n".join(f"long {name}();                     /* ecdet stub */\n"

@@ -1,0 +1,6 @@
+[
+  {"id":"A1","function":"case_a","rule_id":"CERT C ARR30-C","line":6,"message":"检查数组下标访问是否超出数组边界","expected_verdict":"TRUE_POSITIVE"},
+  {"id":"A2","function":"case_b","rule_id":"CERT C ARR30-C","line":12,"message":"检查数组下标访问是否超出数组边界","expected_verdict":"FALSE_POSITIVE"},
+  {"id":"C1","function":"case_c","rule_id":"CERT C STR31-C","line":18,"message":"检查目标缓冲区是否足够容纳字符串及终止符","expected_verdict":"TRUE_POSITIVE"},
+  {"id":"C2","function":"case_d","rule_id":"CERT C STR31-C","line":24,"message":"检查目标缓冲区是否足够容纳字符串及终止符","expected_verdict":"FALSE_POSITIVE"}
+]

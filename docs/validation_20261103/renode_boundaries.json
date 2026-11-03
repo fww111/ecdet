@@ -1,0 +1,10 @@
+{
+  "description": "Boundary acceptance summary; per-run raw logs remain local.",
+  "validated": {
+    "invalid_platform": "ERROR",
+    "invalid_elf": "ERROR",
+    "missing_uart": "ERROR",
+    "active_wall_timeout": "TIMEOUT",
+    "remaining_renode_processes": 0
+  }
+}

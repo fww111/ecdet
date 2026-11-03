@@ -1,10 +1,8 @@
 """L3 动态分析引擎（方案 3.3.5，对应 P7）。
 
-执行载体三级吞吐-保真梯度：宿主机原生执行（嵌入式 Linux 目标档，
-本包 HostCarrier）→ Unicorn CPU 级仿真 → Renode 外设级仿真
-（检测到安装即接入）。harness 生成-编译-修正闭环 + oracle 三类
-（崩溃退出码 / UB stderr / 看门狗超时），输出真触发 PoC 证据，
-进入 L5 可证明性分级的 Detected 级。
+源码函数测试使用DynamicEngine；字节接口覆盖率测试使用LibFuzzerEngine；
+ELF固件仿真使用RenodeRunner。Unicorn当前只提供探测接口。
+各执行路径保留实际载体、输入与状态，运行证据按各自判据写入报告。
 """
 
 from ecdet.l3_analysis.dynamic.engine import DynamicEngine, DynamicFinding

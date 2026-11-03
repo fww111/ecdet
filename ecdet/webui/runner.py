@@ -16,9 +16,9 @@ from ecdet.l2_ir import save_sarif
 from ecdet.l3_analysis.engine import (
     AnalysisTarget,
     collect_sources,
+    project_files,
     run_all_engines,
 )
-from ecdet.l3_analysis.builtin_rules.checks import FILE_RULES
 from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
 from ecdet.l4_llm.fixer import apply_patch
 from ecdet.l4_llm.triage import triage_alerts
@@ -132,6 +132,14 @@ class ScanRunner:
         self._queue.put({"kind": "scan", "id": run_id})
         return run_id
 
+    def submit_analysis(self, project_id: int, params: dict) -> int:
+        from ecdet.webui.analysis import normalize_request
+        project = self.store.get_project(project_id)
+        if not project:
+            raise ValueError('工程不存在')
+        options = normalize_request(Path(project['workspace']), params)
+        return self.submit(project_id, {'analysis': options})
+
     def submit_fix(self, run_id: int, alert_ids: list[int] | None = None,
                    mode: str = "suggest") -> int:
         job_id = self.store.add_fix_job(run_id, alert_ids)
@@ -168,6 +176,10 @@ class ScanRunner:
         run = store.get_run(run_id)
         project = store.get_project(run["project_id"])
         params = run["params"]
+        if params.get('analysis'):
+            from ecdet.webui.analysis import execute_analysis
+            execute_analysis(store, self.data_dir, run_id)
+            return
         workspace = Path(project["workspace"])
         out_dir = self.data_dir / "runs" / str(run_id)
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -189,6 +201,8 @@ class ScanRunner:
             return
         svd = params.get("svd")
         svd_path = Path(svd) if svd else None
+        if svd_path is None:
+            svd_path = next(iter(sorted((p for p in project_files(workspace) if p.suffix.lower() == '.svd'))), None)
         if svd_path and not svd_path.is_absolute():
             svd_path = workspace / svd_path
         target = AnalysisTarget(root=workspace, files=files, svd_path=svd_path,
@@ -219,7 +233,11 @@ class ScanRunner:
                 client = MockLlmClient()
             else:
                 client = llm_client_from_settings(store)
-            triage_alerts(alerts, workspace, client=client)
+            from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
+            call_budget = LlmCallBudget(int(params.get('max_llm_calls', 64)))
+            triage_alerts(alerts, workspace, client=BudgetedClient(client, call_budget, 'triage'))
+            warnings.append(f"LLM calls: {call_budget.calls}/{call_budget.max_calls}")
+            (out_dir/'llm_budget.json').write_text(json.dumps(call_budget.snapshot(), ensure_ascii=False, indent=2), encoding='utf-8')
 
         # L5 聚合输出
         result = aggregate(alerts, metas)
@@ -281,8 +299,8 @@ class ScanRunner:
         from ecdet.l2_ir.model import Alert, Location, Severity, Provenance
         from ecdet.l3_analysis.builtin_rules.checks import (
             build_file_facts, finalize_facts)
-        from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
-        import difflib
+        from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient, fix_candidate_allowed
+        from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
 
         store = self.store
         store.set_fix_job(job_id, "running", mode=mode)
@@ -295,18 +313,20 @@ class ScanRunner:
             fix_client = llm_client_from_settings(store)
         else:
             fix_client = MockFixClient()
-        proposer = FixProposer(fix_client)
-        params = run["params"]
-        svd = Path(params["svd"]) if params.get("svd") else None
-        if svd and not svd.is_absolute():
-            svd = workspace / svd
-        verifier = FixVerifier(workspace, use_compiler=True, svd_path=svd,
+        budget = LlmCallBudget(int(cfg.get('max_llm_calls', 64)))
+        proposer = FixProposer(BudgetedClient(fix_client, budget, 'patch'))
+        params = run.get('params') or {}
+        svd_path = Path(params['svd']) if params.get('svd') else next(
+            iter(sorted((p for p in project_files(workspace) if p.suffix.lower() == '.svd'))), None)
+        if svd_path and not svd_path.is_absolute():
+            svd_path = workspace / svd_path
+        verifier = FixVerifier(workspace, use_compiler=True, svd_path=svd_path,
                                profile=params.get("profile"), enable=params.get("enable"),
                                disable=params.get("disable"))
 
         def scan_project(label):
             target = AnalysisTarget(root=workspace, files=collect_sources(workspace),
-                                    svd_path=svd, artifact_dir=self.data_dir /
+                                    svd_path=verifier.svd_path or svd_path, artifact_dir=self.data_dir /
                                     "fix-codechecker" / str(job_id) / label)
             return run_all_engines(target, profile=params.get("profile"),
                                    enable=params.get("enable"), disable=params.get("disable"))[0]
@@ -320,6 +340,17 @@ class ScanRunner:
                 for rel in files]
             return facts, finalize_facts(facts)
 
+        verification = {}
+        def record(proposal, alert, db_aid, applied=False):
+            fix_id = store.add_fix(run_id=run_id, alert_id=db_aid,
+                rule_id=alert.rule_id, path=alert.location.path, line=alert.location.line,
+                func=proposal.func_name, verified=proposal.verified,
+                fail_reason=proposal.fail_reason, explanation=proposal.explanation,
+                diff=proposal.diff, job_id=job_id, applied=applied)
+            verification[str(fix_id)] = proposal.to_props()
+            store.set_fix_job(job_id, 'running', final_stats={'verification': verification,
+                               'llm_budget': budget.snapshot()})
+
         backup_dir = ""
         if mode == "apply":
             backup_dir = self._backup_sources(workspace, job_id)
@@ -330,14 +361,24 @@ class ScanRunner:
         # 用户勾选按 (规则, 文件) 记录——行号随修复漂移，不按行匹配。
         # alert_ids 为告警库主键，先映射为 (rule_id, path)。
         selected: set[tuple[str, str]] = set()
-        if alert_ids:
+        if alert_ids is not None:
             wanted = set(alert_ids)
             for a in store.list_alerts(run_id, limit=1000):
                 if a["id"] in wanted:
                     selected.add((a["rule_id"], a["path"].replace("\\", "/")))
+        if alert_ids is not None and not selected:
+            store.set_fix_job(job_id, 'done', accepted=0, rejected=0, applied=0,
+                              rounds=0, final_stats={'reason':'No selected alert IDs matched',
+                                                     'llm_budget':budget.snapshot()})
+            return
         # 告警库主键映射：补丁记录回填 alert_id，供告警抽屉按 id 匹配展示
         db_alert_id: dict[tuple[str, str], int] = {}
-        for a in store.list_alerts(run_id, limit=2000):
+        stored_alerts = store.list_alerts(run_id, limit=2000)
+        # Preserve review decisions when current sources are rescanned.
+        protected = {(a['rule_id'],a['path'].replace('\\','/')) for a in stored_alerts
+                     if a.get('triage') and (a['triage'].get('verdict') != 'TRUE_POSITIVE'
+                         or not a['triage'].get('verified') or a['triage'].get('review_pending'))}
+        for a in stored_alerts:
             db_alert_id.setdefault(
                 (a["rule_id"], a["path"].replace("\\", "/")), a["id"])
 
@@ -351,14 +392,17 @@ class ScanRunner:
                 for a in fresh:
                     key = (a.rule_id, a.location.path.replace("\\", "/"))
                     if key in selected:
-                        candidates.append(a)
+                        if key not in protected and fix_candidate_allowed(a):
+                            candidates.append(a)
             else:
                 for a in fresh:
                     if a.severity == Severity.ERROR and (
                             a.provenance == Provenance.DETECTED
                             or a.engine == "dynamic") and (
                             a.rule_id in AUTO_FIXABLE):
-                        candidates.append(a)
+                        key = (a.rule_id, a.location.path.replace('\\','/'))
+                        if key not in protected and fix_candidate_allowed(a):
+                            candidates.append(a)
             candidates = candidates[:max_targets]
             if not candidates:
                 break
@@ -368,57 +412,34 @@ class ScanRunner:
             applied_this_round = 0
 
             for a in candidates:
+                # Previous accepted patches may have changed another file.
+                facts, ctx = rescan_facts()
                 db_aid = db_alert_id.get(
                     (a.rule_id, a.location.path.replace("\\", "/")))
                 proposal = proposer.propose(a, ctx)
                 if proposal.fail_reason:
                     total_rejected += 1
-                    store.add_fix(run_id=run_id, alert_id=db_aid,
-                                  rule_id=a.rule_id, path=a.location.path,
-                                  line=a.location.line,
-                                  func=proposal.func_name, verified=False,
-                                  fail_reason=proposal.fail_reason,
-                                  explanation=proposal.explanation or "",
-                                  diff="", job_id=job_id)
+                    record(proposal, a, db_aid)
                     continue
                 rel = a.location.path.replace("\\", "/")
                 src_path = workspace / rel
                 current = src_path.read_text(encoding="utf-8",
                                              errors="replace")
-                modified = apply_patch(current, proposal.func_start,
-                                       proposal.func_end,
-                                       proposal.patched_code)
-
                 proposal = verifier.verify(proposal, ctx, current)
-                verified = proposal.verified
-
-                diff = "\n".join(difflib.unified_diff(
-                    current.splitlines(), modified.splitlines(),
-                    fromfile=f"a/{rel}", tofile=f"b/{rel}", lineterm=""))
-                if not verified:
+                if not proposal.verified:
                     total_rejected += 1
-                    store.add_fix(run_id=run_id, alert_id=db_aid,
-                                  rule_id=a.rule_id, path=a.location.path,
-                                  line=a.location.line,
-                                  func=proposal.func_name, verified=False,
-                                  fail_reason=proposal.fail_reason,
-                                  explanation=proposal.explanation,
-                                  diff=diff, job_id=job_id)
+                    record(proposal, a, db_aid)
                     continue
 
                 total_accepted += 1
                 was_applied = False
                 if mode == "apply":
+                    modified = apply_patch(current, proposal.func_start, proposal.func_end, proposal.patched_code)
                     src_path.write_text(modified, encoding="utf-8")
                     total_applied += 1
                     applied_this_round += 1
                     was_applied = True
-                store.add_fix(run_id=run_id, alert_id=db_aid,
-                              rule_id=a.rule_id, path=a.location.path,
-                              line=a.location.line,
-                              func=proposal.func_name, verified=True,
-                              fail_reason="", explanation=proposal.explanation,
-                              diff=diff, job_id=job_id, applied=was_applied)
+                record(proposal, a, db_aid, was_applied)
 
             rounds_done = round_no
             store.set_fix_job(job_id, "running", rounds=rounds_done,
@@ -436,6 +457,8 @@ class ScanRunner:
                                      if a.severity == Severity.WARNING),
             "rounds": rounds_done,
             "applied_total": total_applied,
+            "verification": verification,
+            "llm_budget": budget.snapshot(),
         }
         store.set_fix_job(job_id, "done", accepted=total_accepted,
                           rejected=total_rejected, rounds=rounds_done,

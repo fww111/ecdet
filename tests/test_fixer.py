@@ -158,19 +158,20 @@ def test_native_fix_validation_preserves_project_and_rejects_regressions(tmp_pat
                                                "-c", str(tmp_path / "m.c")]}]), encoding="utf-8")
     original_db = ccdb.read_bytes()
     ctx = finalize_facts([build_file_facts("m.c", src)])
-    verifier = FixVerifier(tmp_path, use_compiler=False)
+    verifier = FixVerifier(tmp_path, use_compiler=True)
 
     def verify(patch):
         proposal = FixProposal(rule_id="core.NullDereference", path="m.c", func_name="f",
                                func_start=1, func_end=5, original_code=src,
-                               patched_code=patch)
+                               patched_code=patch, source_engine="codechecker",
+                               alert_line=4, alert_col=12)
         return verifier.verify(proposal, ctx, src)
 
     still_bad = verify(src.replace("return *p;", "return *p + 1;"))
     assert not still_bad.verified and "仍存在" in still_bad.fail_reason
-    regression = verify("int f(void)\n{\n    return 42 / 0;\n}\n")
-    assert not regression.verified and "新的 error" in regression.fail_reason
-    repaired = verify("int f(void)\n{\n    return 42;\n}\n")
+    regression = verify("int f(void)\n{\n    int value = 42;\n    return value / 0;\n}\n")
+    assert not regression.verified and "error" in regression.fail_reason
+    repaired = verify("int f(void)\n{\n    int value = 42;\n    return value;\n}\n")
     assert repaired.verified, repaired.fail_reason
     assert (tmp_path / "m.c").read_text(encoding="utf-8") == src
     assert ccdb.read_bytes() == original_db

@@ -24,7 +24,8 @@ def command(binary: str = "CodeChecker") -> list[str]:
 
 
 def load_catalog(binary: str, env: dict[str, str]) -> dict:
-    keys = ("PATH", "CC_ANALYZER_BIN", "CC_ANALYZERS_FROM_PATH", "CC_CLANGSA_PLUGIN_DIR")
+    keys = ("PATH", "PYTHONPATH", "CC_ANALYZER_BIN", "CC_ANALYZERS_FROM_PATH",
+            "CC_CLANGSA_PLUGIN_DIR")
     return _load_catalog(binary, tuple((key, env.get(key, "")) for key in keys))
 
 

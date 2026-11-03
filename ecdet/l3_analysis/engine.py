@@ -7,8 +7,9 @@ Clang、Clang-Tidy 与 Cppcheck，ESBMC 独立接入。
 
 from __future__ import annotations
 
-import shutil
+import logging
 import os
+import shutil
 import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, replace
@@ -24,6 +25,8 @@ from ecdet.l3_analysis.builtin_rules.checks import (
     finalize_facts,
 )
 from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES, canonical_rule_id
+
+_LOG = logging.getLogger(__name__)
 
 # 行业配置文件：方案 3.3.3 的裁剪策略（按 Mandatory/Required/Advisory 与行业分层启停）
 INDUSTRY_PROFILES: dict[str, set[str]] = {
@@ -168,10 +171,14 @@ class ClangTidyAdapter(ExternalEngineAdapter):
     name = "clang-tidy"
     binary = "clang-tidy"
 
+    def available(self) -> bool:
+        return shutil.which(os.environ.get('ECDET_CLANG_TIDY') or self.binary) is not None
+
     def run(self, target: AnalysisTarget, enabled_rules: set[str]) -> list[Alert]:
         from ecdet.l3_analysis.adapters.clang_tidy import run_clang_tidy
 
         if not self.available():
+            _LOG.warning("clang-tidy unavailable: executable not found; analysis skipped")
             return []
         return run_clang_tidy(target, timeout=180)
 
@@ -253,17 +260,31 @@ def all_rule_metas(engines: list[Engine]) -> list[RuleMeta]:
     return list(metas.values())
 
 
+def project_files(root: Path, skip: set[str] | None = None):
+    """Prune generated directories before descent, including deep reports."""
+    excluded = skip if skip is not None else {
+        ".git", ".svn", "build", "ecdet_build", "node_modules",
+        "__pycache__", ".venv", "ecdet_reports"}
+    def failed(error):
+        raise error
+
+    for directory, dirs, files in os.walk(root, onerror=failed):
+        dirs[:] = sorted(name for name in dirs if name not in excluded)
+        for name in sorted(files):
+            yield Path(directory) / name
+
+
 def collect_sources(root: Path, extra_skip: set[str] | None = None) -> list[Path]:
     """收集工程源文件（相对路径），供 CLI / 编排层共用。
 
-    过滤按相对根的 parts 判定：rglob 产出的路径带 root 前缀，
-    若按全路径 parts 判定，位于 tests/ 等目录下的工程会被整体误杀。
+    遍历前裁剪生成目录，过滤按相对根的 parts 判定，
+    避免把工程所在父目录的名称误当成工程内部的排除目录。
     """
     skip = {".git", ".svn", "build", "ecdet_build", "node_modules",
             "__pycache__", ".venv", "ecdet_reports"}
     skip |= extra_skip or set()
     out = []
-    for p in sorted(root.rglob("*")):
+    for p in sorted(project_files(root, skip)):
         rel = p.relative_to(root)
         if p.suffix.lower() in (".c", ".h", ".cc", ".cpp", ".cxx", ".c++",
                                 ".hh", ".hpp", ".hxx") and \
@@ -287,7 +308,12 @@ def run_all_engines(target: AnalysisTarget, profile: str | None = None,
                     engines: list[Engine] | None = None) -> tuple[list[Alert], list[RuleMeta]]:
     """调度全部可用引擎并合并告警。"""
     engs = engines if engines is not None else _make_default_engines()
-    usable = [e for e in engs if e.available()]
+    usable = []
+    for engine in engs:
+        if engine.available():
+            usable.append(engine)
+        else:
+            _LOG.warning("%s unavailable; analysis skipped", engine.name)
     metas = all_rule_metas(usable)
     enabled = resolve_enabled(metas, profile, disable, enable)
     configured_target = replace(
@@ -299,4 +325,11 @@ def run_all_engines(target: AnalysisTarget, profile: str | None = None,
     alerts: list[Alert] = []
     for e in usable:
         alerts.extend(e.run(configured_target, enabled))
-    return alerts, all_rule_metas(usable)
+    metas = all_rule_metas(usable)
+    known_rules = {meta.rule_id for meta in metas}
+    for alert in alerts:
+        if alert.rule_id not in known_rules:
+            metas.append(RuleMeta(alert.rule_id, alert.engine, 'Required', 'tool',
+                                  alert.rule_id, [alert.cwe] if alert.cwe else []))
+            known_rules.add(alert.rule_id)
+    return alerts, metas

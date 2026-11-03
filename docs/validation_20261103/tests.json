@@ -1,0 +1,39 @@
+{
+  "description": "Full run: 623 passed, 1 failed. After the Windows snapshot path and traversal fixes: 105 web/repair tests and 40 CLI/orchestration tests passed, including that failure and one new regression. These are separate runs, not one clean full run.",
+  "full": {
+    "tests": "624",
+    "failures": "1",
+    "errors": "0",
+    "skipped": "0",
+    "time": "823.256"
+  },
+  "basic_steps345": {
+    "tests": "96",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "31",
+    "time": "4.264"
+  },
+  "frontend_checks": 13,
+  "pre_merge_full": {
+    "tests": "578",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "112.598"
+  },
+  "codechecker_fix_contract": {
+    "tests": "105",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "442.672"
+  },
+  "entry_point_regression": {
+    "tests": "40",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "233.742"
+  }
+}

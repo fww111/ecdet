@@ -10,6 +10,20 @@ from pathlib import Path
 def install_platform_fixes() -> None:
     if os.name != "nt":
         return
+    from codechecker_analyzer import arg, analyzer_context
+
+    original_analyzer_binary = arg.analyzer_binary
+
+    def analyzer_binary(value):
+        # Upstream's greedy separator consumes the Windows drive colon.
+        if re.match(r"^[^:]+:[a-zA-Z]:[/\\]", value):
+            name, path = value.split(":", 1)
+            return arg.AnalyzerBinary(name, path)
+        return original_analyzer_binary(value)
+
+    arg.analyzer_binary = analyzer_binary
+    analyzer_context.analyzer_binary = analyzer_binary
+
     from codechecker_analyzer.analyzers.clangsa.analyzer import ClangSA
 
     original = ClangSA.ctu_mapping.__func__

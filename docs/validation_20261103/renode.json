@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "cases": {
+    "good": {
+      "status": "PASS",
+      "execution_mode": "renode-simulation",
+      "version": "Renode v1.17.0\n  build: 1.17.0+20260906gitf1dd1b4af\n  build type: Release\n  runtime: .NET 8.0.10",
+      "firmware_sha256": "6bb45c844981c8aeb2eab3b2d4fec75932f6f55ca497586de66287076a486ab4",
+      "platform_sha256": "160681fea9188eddf8249889b5e819e2a25220e3b56e36a8a016e848b663ee97",
+      "uart_text": "ECDET_BOOT_OK\nECDET_STATUS_OK\n",
+      "missing_expected": [],
+      "observed_failures": []
+    },
+    "bad": {
+      "status": "FAIL",
+      "execution_mode": "renode-simulation",
+      "version": "Renode v1.17.0\n  build: 1.17.0+20260906gitf1dd1b4af\n  build type: Release\n  runtime: .NET 8.0.10",
+      "firmware_sha256": "275c4a6ca36ade3bc4483d19d7cd3d43592961e9fcb68a21a3312c3e394bab94",
+      "platform_sha256": "160681fea9188eddf8249889b5e819e2a25220e3b56e36a8a016e848b663ee97",
+      "uart_text": "ECDET_BOOT_OK\nECDET_SELFTEST_FAIL\n",
+      "missing_expected": [
+        "ECDET_STATUS_OK"
+      ],
+      "observed_failures": [
+        "ECDET_SELFTEST_FAIL"
+      ]
+    }
+  }
+}

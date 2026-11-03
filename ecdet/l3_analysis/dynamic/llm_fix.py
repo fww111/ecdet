@@ -28,7 +28,7 @@ class HarnessFixer(Protocol):
 
 def extract_patched_harness(raw: str) -> tuple[str, str] | None:
     """从 LLM 输出解析 {"patched_harness": ..., "changes": ...}。"""
-    if not raw:
+    if not isinstance(raw, str) or not raw:
         return None
     m = re.search(r"\{.*\}", raw, re.S)
     if not m:
@@ -36,6 +36,8 @@ def extract_patched_harness(raw: str) -> tuple[str, str] | None:
     try:
         data = json.loads(m.group(0))
     except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get("changes"), str):
         return None
     patched = data.get("patched_harness")
     if not isinstance(patched, str) or not patched.strip():
@@ -52,6 +54,8 @@ class LlmHarnessFixer:
     def __init__(self, client):
         self.client = client
         self.calls = 0
+        self.last_error = ""
+        self.attempts: list[dict] = []
 
     def fix(self, source: str, error_log: str) -> tuple[str, str] | None:
         user = "\n".join([
@@ -68,5 +72,18 @@ class LlmHarnessFixer:
             "输出修复后的完整源码（JSON）。",
         ])
         self.calls += 1
-        raw = self.client.complete(FIX_SYSTEM_PROMPT, user)
-        return extract_patched_harness(raw)
+        self.last_error = ""
+        mode = getattr(self.client, "mode", "mock" if type(self.client).__name__.startswith("Mock") else "custom")
+        try:
+            raw = self.client.complete(FIX_SYSTEM_PROMPT, user)
+            fixed = extract_patched_harness(raw)
+        except Exception as exc:
+            # A model/transport adapter cannot abort the remaining targets.
+            self.last_error = f"{type(exc).__name__}: harness model call failed"
+            self.attempts.append({"mode": mode, "status": "ERROR", "reason": self.last_error})
+            return None
+        if fixed is None:
+            self.last_error = "Invalid harness response structure"
+        self.attempts.append({"mode": mode, "status": "PASS" if fixed else "FAIL",
+                              "reason": self.last_error})
+        return fixed

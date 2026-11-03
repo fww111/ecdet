@@ -76,10 +76,11 @@ def reconstruct(project_root: str | Path, build_cmd: str | None = None,
         return _via_cmake(root, out)
     if (root / "Makefile").exists() or (root / "makefile").exists():
         return _via_makefile(root, out)
-    uvprojx = sorted(root.rglob("*.uvprojx"))
+    from ecdet.l3_analysis.engine import project_files
+    uvprojx = sorted(p for p in project_files(root) if p.suffix.lower() == ".uvprojx")
     if uvprojx:
         return _via_uvprojx(root, out, uvprojx[0])
-    ewp = sorted(root.rglob("*.ewp"))
+    ewp = sorted(p for p in project_files(root) if p.suffix.lower() == ".ewp")
     if ewp:
         return _via_ewp(root, out, ewp[0])
     return _via_directory_scan(root, out)
@@ -231,11 +232,12 @@ _SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache
 
 
 def _via_directory_scan(root: Path, out: Path) -> BuildReconResult:
+    from ecdet.l3_analysis.engine import project_files
     res = BuildReconResult(method="directory-scan")
     # 以根目录与各源文件所在目录为包含路径，可覆盖绝大多数小型裸机工程
     includes = [f"-I{root.resolve().as_posix()}"]
     src_dirs = {p.parent.resolve().as_posix() for p in _iter_sources(root)}
-    src_dirs.update(p.parent.resolve().as_posix() for p in root.rglob("*")
+    src_dirs.update(p.parent.resolve().as_posix() for p in project_files(root, _SKIP_DIRS)
                     if p.suffix.lower() in {".h", ".hh", ".hpp", ".hxx"}
                     and not any(part in _SKIP_DIRS for part in p.relative_to(root).parts))
     includes += [f"-I{d}" for d in sorted(src_dirs)]
@@ -243,7 +245,8 @@ def _via_directory_scan(root: Path, out: Path) -> BuildReconResult:
 
 
 def _iter_sources(root: Path):
-    for p in root.rglob("*"):
+    from ecdet.l3_analysis.engine import project_files
+    for p in project_files(root, _SKIP_DIRS):
         if p.suffix.lower() in _SOURCE_SUFFIXES and \
                 not any(part in _SKIP_DIRS for part in p.relative_to(root).parts):
             yield p

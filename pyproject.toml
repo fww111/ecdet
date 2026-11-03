@@ -10,6 +10,11 @@ keywords = ["embedded", "static-analysis", "misra", "cert-c", "gjb", "sarif", "c
 # CodeChecker 是 L3 静态分析主引擎；SARIF 与其余分析逻辑由 ecdet 统一编排。
 dependencies = ["codechecker>=6.29,<7"]
 
+[project.optional-dependencies]
+hardware = ["cmsis-svd==0.6"]
+syntax = ["tree-sitter==0.26.0", "tree-sitter-c==0.24.2"]
+constraints = ["z3-solver==5.3.3.0", "tree-sitter==0.26.0", "tree-sitter-c==0.24.2"]
+
 [project.scripts]
 ecdet = "ecdet.cli:main"
 

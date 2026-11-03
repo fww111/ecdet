@@ -1,7 +1,7 @@
 """LLM 客户端 —— OpenAI 兼容接口 + 确定性 Mock（零第三方依赖）。
 
-OpenAICompatClient 对接 vLLM / Ollama / LM Studio 等本地部署
-（`POST {base_url}/chat/completions`），满足行业数据不出域要求。
+OpenAICompatClient supports configured local or remote compatible endpoints.
+The deployment's data boundary depends on that endpoint configuration.
 MockLlmClient 供离线测试与演示：按规则给出确定性判定，并刻意构造
 "引用错行"用例驱动证据核对降级路径。
 """
@@ -21,6 +21,8 @@ class LlmClient(Protocol):
 
 class OpenAICompatClient:
     """OpenAI Chat Completions 兼容客户端。"""
+
+    mode = "real"
 
     def __init__(self, base_url: str | None = None, model: str | None = None,
                  api_key: str | None = None, timeout: int = 120):
@@ -46,10 +48,13 @@ class OpenAICompatClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        except (OSError, TimeoutError, UnicodeError, json.JSONDecodeError) as e:
             raise LlmTransportError(f"LLM 端点不可达或响应异常：{e}") from e
         try:
-            return body["choices"][0]["message"]["content"]
+            content = body["choices"][0]["message"]["content"]
+            if not isinstance(content, str):
+                raise TypeError("message.content must be a string")
+            return content
         except (KeyError, IndexError, TypeError) as e:
             raise LlmTransportError(f"LLM 响应结构异常：{e}") from e
 
@@ -68,6 +73,8 @@ _MOCK_FP = {"MISRA C:2012 8.7", "MISRA C:2012 8.9", "MISRA C:2012 2.5",
 
 class MockLlmClient:
     """确定性 Mock：覆盖真判/误报/低置信 RAG/引用错行四条路径。"""
+
+    mode = "mock"
 
     def __init__(self):
         self.calls = 0

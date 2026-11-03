@@ -20,6 +20,7 @@ from ecdet.l2_ir import save_sarif
 from ecdet.l3_analysis.engine import (
     DEFAULT_ENGINES,
     AnalysisTarget,
+    project_files,
     all_rule_metas,
     resolve_enabled,
     run_all_engines,
@@ -33,7 +34,7 @@ _SKIP_DIRS = {".git", ".svn", "build", "ecdet_build", "node_modules", "__pycache
 
 def _collect_sources(root: Path) -> list[Path]:
     out = []
-    for p in sorted(root.rglob("*")):
+    for p in sorted(project_files(root, _SKIP_DIRS | {"ecdet_reports"})):
         if p.suffix.lower() in (".c", ".h", ".cc", ".cpp", ".cxx", ".c++") and \
                 not any(s in p.parts for s in _SKIP_DIRS):
             out.append(p.relative_to(root))
@@ -93,7 +94,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
     if args.svd:
         svd_path = Path(args.svd)
     else:
-        candidates = [p for p in sorted(root.rglob("*.svd"))
+        candidates = [p for p in sorted(p for p in project_files(root) if p.suffix.lower() == ".svd")
                       if "ecdet_build" not in p.parts]
         svd_path = candidates[0] if candidates else None
     if svd_path and not svd_path.is_absolute():
@@ -101,7 +102,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
     target = AnalysisTarget(root=root, files=files, svd_path=svd_path,
                             artifact_dir=out_dir / "codechecker")
     if svd_path:
-        print(f"[L2] 硬件语义：加载 SVD {svd_path.name}（MMIO 权限检查启用）")
+        print(f"[L2] 硬件语义：尝试加载SVD {svd_path.name}（加载成功后MMIO 权限检查启用）")
     try:
         alerts, metas = run_all_engines(target, profile=args.profile,
                                         disable=args.disable, enable=args.enable)
@@ -109,11 +110,29 @@ def cmd_scan(args: argparse.Namespace) -> int:
         print(f"错误：静态分析失败：{exc}", file=sys.stderr)
         return 2
 
+    constraint_receipt = None
+    if getattr(args, 'constraints', False):
+        from ecdet.advanced_cli import analyze_constraint_files
+        from ecdet.l2_ir.model import RuleMeta
+        constraint_receipt, candidates = analyze_constraint_files(
+            root, files, timeout_ms=args.constraint_timeout_ms)
+        alerts.extend(candidates)
+        known = {meta.rule_id for meta in metas}
+        for candidate in candidates:
+            if candidate.rule_id not in known:
+                metas.append(RuleMeta(candidate.rule_id, 'ECDET', 'Required',
+                                      'constraint-based', '受限C路径数组越界候选', ['CWE-129']))
+                known.add(candidate.rule_id)
+
     # L5 聚合输出
     result = aggregate(alerts, metas)
     records = build_compliance_records(result)
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    if constraint_receipt is not None:
+        (out_dir / 'constraints.json').write_text(
+            json.dumps(constraint_receipt, ensure_ascii=False, indent=2), encoding='utf-8')
+        print(f"[Z3] 分项状态：{constraint_receipt['status_counts']}")
     sarif_path = save_sarif(alerts, metas, out_dir / "results.sarif")
     html_path = render_html_report(result, records,
                                    project_name=root.name,
@@ -150,7 +169,13 @@ def cmd_scan(args: argparse.Namespace) -> int:
         print(f"CWE Top5：{top}")
     print(f"\nSARIF：{sarif_path}")
     print(f"HTML 报告：{html_path}")
-    return 0 if s["error"] == 0 else 1
+    if s['error']:
+        return 1
+    if constraint_receipt is not None:
+        counts = constraint_receipt['status_counts']
+        if not counts or set(counts) - {'SAT', 'UNSAT'}:
+            return 2
+    return 0
 
 
 def cmd_init_ccdb(args: argparse.Namespace) -> int:
@@ -226,8 +251,12 @@ def cmd_triage(args: argparse.Namespace) -> int:
         print("[L4] 使用 Mock LLM（离线演示模式）")
     else:
         client = OpenAICompatClient(base_url=args.llm_url, model=args.model)
-        print(f"[L4] LLM 端点：{client.base_url}（模型 {client.model}）")
 
+    from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
+    call_budget = LlmCallBudget(args.max_llm_calls)
+    client = BudgetedClient(client, call_budget, 'triage')
+    if not args.mock:
+        print(f"[L4] LLM 端点：{client.base_url}（模型 {client.model}）")
     verdicts, calls = triage_alerts(alerts, project, client=client,
                                     budget_chars=args.budget)
     by_v: dict[str, int] = {}
@@ -243,7 +272,8 @@ def cmd_triage(args: argparse.Namespace) -> int:
                        out_path=out_dir / "report.html")
 
     print("\n=== L4 分诊完成 ===")
-    print(f"告警：{len(verdicts)} 条 | LLM 调用：{calls} 次")
+    print(f"告警：{len(verdicts)} 条 | LLM 调用：{call_budget.calls} 次")
+    (out_dir / 'llm_budget.json').write_text(json.dumps(call_budget.snapshot(), ensure_ascii=False, indent=2), encoding='utf-8')
     for k in ("TRUE_POSITIVE", "FALSE_POSITIVE", "NEEDS_REVIEW"):
         if by_v.get(k):
             print(f"  {k}: {by_v[k]}")
@@ -257,7 +287,7 @@ def cmd_fix(args: argparse.Namespace) -> int:
     from ecdet.l2_ir import load_sarif
     from ecdet.l3_analysis.builtin_rules.checks import build_file_facts, finalize_facts
     from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
-    from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
+    from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient, fix_candidate_allowed
 
     sarif_path = Path(args.sarif)
     if not sarif_path.exists():
@@ -266,17 +296,17 @@ def cmd_fix(args: argparse.Namespace) -> int:
     project = Path(args.project).resolve() if args.project else sarif_path.parent.parent
     alerts, metas = load_sarif(sarif_path)
 
-    # 只对真缺陷生成补丁（已分诊时取 TRUE_POSITIVE；未分诊时取全部）
-    targets = [a for a in alerts
-               if (a.triage or {}).get("verdict", "TRUE_POSITIVE") == "TRUE_POSITIVE"]
+    # Untriaged alerts may produce explicitly unconfirmed candidates.
+    targets = [a for a in alerts if fix_candidate_allowed(a)]
     if args.max:
         targets = targets[:args.max]
     if not targets:
-        print("无待修复告警（无 TRUE_POSITIVE 结论）")
+        print("无满足修复候选条件的告警")
         return 0
 
     # 构建工程事实
-    need = sorted({a.location.path.replace("\\", "/") for a in targets})
+    from ecdet.l3_analysis.engine import collect_sources
+    need = [rel.as_posix() for rel in collect_sources(project)]
     sources: dict[str, str] = {}
     facts = []
     for rel in need:
@@ -289,6 +319,9 @@ def cmd_fix(args: argparse.Namespace) -> int:
 
     client = MockFixClient() if args.mock else OpenAICompatClient(
         base_url=args.llm_url, model=args.model)
+    from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
+    call_budget = LlmCallBudget(args.max_llm_calls)
+    client = BudgetedClient(client, call_budget, 'patch')
     mode = "Mock（离线演示）" if args.mock else client.base_url
     print(f"[L4] 修复建议 LLM：{mode}")
     proposer = FixProposer(client)
@@ -315,6 +348,7 @@ def cmd_fix(args: argparse.Namespace) -> int:
             "verified": proposal.verified,
             "fail_reason": proposal.fail_reason,
             "explanation": proposal.explanation, "diff": proposal.diff,
+            **proposal.to_props(),
         })
         if proposal.verified and proposal.diff:
             patch_name = f"{i:02d}_{a.rule_id.replace(' ', '_').replace(':', '')}_" \
@@ -324,7 +358,7 @@ def cmd_fix(args: argparse.Namespace) -> int:
 
     (out_dir / "fixes.json").write_text(
         json.dumps({"accepted": accepted, "rejected": rejected,
-                    "proposals": records}, ensure_ascii=False, indent=2),
+                    "proposals": records, "llm_budget": call_budget.snapshot()}, ensure_ascii=False, indent=2),
         encoding="utf-8")
     print(f"\n=== L4 修复闭环完成 ===")
     print(f"建议 {len(records)} 条：采纳 {accepted} / 拒绝 {rejected}"
@@ -365,13 +399,13 @@ def cmd_orchestrate(args: argparse.Namespace) -> int:
     cfg = OrchestratorConfig(
         mock=args.mock, llm_url=args.llm_url, llm_model=args.model,
         use_llm=not args.no_llm, use_dynamic=not args.no_dynamic,
-        single_agent=args.single_agent, auto_accept=not args.no_auto_accept,
-        max_fix_targets=args.max_fix)
+        single_agent=args.single_agent, auto_accept=args.auto_accept,
+        max_fix_targets=args.max_fix, max_llm_calls=args.max_llm_calls)
     mode = "单智能体串行（A6）" if args.single_agent else "多智能体协同"
     print(f"[L4] 编排模式：{mode} | LLM：{'Mock' if args.mock else 'OpenAI 兼容端点'}"
          f" | 动态通道：{'开' if cfg.use_dynamic else '关'}")
 
-    state = Orchestrator(cfg).orchestrate(root)
+    state = Orchestrator(cfg).orchestrate(root, svd_path=Path(args.svd) if args.svd else None)
     for line in state.logs:
         print(f"  {line}")
 
@@ -381,6 +415,7 @@ def cmd_orchestrate(args: argparse.Namespace) -> int:
     out_dir = root / "ecdet_reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     save_sarif(state.static_alerts, state.rule_metas, out_dir / "results.sarif")
+    (out_dir / 'llm_budget.json').write_text(json.dumps(state.llm_budget, ensure_ascii=False, indent=2), encoding='utf-8')
     html = render_html_report(result, records, project_name=root.name,
                               out_path=out_dir / "report.html")
 
@@ -434,6 +469,9 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--changed", help="增量模式：逗号分隔的变更文件（相对根目录），"
                                           "按影响集收缩扫描范围")
     p_scan.add_argument("--output", "-o", help="报告输出目录")
+    p_scan.add_argument('--constraints', action='store_true', help='启用可选Z3路径约束检查')
+    from ecdet.advanced_cli import positive_int, register_commands
+    p_scan.add_argument('--constraint-timeout-ms', type=positive_int, default=1000)
     p_scan.set_defaults(func=cmd_scan)
 
     p_ccdb = sub.add_parser("init-ccdb", help="L1 构建复现")
@@ -460,6 +498,7 @@ def main(argv: list[str] | None = None) -> int:
                           help="使用确定性 Mock LLM（离线演示/测试）")
     p_triage.add_argument("--budget", type=int, default=8000,
                           help="上下文字符预算（默认 8000）")
+    p_triage.add_argument('--max-llm-calls', type=int, default=64, help='模型调用次数上限（含重判）')
     p_triage.add_argument("--only-new", help="增量研判：仅研判基线 JSON 之外的新增告警")
     p_triage.add_argument("--output", "-o", help="输出目录（缺省覆盖原 SARIF 所在目录）")
     p_triage.set_defaults(func=cmd_triage)
@@ -471,7 +510,8 @@ def main(argv: list[str] | None = None) -> int:
     p_fix.add_argument("--model", help="模型名（缺省 env）")
     p_fix.add_argument("--mock", action="store_true", help="使用确定性 Mock LLM")
     p_fix.add_argument("--no-compile", action="store_true",
-                       help="跳过 gcc 语法检查（仅静态重扫验证）")
+                       help="跳过gcc检查并保留待验证状态")
+    p_fix.add_argument('--max-llm-calls', type=int, default=64, help='模型调用次数上限')
     p_fix.add_argument("--max", type=int, default=20, help="单次处理告警数上限")
     p_fix.add_argument("--output", "-o", help="输出目录")
     p_fix.set_defaults(func=cmd_fix)
@@ -494,8 +534,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="跳过动态通道与运行时监控（A5）")
     p_orch.add_argument("--single-agent", action="store_true",
                         help="单智能体串行模式（A6 消融）")
-    p_orch.add_argument("--no-auto-accept", action="store_true",
-                        help="高危误报判定挂起待人工（缺省自动接受并留痕）")
+    review = p_orch.add_mutually_exclusive_group()
+    review.add_argument('--auto-accept', action='store_true', dest='auto_accept',
+                        help='显式接受证据合格的高危误报建议并记录策略')
+    review.add_argument('--no-auto-accept', action='store_false', dest='auto_accept',
+                        help='高危误报建议保持待复核（默认）')
+    p_orch.set_defaults(auto_accept=False)
+    p_orch.add_argument('--max-llm-calls', type=int, default=64, help='全流程模型调用次数上限')
     p_orch.add_argument("--max-fix", type=int, default=5, help="单次修复目标上限")
     p_orch.set_defaults(func=cmd_orchestrate)
 
@@ -505,6 +550,7 @@ def main(argv: list[str] | None = None) -> int:
                          help="数据目录（SQLite + 工作区 + 运行产物）")
     p_serve.set_defaults(func=cmd_serve)
 
+    register_commands(sub)
     args = parser.parse_args(argv)
     return args.func(args)
 

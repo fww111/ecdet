@@ -1,0 +1,52 @@
+{
+  "accepted": true,
+  "cases": {
+    "bad": {
+      "status": "FINDING",
+      "alert_count": 1,
+      "coverage": {
+        "snapshots": [
+          {
+            "runs": 4,
+            "edges": 5,
+            "features": 5
+          }
+        ],
+        "initial_edges": 5,
+        "final_edges": 5,
+        "executed_units": 22,
+        "kind": "libFuzzer SanitizerCoverage edges/features"
+      },
+      "source_sha256": {
+        "harness.c": "9afd2e1050c8d7eadc4b2c1f95f799f27c24bc05088a8d4bb2b022101fe644e6",
+        "packet_bad.c": "47661a3a33decc399382fb28428d875fc5f346ac24c5383cb1f85df46ffe6fe7"
+      }
+    },
+    "fixed": {
+      "status": "COMPLETED",
+      "alert_count": 0,
+      "coverage": {
+        "snapshots": [
+          {
+            "runs": 5,
+            "edges": 6,
+            "features": 6
+          },
+          {
+            "runs": 5000,
+            "edges": 6,
+            "features": 6
+          }
+        ],
+        "initial_edges": 6,
+        "final_edges": 6,
+        "executed_units": 5000,
+        "kind": "libFuzzer SanitizerCoverage edges/features"
+      },
+      "source_sha256": {
+        "harness.c": "9afd2e1050c8d7eadc4b2c1f95f799f27c24bc05088a8d4bb2b022101fe644e6",
+        "packet_fixed.c": "f0ad789c93b297f8ea3b1b8c989d58a6403abaeb9f0474b2da9b1283ca572b51"
+      }
+    }
+  }
+}

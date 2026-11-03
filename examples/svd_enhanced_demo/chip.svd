@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<device schemaVersion="1.3">
+  <name>EnhancedDemo</name>
+  <version>1</version>
+  <description>Controlled register analysis demonstration</description>
+  <addressUnitBits>8</addressUnitBits>
+  <width>32</width>
+  <size>32</size>
+  <access>read-write</access>
+  <peripherals>
+    <peripheral>
+      <name>GPIOA</name>
+      <description>Base peripheral</description>
+      <baseAddress>0x40000000</baseAddress>
+      <registers>
+        <register>
+          <name>CTRL</name>
+          <description>Two write-one-to-clear status flags</description>
+          <addressOffset>0</addressOffset>
+          <access>read-write</access>
+          <fields>
+            <field>
+              <name>READY</name>
+              <description>Ready status</description>
+              <bitOffset>0</bitOffset>
+              <bitWidth>1</bitWidth>
+              <modifiedWriteValues>oneToClear</modifiedWriteValues>
+            </field>
+            <field>
+              <name>ERROR</name>
+              <description>Error status</description>
+              <bitOffset>1</bitOffset>
+              <bitWidth>1</bitWidth>
+              <modifiedWriteValues>oneToClear</modifiedWriteValues>
+            </field>
+          </fields>
+        </register>
+        <register>
+          <dim>2</dim>
+          <dimIncrement>4</dimIncrement>
+          <dimIndex>0,1</dimIndex>
+          <name>DATA%s</name>
+          <description>Read-only register array</description>
+          <addressOffset>0x10</addressOffset>
+          <access>read-only</access>
+        </register>
+        <cluster>
+          <name>CH</name>
+          <description>Nested channel registers</description>
+          <addressOffset>0x100</addressOffset>
+          <register>
+            <name>STATUS</name>
+            <description>Channel status</description>
+            <addressOffset>4</addressOffset>
+            <access>read-only</access>
+          </register>
+        </cluster>
+      </registers>
+    </peripheral>
+    <peripheral derivedFrom="GPIOA">
+      <name>GPIOB</name>
+      <description>Inherited peripheral at another base address</description>
+      <baseAddress>0x40001000</baseAddress>
+    </peripheral>
+  </peripherals>
+</device>

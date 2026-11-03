@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "name": "constraints_bad",
+      "exit_code": 1,
+      "sarif_alerts": 1,
+      "provenance": [
+        "suspected"
+      ]
+    },
+    {
+      "name": "constraints_good",
+      "exit_code": 0,
+      "sarif_alerts": 0,
+      "provenance": []
+    },
+    {
+      "name": "constraints_all",
+      "exit_code": 1,
+      "sarif_alerts": 2,
+      "provenance": [
+        "suspected",
+        "suspected"
+      ]
+    },
+    {
+      "name": "scan_constraints",
+      "exit_code": 2,
+      "sarif_alerts": 11,
+      "provenance": [
+        "detected",
+        "detected",
+        "detected",
+        "detected",
+        "suspected",
+        "suspected",
+        "suspected",
+        "suspected",
+        "suspected",
+        "suspected",
+        "suspected"
+      ]
+    },
+    {
+      "name": "fuzz_bad",
+      "exit_code": 1,
+      "sarif_alerts": 1,
+      "provenance": [
+        "detected"
+      ]
+    },
+    {
+      "name": "fuzz_fixed",
+      "exit_code": 0,
+      "sarif_alerts": 0,
+      "provenance": []
+    },
+    {
+      "name": "firmware_good",
+      "exit_code": 0,
+      "sarif_alerts": 0,
+      "provenance": []
+    },
+    {
+      "name": "firmware_bad",
+      "exit_code": 1,
+      "sarif_alerts": 1,
+      "provenance": [
+        "detected"
+      ]
+    }
+  ]
+}

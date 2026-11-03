@@ -47,6 +47,8 @@ class FileFacts:
     global_vars: list[tuple[str, int, bool]] = field(default_factory=list)  # (名, 行, 是否static)
     switches: list[tuple[FunctionInfo, list[SwitchInfo]]] = field(default_factory=list)
     declared_funcs: set[str] = field(default_factory=set)   # 头文件原型名集合
+    source: str = ""                  # Exact text for optional UTF-8 syntax ranges.
+    syntax: object | None = None       # Optional structural index; rules keep functions.
 
 
 @dataclass
@@ -58,6 +60,7 @@ class ProjectContext:
 
 
 def build_file_facts(path: str, source: str) -> FileFacts:
+    from ecdet.l3_analysis.syntax import parse_c_syntax
     lex = lex_c(source, path)
     funcs = parse_functions(lex)
     func_lines = set()
@@ -74,6 +77,8 @@ def build_file_facts(path: str, source: str) -> FileFacts:
         func_lines=func_lines,
         global_vars=gvars,
         switches=switches,
+        source=source,
+        syntax=parse_c_syntax(source, path),
     )
 
 

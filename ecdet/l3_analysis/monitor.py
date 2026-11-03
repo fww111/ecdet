@@ -41,7 +41,7 @@ def probes_from_alerts(alerts: list[Alert],
     """
     targets: list[str] = []
     for a in alerts:
-        if a.provenance != Provenance.SUSPECTED and a.rule_id not in _PROBE_RULES:
+        if a.provenance != Provenance.SUSPECTED:
             continue
         if a.rule_id not in _PROBE_RULES:
             continue
@@ -71,19 +71,39 @@ class RuntimeMonitor:
         events = self.engine.run(root, facts, probe_names=set(probes))
         result = MonitorResult(events=events, probed_functions=probes)
 
-        # 裁决回填：探针函数命中 → 同函数的 Suspected 告警升级 Detected
-        hit_funcs = {e.func_name for e in events}
+        # A function-level crash is an independent event, not proof of each
+        # suspected defect in that function. Require explicit source binding.
         for a in suspected:
             a_func = _alert_function(a, facts)
-            if a_func in hit_funcs and a.provenance == Provenance.SUSPECTED:
-                poc = next(e for e in events if e.func_name == a_func)
+            poc = next((event for event in events if _matches_alert(event, a, a_func)), None)
+            if poc is not None and a.provenance == Provenance.SUSPECTED:
                 a.provenance = Provenance.DETECTED
                 a.evidence.append(Evidence(
                     kind="note",
                     message=(f"运行时监控升级：定向激励 seed={poc.replay_seed} "
-                             f"复现同类崩溃（{poc.detail}）")))
+                             f"在{poc.target_rel}:{poc.source_line}复现{poc.defect_class}，"
+                             f"关联规则{a.rule_id}（{poc.detail}）")))
                 result.upgraded.append(a)
         return result
+
+
+_DEFECT_RULES = {
+    "array-bounds": {"CERT C ARR30-C"},
+    "buffer-overflow": {"CERT C STR31-C", "ECDET-CWE-242", "ECDET-CWE-1284"},
+    "integer-truncation": {"ECDET-CWE-197"},
+    "mmio-access": {"ECDET-MMIO-ACCESS"},
+    "format-string": {"CERT C FIO30-C"},
+}
+
+
+def _matches_alert(event: DynamicFinding, alert: Alert, function: str) -> bool:
+    return bool(
+        function and event.func_name == function
+        and event.target_rel.replace("\\", "/") == alert.location.path.replace("\\", "/")
+        and type(getattr(event, "source_line", None)) is int and event.source_line == alert.location.line
+        and alert.rule_id in _DEFECT_RULES.get(getattr(event, "defect_class", ""), set())
+        and alert.rule_id in getattr(event, "confirmed_rule_ids", [])
+    )
 
 
 def _alert_function(alert: Alert, facts: list[FileFacts]) -> str:

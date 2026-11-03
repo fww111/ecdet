@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -37,6 +38,12 @@ def _analyzer_environment() -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
+    # Python 3.11 can decode an editable .pth with the Windows locale even
+    # when its Unicode source path was written as UTF-8. Native jobs change
+    # cwd, so pass the already-loaded package root explicitly to children.
+    package_root = str(Path(__file__).resolve().parents[3])
+    python_paths = [p for p in env.get('PYTHONPATH', '').split(os.pathsep) if p]
+    env['PYTHONPATH'] = os.pathsep.join([package_root, *[p for p in python_paths if p != package_root]])
     if os.name != "nt":
         return env
     candidates: list[Path] = []
@@ -52,11 +59,51 @@ def _analyzer_environment() -> dict[str, str]:
     found = [str(path) for path in candidates if path.is_dir()]
     if found:
         env["PATH"] = os.pathsep.join([*found, env.get("PATH", "")])
+    overrides = env.get("CC_ANALYZER_BIN", "")
+    if not any(value.startswith("clangsa:") for value in overrides.split(";")):
+        clang = _which("clang", env)
+        if clang:
+            driver = _clangsa_driver(clang)
+            if driver != clang:
+                env["CC_ANALYZER_BIN"] = ";".join(
+                    value for value in (overrides, f"clangsa:{driver}") if value)
     return env
 
 
 def _which(binary: str, env: dict[str, str]) -> str | None:
     return shutil.which(binary, path=env.get("PATH"))
+
+
+@lru_cache(maxsize=8)
+def _clangsa_driver(binary: str) -> str:
+    """LLVM-MinGW wrappers reject CodeChecker's direct cc1 checker query."""
+    directory = Path(binary).parent
+    candidates = [path for path in directory.glob("clang-*.exe")
+                  if re.fullmatch(r"clang-\d+\.exe", path.name)]
+    if not candidates:
+        return binary
+    try:
+        help_result = subprocess.run(
+            [binary, "-cc1", "-analyzer-checker-help"], capture_output=True,
+            text=True, timeout=10, encoding="utf-8", errors="replace")
+        if help_result.returncode == 0 and "CHECKERS:" in help_result.stdout:
+            return binary
+        version = subprocess.run([binary, "--version"], capture_output=True,
+                                 text=True, timeout=10, encoding="utf-8",
+                                 errors="replace")
+        major = re.search(r"clang version (\d+)\.", version.stdout)
+        if major:
+            candidate = directory / f"clang-{major.group(1)}.exe"
+            if candidate in candidates:
+                checkers = subprocess.run(
+                    [str(candidate), "-cc1", "-analyzer-checker-help"],
+                    capture_output=True, text=True, timeout=10,
+                    encoding="utf-8", errors="replace")
+                if checkers.returncode == 0 and "CHECKERS:" in checkers.stdout:
+                    return str(candidate)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    return binary
 
 
 def _find_ccdb(root: Path) -> Path | None:

@@ -115,11 +115,11 @@ def render_html_report(result: AggregationResult,
     # LLM 分诊结果（L4）
     tri = s.get("by_triage", {})
     if tri and set(tri) != {"untriaged"}:
-        parts.append("<section><h2>LLM 分诊结果（L4，证据行号核对后）</h2><table>"
+        parts.append("<section><h2>LLM 分诊结果（模型建议与引用核对）</h2><table>"
                      "<tr><th>判定</th><th>含义</th><th>数量</th></tr>")
         tri_desc = {
-            "TRUE_POSITIVE": ("真缺陷", "确认为真实告警"),
-            "FALSE_POSITIVE": ("误报", "结合上下文判定为误报"),
+            "TRUE_POSITIVE": ("建议真缺陷", "模型建议，引用有效不等于语义已证明"),
+            "FALSE_POSITIVE": ("建议误报", "模型建议，原始告警仍保留"),
             "NEEDS_REVIEW": ("待复核", "证据不足/核对未通过/输出不可解析"),
         }
         for k in ("TRUE_POSITIVE", "FALSE_POSITIVE", "NEEDS_REVIEW"):
@@ -167,12 +167,15 @@ def render_html_report(result: AggregationResult,
         tri_html = ""
         if a.triage:
             tv = a.triage.get("verdict", "")
-            tmap = {"TRUE_POSITIVE": "真缺陷", "FALSE_POSITIVE": "误报",
+            tmap = {"TRUE_POSITIVE": "建议真缺陷", "FALSE_POSITIVE": "建议误报",
                     "NEEDS_REVIEW": "待复核"}
             tri_html = (f"<br><span class='badge tri-{tv.lower()}'>"
                         f"LLM:{tmap.get(tv, tv)}({a.triage.get('confidence', 0):.2f}"
                         f"{'✓' if a.triage.get('verified') else '!'})</span>"
                         f"<div class='evidence'>{_esc(a.triage.get('reason', ''))}</div>")
+            tri_html += (f"<div class='evidence'>模式：{_esc(a.triage.get('client_mode','unknown'))}；"
+                         f"引用：{'有效' if a.triage.get('verified') else '未通过'}；"
+                         f"{'待人工复核' if a.triage.get('review_pending') else '模型建议'}</div>")
         parts.append(
             f"<tr><td>{i}</td><td>{loc}</td>"
             f"<td><span class='badge {a.severity.value}'>{a.severity.value}</span><br>"

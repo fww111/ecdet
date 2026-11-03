@@ -1,0 +1,86 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "name": "constraints_bad",
+      "kind": "constraints",
+      "run_status": "done",
+      "backend_status": "FINDING",
+      "alert_count": 1,
+      "provenance": [
+        "suspected"
+      ]
+    },
+    {
+      "name": "constraints_good",
+      "kind": "constraints",
+      "run_status": "done",
+      "backend_status": "PASS",
+      "alert_count": 0,
+      "provenance": []
+    },
+    {
+      "name": "constraints_partial",
+      "kind": "constraints",
+      "run_status": "done",
+      "backend_status": "PARTIAL",
+      "alert_count": 2,
+      "provenance": [
+        "suspected",
+        "suspected"
+      ]
+    },
+    {
+      "name": "fuzz_bad",
+      "kind": "fuzz",
+      "run_status": "done",
+      "backend_status": "FINDING",
+      "alert_count": 1,
+      "provenance": [
+        "detected"
+      ]
+    },
+    {
+      "name": "fuzz_fixed",
+      "kind": "fuzz",
+      "run_status": "done",
+      "backend_status": "COMPLETED",
+      "alert_count": 0,
+      "provenance": []
+    },
+    {
+      "name": "firmware_good",
+      "kind": "firmware",
+      "run_status": "done",
+      "backend_status": "PASS",
+      "alert_count": 0,
+      "provenance": []
+    },
+    {
+      "name": "firmware_bad",
+      "kind": "firmware",
+      "run_status": "done",
+      "backend_status": "FAIL",
+      "alert_count": 1,
+      "provenance": [
+        "detected"
+      ]
+    },
+    {
+      "name": "missing_clang",
+      "kind": "fuzz",
+      "run_status": "failed",
+      "backend_status": "UNAVAILABLE",
+      "alert_count": 0,
+      "provenance": []
+    },
+    {
+      "name": "after_failed_job",
+      "kind": "constraints",
+      "run_status": "done",
+      "backend_status": "PASS",
+      "alert_count": 0,
+      "provenance": []
+    }
+  ]
+}
