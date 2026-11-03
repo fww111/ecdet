@@ -142,7 +142,7 @@ def render_html_report(result: AggregationResult,
         f"<tr><td>{_esc(r.rule_id)}</td><td>{_esc(r.category)}</td>"
         f"<td>{_esc(r.title)}</td>"
         f"<td>{_esc(r.gjb_topic) if r.gjb_topic else '—'}</td>"
-        f"<td>{'<span class=ok>合规</span>' if r.status == 'compliant' else '偏离'}</td>"
+        f"<td>{ {'compliant': '<span class=ok>合规</span>', 'deviation': '偏离', 'no_findings': '本次未检出', 'not_evaluated': '未执行'}.get(r.status, _esc(r.status))}</td>"
         f"<td>{r.violation_count}</td></tr>"
         for r in records)
     parts.append(f"<section><h2>规范合规记录（MISRA/CERT/ECDET，含 GJB 8114 主题映射）</h2>"

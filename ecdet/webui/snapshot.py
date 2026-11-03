@@ -18,7 +18,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-SNAPSHOT_EXTS = {".c", ".cc", ".cpp", ".h", ".hpp"}
+SNAPSHOT_EXTS = {".c", ".cc", ".cpp", ".cxx", ".c++", ".h", ".hh", ".hpp", ".hxx"}
 SKIP_DIRS = {".git", "build", "ecdet_build", "ecdet_reports", ".venv",
              "__pycache__", "node_modules", "out", ".vs", ".vscode"}
 MAX_FILE_BYTES = 1_000_000      # 单文件上限 1MB

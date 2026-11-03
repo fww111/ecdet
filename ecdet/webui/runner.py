@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import queue
 import shutil
 import subprocess
@@ -26,6 +27,7 @@ from ecdet.webui.store import Store
 
 _SKIP_DIRS = {".git", "build", "ecdet_build", "ecdet_reports", ".venv",
               "__pycache__", "node_modules"}
+_ARCHIVE_IGNORED = {".git", ".venv", "ecdet_reports", "__pycache__", "node_modules"}
 
 
 def register_project(store: Store, data_dir: Path, name: str,
@@ -84,11 +86,8 @@ def register_project(store: Store, data_dir: Path, name: str,
 
 
 def _require_sources(workspace: str) -> None:
-    files = [p for p in Path(workspace).rglob("*")
-             if p.suffix.lower() in (".c", ".h")
-             and not any(s in p.parts for s in _SKIP_DIRS)]
-    if not files:
-        raise ValueError("工程中未发现 C/H 源文件")
+    if not collect_sources(Path(workspace), extra_skip=set(_SKIP_DIRS)):
+        raise ValueError("工程中未发现 C/C++ 源文件或头文件")
 
 
 def _extract_archive(data: bytes, dest: Path) -> None:
@@ -101,14 +100,16 @@ def _extract_archive(data: bytes, dest: Path) -> None:
             with zipfile.ZipFile(marker) as zf:
                 for info in zf.infolist():
                     name = info.filename.replace("\\", "/")
-                    if name.startswith("/") or ".." in name.split("/"):
+                    parts = name.split("/")
+                    if name.startswith("/") or ".." in parts or _ARCHIVE_IGNORED.intersection(parts):
                         continue          # 防路径逃逸
                     zf.extract(info, dest)
         elif tarfile.is_tarfile(marker):
             with tarfile.open(marker) as tf:
                 safe = [m for m in tf.getmembers()
                         if not m.name.startswith("/")
-                        and ".." not in Path(m.name).parts]
+                        and ".." not in Path(m.name).parts
+                        and not _ARCHIVE_IGNORED.intersection(Path(m.name).parts)]
                 tf.extractall(dest, members=safe)
         else:
             raise ValueError("仅支持 zip / tar.gz 归档")
@@ -150,6 +151,12 @@ class ScanRunner:
                                         alert_ids=task.get("alert_ids"),
                                         mode=task.get("mode", "suggest"))
             except Exception as e:  # noqa: BLE001 —— 任务隔离，失败入状态
+                import traceback
+
+                errors = self.data_dir / "task-errors"
+                errors.mkdir(parents=True, exist_ok=True)
+                (errors / f"{task['kind']}-{task['id']}.log").write_text(
+                    traceback.format_exc(), encoding="utf-8")
                 if task["kind"] == "scan":
                     self.store.set_run_status(task["id"], "failed",
                                               error=str(e))
@@ -171,24 +178,25 @@ class ScanRunner:
             method = "skipped"
             warnings: list[str] = []
         else:
-            res = reconstruct(workspace)
+            res = reconstruct(workspace, build_cmd=params.get("build_command"))
             method = res.method
             warnings = res.warnings
 
         # L3 静态扫描
         files = collect_sources(workspace, extra_skip=set())
         if not files:
-            store.set_run_status(run_id, "failed", error="未发现 C/H 源文件")
+            store.set_run_status(run_id, "failed", error="未发现 C/C++ 源文件或头文件")
             return
         svd = params.get("svd")
         svd_path = Path(svd) if svd else None
         if svd_path and not svd_path.is_absolute():
             svd_path = workspace / svd_path
-        target = AnalysisTarget(root=workspace, files=files, svd_path=svd_path)
+        target = AnalysisTarget(root=workspace, files=files, svd_path=svd_path,
+                                artifact_dir=out_dir / "codechecker")
         enabled_disable = params.get("disable") or []
         alerts, metas = run_all_engines(
             target, profile=params.get("profile") or None,
-            disable=list(enabled_disable))
+            disable=list(enabled_disable), enable=list(params.get("enable") or []))
 
         # L3 动态通道（可选）
         if params.get("dynamic"):
@@ -231,6 +239,7 @@ class ScanRunner:
                 "message": a.message, "cwe": a.cwe,
                 "provenance": c.provenance.value,
                 "triage": a.triage, "fingerprint": a.ensure_fingerprint(),
+                "properties": a.properties,
                 "evidence": [{"kind": e.kind, "message": e.message,
                               "path": e.location.path if e.location else "",
                               "line": e.location.line if e.location else None}
@@ -247,6 +256,9 @@ class ScanRunner:
         stats["warnings"] = warnings
         stats["files"] = len(files)
         stats["out_dir"] = str(out_dir)
+        native_manifest = out_dir / "codechecker" / "latest.json"
+        if native_manifest.is_file():
+            stats["codechecker"] = json.loads(native_manifest.read_text(encoding="utf-8"))
         stats["snapshot"] = snapshot
         commit = detect_git_commit(workspace)
         if commit:
@@ -269,7 +281,6 @@ class ScanRunner:
         from ecdet.l2_ir.model import Alert, Location, Severity, Provenance
         from ecdet.l3_analysis.builtin_rules.checks import (
             build_file_facts, finalize_facts)
-        from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
         from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
         import difflib
 
@@ -285,8 +296,20 @@ class ScanRunner:
         else:
             fix_client = MockFixClient()
         proposer = FixProposer(fix_client)
-        verifier = FixVerifier(workspace, use_compiler=True)
-        all_rule_ids = {r.rule_id for r in BUILTIN_RULES}
+        params = run["params"]
+        svd = Path(params["svd"]) if params.get("svd") else None
+        if svd and not svd.is_absolute():
+            svd = workspace / svd
+        verifier = FixVerifier(workspace, use_compiler=True, svd_path=svd,
+                               profile=params.get("profile"), enable=params.get("enable"),
+                               disable=params.get("disable"))
+
+        def scan_project(label):
+            target = AnalysisTarget(root=workspace, files=collect_sources(workspace),
+                                    svd_path=svd, artifact_dir=self.data_dir /
+                                    "fix-codechecker" / str(job_id) / label)
+            return run_all_engines(target, profile=params.get("profile"),
+                                   enable=params.get("enable"), disable=params.get("disable"))[0]
 
         def rescan_facts():
             files = collect_sources(workspace, extra_skip=set())
@@ -294,20 +317,8 @@ class ScanRunner:
                 rel.as_posix(),
                 (workspace / rel).read_text(encoding="utf-8",
                                             errors="replace"))
-                for rel in files if rel.as_posix().endswith((".c", ".h"))]
+                for rel in files]
             return facts, finalize_facts(facts)
-
-        def scan_alerts(facts, ctx):
-            """按当前生效规则重扫，返回 fresh 告警（L2 模型）。"""
-            out = []
-            seen = {}
-            for rid, fn in FILE_RULES.items():
-                if rid in all_rule_ids:
-                    seen.setdefault(fn, set()).add(rid)
-            for f in facts:
-                for fn, rids in seen.items():
-                    out.extend(fn(f, ctx, rids))
-            return out
 
         backup_dir = ""
         if mode == "apply":
@@ -333,7 +344,7 @@ class ScanRunner:
         for round_no in range(1, max_rounds + 1):
             facts, ctx = rescan_facts()
             verifier._prepare(ctx)          # 每轮刷新 include 目录
-            fresh = scan_alerts(facts, ctx)
+            fresh = scan_project(f"round-{round_no}")
 
             candidates = []
             if selected:
@@ -378,18 +389,8 @@ class ScanRunner:
                                        proposal.func_end,
                                        proposal.patched_code)
 
-                # 验证：内存应用后全文件规则重扫（该规则告警消失）
-                facts_new = [build_file_facts(rel, modified)]
-                ctx_new = finalize_facts(facts_new)
-                remaining = scan_alerts(facts_new, ctx_new)
-                alert_gone = not any(
-                    x.rule_id == a.rule_id
-                    and x.location.path.replace("\\", "/") == rel
-                    for x in remaining)
-                ok_compile = True
-                if verifier._gcc:
-                    ok_compile, _ = verifier._compile_check(rel, modified)
-                verified = alert_gone and ok_compile
+                proposal = verifier.verify(proposal, ctx, current)
+                verified = proposal.verified
 
                 diff = "\n".join(difflib.unified_diff(
                     current.splitlines(), modified.splitlines(),
@@ -400,7 +401,7 @@ class ScanRunner:
                                   rule_id=a.rule_id, path=a.location.path,
                                   line=a.location.line,
                                   func=proposal.func_name, verified=False,
-                                  fail_reason="重扫后原告警仍在或语法检查未过",
+                                  fail_reason=proposal.fail_reason,
                                   explanation=proposal.explanation,
                                   diff=diff, job_id=job_id)
                     continue
@@ -426,9 +427,7 @@ class ScanRunner:
                 break           # 建议模式单轮；apply 无进展即收敛
 
         # 验收扫描：修复后的全工程残留告警
-        final_files = collect_sources(workspace, extra_skip=set())
-        target = AnalysisTarget(root=workspace, files=final_files)
-        final_alerts, _ = run_all_engines(target)
+        final_alerts = scan_project("final")
         final_stats = {
             "remaining_total": len(final_alerts),
             "remaining_error": sum(1 for a in final_alerts
@@ -444,18 +443,14 @@ class ScanRunner:
                           backup_dir=backup_dir)
 
     def _backup_sources(self, workspace: Path, job_id: int) -> str:
-        """首写前备份全部 C/H 文件（保留相对结构），返回备份目录。"""
+        """首写前备份全部 C/C++ 源文件与头文件，返回备份目录。"""
         backup = self.data_dir / "backups" / f"job_{job_id}"
         if backup.exists():
             return str(backup)
-        for p in workspace.rglob("*"):
-            if p.suffix.lower() in (".c", ".h") and not any(
-                    s in p.parts for s in
-                    {".git", "build", "ecdet_build", "ecdet_reports"}):
-                rel = p.relative_to(workspace)
-                dst = backup / rel
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(p, dst)
+        for rel in collect_sources(workspace):
+            dst = backup / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(workspace / rel, dst)
         return str(backup)
 
 

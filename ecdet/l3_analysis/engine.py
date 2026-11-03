@@ -1,16 +1,17 @@
 """引擎编排 —— L3 层调度入口。
 
 引擎接口（Engine）：输入分析目标（文件集 + 规则启停配置），输出统一告警。
-内置规则引擎零依赖恒可用；外部引擎（cppcheck/clang-tidy）通过适配器
-“检测到即接入”（方案 3.3.3：以 cppcheck 为基补齐、clang-tidy/Semgrep 框架复用）。
+内置规则与 CodeChecker 核心静态分析共同运行；CodeChecker 调度
+Clang、Clang-Tidy 与 Cppcheck，ESBMC 独立接入。
 """
 
 from __future__ import annotations
 
 import shutil
+import os
 import subprocess
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from ecdet.l2_ir.model import Alert, RuleMeta, Severity
@@ -44,6 +45,10 @@ class AnalysisTarget:
     root: Path
     files: list[Path] = field(default_factory=list)
     svd_path: Path | None = None       # CMSIS-SVD 芯片描述（提供则启用 MMIO 检查）
+    artifact_dir: Path | None = None   # CodeChecker 原生报告、配置与日志
+    rule_enable: list[str] = field(default_factory=list)
+    rule_disable: list[str] = field(default_factory=list)
+    analysis_profile: str | None = None
 
     def read(self, rel: Path) -> str:
         return (self.root / rel).read_text(encoding="utf-8", errors="replace")
@@ -171,10 +176,63 @@ class ClangTidyAdapter(ExternalEngineAdapter):
         return run_clang_tidy(target, timeout=180)
 
 
+class CodeCheckerEngine(Engine):
+    """CodeChecker 核心引擎：每次静态扫描均执行并汇总 C/C++ 分析结果。"""
+
+    name = "codechecker"
+    binary = "CodeChecker"
+
+    def _binary_path(self) -> str | None:
+        binary = shutil.which("CodeChecker") or shutil.which("codechecker")
+        if binary:
+            return binary
+        from importlib.util import find_spec
+
+        # Embedded Python callers need not activate the scripts directory;
+        # the project bridge invokes the installed package with this Python.
+        return "CodeChecker" if find_spec("codechecker_common") else None
+
+    def available(self) -> bool:
+        # CodeChecker 是项目基础依赖，不按“检测到即接入”方式静默跳过。
+        return True
+
+    def rules(self) -> list[RuleMeta]:
+        from ecdet.l3_analysis.adapters.codechecker import _analyzer_environment
+        from ecdet.l3_analysis.codechecker_catalog import load_catalog, rule_metas
+
+        binary = self._binary_path()
+        metas = rule_metas(load_catalog(binary, _analyzer_environment())) if binary else []
+        manifest = getattr(self, "scan_manifest", {})
+        if "enabled_checkers" in manifest:
+            active = set(manifest["enabled_checkers"])
+            metas = [replace(meta, enabled_by_default=meta.rule_id in active,
+                             properties={**meta.properties, "analyzed": meta.rule_id in active})
+                     for meta in metas]
+        return metas
+
+    def run(self, target: AnalysisTarget, enabled_rules: set[str]) -> list[Alert]:
+        from ecdet.l3_analysis.adapters.codechecker import run_codechecker
+
+        binary = self._binary_path()
+        if not binary:
+            raise RuntimeError(
+                "CodeChecker 是必需的静态分析引擎。请先运行 `uv sync`，"
+                "并确认虚拟环境中的 CodeChecker 命令可用。"
+            )
+        self.scan_manifest = {}
+        try:
+            timeout = int(os.environ.get("ECODET_CODECHECKER_TIMEOUT", "1800"))
+            if timeout <= 0:
+                raise ValueError
+        except ValueError as exc:
+            raise RuntimeError("ECODET_CODECHECKER_TIMEOUT 必须是正整数秒数。") from exc
+        return run_codechecker(target, binary=binary, timeout=timeout,
+                               on_manifest=lambda value: setattr(self, "scan_manifest", value))
+
+
 DEFAULT_ENGINES: list[Engine] = [
+    CodeCheckerEngine(),
     BuiltinEngine(),
-    CppcheckAdapter(),
-    ClangTidyAdapter(),
 ]
 
 
@@ -182,7 +240,7 @@ def _make_default_engines() -> list[Engine]:
     """延迟导入 ESBMC 适配器，保持模块加载轻量。"""
     from ecdet.l3_analysis.adapters.esbmc import ESBMCAdapter
 
-    return [BuiltinEngine(), CppcheckAdapter(), ClangTidyAdapter(), ESBMCAdapter()]
+    return [CodeCheckerEngine(), BuiltinEngine(), ESBMCAdapter()]
 
 
 def all_rule_metas(engines: list[Engine]) -> list[RuleMeta]:
@@ -207,7 +265,8 @@ def collect_sources(root: Path, extra_skip: set[str] | None = None) -> list[Path
     out = []
     for p in sorted(root.rglob("*")):
         rel = p.relative_to(root)
-        if p.suffix.lower() in (".c", ".h") and \
+        if p.suffix.lower() in (".c", ".h", ".cc", ".cpp", ".cxx", ".c++",
+                                ".hh", ".hpp", ".hxx") and \
                 not any(s in rel.parts for s in skip):
             out.append(rel)
     return out
@@ -219,7 +278,8 @@ def resolve_enabled(rules: list[RuleMeta], profile: str | None,
     disabled = set(INDUSTRY_PROFILES.get(profile or "", set()))
     disabled.update(disable or [])
     enabled_extra = set(enable or [])
-    return {r.rule_id for r in rules if r.rule_id not in disabled} | enabled_extra
+    return {r.rule_id for r in rules if r.enabled_by_default and
+            r.rule_id not in disabled} | enabled_extra
 
 
 def run_all_engines(target: AnalysisTarget, profile: str | None = None,
@@ -230,8 +290,13 @@ def run_all_engines(target: AnalysisTarget, profile: str | None = None,
     usable = [e for e in engs if e.available()]
     metas = all_rule_metas(usable)
     enabled = resolve_enabled(metas, profile, disable, enable)
+    configured_target = replace(
+        target, rule_enable=[*target.rule_enable, *(enable or [])],
+        rule_disable=[*target.rule_disable, *(disable or [])],
+        analysis_profile=profile or target.analysis_profile,
+    )
 
     alerts: list[Alert] = []
     for e in usable:
-        alerts.extend(e.run(target, enabled))
-    return alerts, metas
+        alerts.extend(e.run(configured_target, enabled))
+    return alerts, all_rule_metas(usable)

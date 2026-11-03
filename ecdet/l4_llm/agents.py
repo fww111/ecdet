@@ -200,7 +200,7 @@ class Orchestrator:
             fix_client = MockFixClient() if cfg.mock else OpenAICompatClient(
                 base_url=cfg.llm_url, model=cfg.llm_model)
             proposer = FixProposer(fix_client)
-            verifier = FixVerifier(state.repo)
+            verifier = FixVerifier(state.repo, svd_path=state.svd_path)
             facts = [build_file_facts(p, (state.repo / p).read_text(
                 encoding="utf-8", errors="replace"))
                 for p in state.plan["files"]]

@@ -8,6 +8,7 @@ from pathlib import Path
 from ecdet.l2_ir.model import Alert, Location, Severity
 from ecdet.l3_analysis.builtin_rules.checks import build_file_facts, finalize_facts
 from ecdet.l4_llm.fixer import (
+    FixProposal,
     FixProposer,
     FixVerifier,
     MockFixClient,
@@ -54,10 +55,13 @@ def _alert_for(root: Path, rule: str, path: str, line: int) -> Alert:
 
 
 def _ctx_for(root: Path):
+    from ecdet.l3_analysis.engine import collect_sources
+
     facts = []
-    for p in sorted(root.rglob("*.c")):
+    for rel in collect_sources(root):
+        p = root / rel
         facts.append(build_file_facts(
-            p.relative_to(root).as_posix(),
+            rel.as_posix(),
             p.read_text(encoding="utf-8", errors="replace")))
     return finalize_facts(facts)
 
@@ -134,3 +138,39 @@ def test_fix_alert_gone_check(tmp_path):
     verifier = FixVerifier(root, use_compiler=True)
     proposal = verifier.verify(proposal, ctx, src)
     assert proposal.verified, proposal.fail_reason
+
+
+def test_native_fix_validation_preserves_project_and_rejects_regressions(tmp_path):
+    """Native defects must really disappear; changing syntax alone is insufficient."""
+    import shutil
+    import pytest
+    from ecdet.l3_analysis.adapters.codechecker import _analyzer_environment
+
+    clang = shutil.which("clang", path=_analyzer_environment().get("PATH"))
+    if not clang:
+        pytest.skip("需要 Clang Static Analyzer")
+    src = "int f(void)\n{\n    int *p = 0;\n    return *p;\n}\n"
+    (tmp_path / "m.c").write_text(src, encoding="utf-8")
+    ccdb = tmp_path / "compile_commands.json"
+    ccdb.write_text(json.dumps([{"directory": str(tmp_path),
+                                 "file": str(tmp_path / "m.c"),
+                                 "arguments": [clang, "-I", str(tmp_path),
+                                               "-c", str(tmp_path / "m.c")]}]), encoding="utf-8")
+    original_db = ccdb.read_bytes()
+    ctx = finalize_facts([build_file_facts("m.c", src)])
+    verifier = FixVerifier(tmp_path, use_compiler=False)
+
+    def verify(patch):
+        proposal = FixProposal(rule_id="core.NullDereference", path="m.c", func_name="f",
+                               func_start=1, func_end=5, original_code=src,
+                               patched_code=patch)
+        return verifier.verify(proposal, ctx, src)
+
+    still_bad = verify(src.replace("return *p;", "return *p + 1;"))
+    assert not still_bad.verified and "仍存在" in still_bad.fail_reason
+    regression = verify("int f(void)\n{\n    return 42 / 0;\n}\n")
+    assert not regression.verified and "新的 error" in regression.fail_reason
+    repaired = verify("int f(void)\n{\n    return 42;\n}\n")
+    assert repaired.verified, repaired.fail_reason
+    assert (tmp_path / "m.c").read_text(encoding="utf-8") == src
+    assert ccdb.read_bytes() == original_db

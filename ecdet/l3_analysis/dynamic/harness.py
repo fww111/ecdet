@@ -83,12 +83,19 @@ def generate_harness(model: InputModel, target_rel: str, n_seeds: int) -> Harnes
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #include "{Path(target_rel).name}"          /* 目标翻译单元整体包含 */
 
 static const int ecdet_combo[{n}][{max(width, 1)}] = {table};
 
 int main(int argc, char **argv) {{
+#ifdef _WIN32
+    /* Intentional crashes must exit without an interactive WER dialog. */
+    SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+#endif
     unsigned ecdet_seed = (unsigned)(argc > 1 ? strtoul(argv[1], 0, 0) : 0);
     int idx = (int)(ecdet_seed % {n}u);
 {buffers}

@@ -18,3 +18,9 @@ baseline.json
 *.docx
 *.pdf
 tests/
+*.pptx
+*.xlsx
+_ppt_shots/
+demo_video/
+projects/
+webui_data*/

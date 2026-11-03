@@ -58,6 +58,32 @@ def _wait_run(base, run_id, timeout=120):
     raise TimeoutError("scan run timeout")
 
 
+def test_codechecker_artifact_access(ui, tmp_path):
+    app, base = ui
+    pid = app.store.add_project("native", "path", "ref", str(tmp_path))
+    rid = app.store.add_run(pid, {})
+    out = tmp_path / "reports"
+    work = out / "codechecker" / "runs" / "sample"
+    work.mkdir(parents=True)
+    (work / "results.sarif").write_text('{"version":"2.1.0"}', encoding="utf-8")
+    latest = out / "codechecker" / "latest.json"
+    latest.write_text(json.dumps({"run_dir": str(work), "status": "complete"}), encoding="utf-8")
+    app.store.set_run_status(rid, "done", out_dir=str(out))
+    assert _get(base, f"/api/runs/{rid}/codechecker")["status"] == "complete"
+    assert _get(base, f"/api/runs/{rid}/codechecker/results.sarif")["version"] == "2.1.0"
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        _get(base, f"/api/runs/{rid}/codechecker/compile_commands.original.json")
+    assert exc.value.code == 404
+    latest.write_text(json.dumps({"run_dir": str(tmp_path)}), encoding="utf-8")
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        _get(base, f"/api/runs/{rid}/codechecker/results.sarif")
+    assert exc.value.code == 400
+    latest.write_text(json.dumps({"run_dir": str(work), "status": "failed"}), encoding="utf-8")
+    app.store.set_run_status(rid, "failed", error="analysis failed")
+    assert _get(base, f"/api/runs/{rid}/codechecker")["status"] == "failed"
+    assert app.store.get_run(rid)["out_dir"] == str(out)
+
+
 # ---------------- Store 单元 ----------------
 
 
@@ -110,6 +136,36 @@ def test_register_path_source(ui):
     assert any(p["name"] == "demo" for p in projects)
 
 
+def test_register_cpp_only_source(ui, tmp_path):
+    _, base = ui
+    project = tmp_path / "cpp_project"
+    project.mkdir()
+    (project / "main.cpp").write_text("int main() { return 0; }", encoding="utf-8")
+    result = _post(base, "/api/projects",
+                   {"name": "cpp", "source_type": "path", "path": str(project)})
+    assert result["project_id"] >= 1
+
+
+def test_scan_applies_native_checker_configuration(ui, tmp_path):
+    _, base = ui
+    project = tmp_path / "configured"
+    project.mkdir()
+    (project / "main.c").write_text("int f(void) { return 7 / 0; }\n", encoding="utf-8")
+    registered = _post(base, "/api/projects",
+                        {"source_type": "path", "path": str(project)})
+    run = _post(base, "/api/runs", {"project_id": registered["project_id"],
+                                    "no_build": True,
+                                    "enable": ["optin.performance.Padding"],
+                                    "disable": ["core.DivideZero"]})
+    done = _wait_run(base, run["run_id"])
+    assert done["status"] == "done", done.get("error")
+    native = _get(base, f"/api/runs/{run['run_id']}/codechecker")
+    assert "optin.performance.Padding" in native["enabled_checkers"]
+    assert "core.DivideZero" not in native["enabled_checkers"]
+    alerts = _get(base, f"/api/runs/{run['run_id']}/alerts")["alerts"]
+    assert not any(alert["rule_id"] == "core.DivideZero" for alert in alerts)
+
+
 def test_register_path_missing(ui):
     _, base = ui
     req = urllib.request.Request(
@@ -135,6 +191,19 @@ def test_register_upload_zip(ui):
     ws = Path(resp["workspace"])
     assert (ws / "pkg" / "src" / "main.c").exists()
     assert not (ws / "evil.c").exists() and not (ws / "pkg" / "evil.c").exists()
+
+
+def test_register_upload_ignores_previous_analysis_artifacts(ui):
+    _, base = ui
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr("main.cpp", "int main() { return 0; }\n")
+        zf.writestr("ecdet_reports/" + ("old-analysis/" * 30) + "generated.c", "bad")
+    result = _post(base, "/api/projects?name=clean", raw=buf.getvalue(),
+                   ctype="application/zip")
+    workspace = Path(result["workspace"])
+    assert (workspace / "main.cpp").is_file()
+    assert not (workspace / "ecdet_reports").exists()
 
 
 def test_register_upload_no_sources(ui):
@@ -330,7 +399,7 @@ def test_one_click_fix_flow(ui):
 
     job = _post(base, f"/api/runs/{run['run_id']}/fix")
     assert job["job_id"] >= 1
-    deadline = time.time() + 120
+    deadline = time.time() + 300  # 多个补丁逐个执行真实 CodeChecker 验证
     while time.time() < deadline:
         data = _get(base, f"/api/runs/{run['run_id']}/fixes")
         j = data["job"]
@@ -371,7 +440,7 @@ def test_targeted_fix_by_alert_ids(ui):
     arr30 = next(a for a in alerts if a["rule_id"] == "CERT C ARR30-C")
     job = _post(base, f"/api/runs/{run['run_id']}/fix",
                 {"alert_ids": [str31["id"], arr30["id"]]})
-    deadline = time.time() + 120
+    deadline = time.time() + 300
     data = {}
     while time.time() < deadline:
         data = _get(base, f"/api/runs/{run['run_id']}/fixes")
@@ -395,26 +464,20 @@ def test_apply_mode_writes_and_converges(ui):
     """自动修复模式：验证通过的补丁写入源文件，验收扫描告警下降，
     原始 examples 不受影响（工程以 zip 副本注册）。"""
     ui_obj, base = ui
-    import io
-    buf = io.BytesIO()
     src_root = EXAMPLES / "demo_rtos"
-    with zipfile.ZipFile(buf, "w") as zf:
-        for f in src_root.rglob("*"):
-            if f.is_file() and f.suffix in (".c", ".h", ".txt"):
-                zf.writestr(f.relative_to(src_root).as_posix(),
-                            f.read_text(encoding="utf-8"))
     reg = _post(base, "/api/projects?name=applydemo",
-                raw=buf.getvalue(), ctype="application/zip")
+                raw=_zip_project(src_root), ctype="application/zip")
     ws = Path(reg["workspace"])
 
     run = _post(base, "/api/runs", {"project_id": reg["project_id"],
                                     "triage": "off"})
-    _wait_run(base, run["run_id"])
-    before_err = None
+    initial = _wait_run(base, run["run_id"])
+    assert initial["status"] == "done", initial.get("error")
+    before_err = initial["stats"]["error"]
 
     job = _post(base, f"/api/runs/{run['run_id']}/fix", {"mode": "apply"})
     data = {}
-    deadline = time.time() + 180
+    deadline = time.time() + 600  # 应用多轮补丁，每轮包含完整静态验收
     while time.time() < deadline:
         data = _get(base, f"/api/runs/{run['run_id']}/fixes")
         if data["job"] and data["job"]["status"] in ("done", "failed"):
@@ -426,7 +489,7 @@ def test_apply_mode_writes_and_converges(ui):
     assert j["applied"] >= 2, "STR31/CWE-197/CWE-1284 至少两条应写入"
     assert j["rounds"] >= 1
     fs = j["final_stats"]
-    assert fs["remaining_error"] < 6, "自动修复后 error 应下降"
+    assert fs["remaining_error"] < before_err, "自动修复后 error 应下降"
     assert fs["applied_total"] == j["applied"]
 
     # 源文件已被真实修改
@@ -454,10 +517,33 @@ def _zip_project(src_root: Path) -> bytes:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
         for f in src_root.rglob("*"):
-            if f.is_file() and f.suffix in (".c", ".h", ".txt"):
+            if (f.is_file() and f.suffix in (".c", ".h", ".txt") and
+                    not {"ecdet_reports", "ecdet_build", ".git", ".venv"}.intersection(
+                        f.relative_to(src_root).parts)):
                 zf.writestr(f.relative_to(src_root).as_posix(),
                             f.read_text(encoding="utf-8"))
     return buf.getvalue()
+
+
+def test_store_concurrent_polling_preserves_rows(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    store = Store(tmp_path / "concurrent.sqlite")
+    project_id = store.add_project("p", "path", "ref", "workspace")
+    run_id = store.add_run(project_id, {})
+
+    def polling_worker(worker):
+        for i in range(40):
+            if worker % 2:
+                store.set_run_status(run_id, "running")
+            else:
+                store.add_fix_job(run_id)
+            assert store.get_run(run_id)["project_id"] == project_id
+            assert store.get_project(project_id)["name"] == "p"
+            assert store.latest_fix_job(run_id) is not None
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(polling_worker, range(8)))
 
 
 def test_snapshot_skip_guard(tmp_path):

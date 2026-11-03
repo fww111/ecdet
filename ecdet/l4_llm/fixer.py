@@ -220,12 +220,17 @@ class MockFixClient:
 class FixVerifier:
     """ToolLoopVerify：静态重扫 + 可选 gcc 语法检查。"""
 
-    def __init__(self, project_root, use_compiler: bool = True):
+    def __init__(self, project_root, use_compiler: bool = True, svd_path=None,
+                 profile=None, enable=None, disable=None):
         self.root = Path(project_root)
         self.use_compiler = use_compiler
         self._gcc = shutil.which("gcc") if use_compiler else None
         self._all_rules = set()          # 由 run 时注入
         self._include_dirs: list[Path] = []
+        from ecdet.l3_analysis.codechecker_verifier import NativeFixValidator
+
+        self._native = NativeFixValidator(self.root, svd_path=svd_path,
+                                          profile=profile, enable=enable, disable=disable)
 
     def _prepare(self, ctx: ProjectContext):
         from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
@@ -269,11 +274,19 @@ class FixVerifier:
             return proposal
 
         # gcc 语法检查（可用时）
-        if self._gcc:
+        from ecdet.l3_analysis.adapters.codechecker import _find_ccdb
+
+        if (self._gcc and Path(proposal.path).suffix.lower() == ".c" and
+                not self._native.svd_path and _find_ccdb(self.root) is None):
             ok, reason = self._compile_check(proposal.path, modified)
             if not ok:
                 proposal.fail_reason = f"编译语法检查失败：{reason}"
                 return proposal
+
+        ok, reason = self._native.verify(proposal, modified)
+        if not ok:
+            proposal.fail_reason = reason
+            return proposal
 
         proposal.verified = True
         proposal.diff = "\n".join(difflib.unified_diff(

@@ -6,6 +6,7 @@ import json
 import sqlite3
 import threading
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 _SCHEMA = """
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS alerts (
     triage TEXT,                        -- JSON（L4 分诊结论）
     status TEXT NOT NULL DEFAULT 'pending',   -- pending / confirmed / dismissed
     fingerprint TEXT,
-    evidence TEXT
+    evidence TEXT,
+    properties TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_run ON alerts(run_id);
 CREATE TABLE IF NOT EXISTS settings (
@@ -73,6 +75,19 @@ def _now() -> float:
     return time.time()
 
 
+@dataclass
+class _QueryResult:
+    rows: list[sqlite3.Row]
+    lastrowid: int | None
+    rowcount: int
+
+    def fetchone(self):
+        return self.rows[0] if self.rows else None
+
+    def fetchall(self):
+        return self.rows
+
+
 class Store:
     """线程安全 SQLite 封装（单写锁 + check_same_thread=False）。"""
 
@@ -86,6 +101,7 @@ class Store:
             self._conn.executescript(_SCHEMA)
             for alter in (  # 旧库迁移：逐列补齐（已存在则忽略）
                 "ALTER TABLE alerts ADD COLUMN evidence TEXT",
+                "ALTER TABLE alerts ADD COLUMN properties TEXT",
                 "ALTER TABLE fix_jobs ADD COLUMN param TEXT",
                 "ALTER TABLE fixes ADD COLUMN job_id INTEGER",
                 "ALTER TABLE fix_jobs ADD COLUMN mode TEXT",
@@ -101,11 +117,16 @@ class Store:
                     pass
             self._conn.commit()
 
-    def _exec(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
+    def _exec(self, sql: str, params: tuple = ()) -> _QueryResult:
         with self._lock:
             cur = self._conn.execute(sql, params)
+            # Fetch while holding the connection lock too. Concurrent polling
+            # must not race a worker's statement/commit on this connection.
+            result = _QueryResult(cur.fetchall() if cur.description else [],
+                                  cur.lastrowid, cur.rowcount)
             self._conn.commit()
-            return cur
+            cur.close()
+            return result
 
     # ---- 项目 ----
 
@@ -141,7 +162,7 @@ class Store:
                        out_dir: str | None = None) -> None:
         finished = status in ("done", "failed")
         self._exec(
-            "UPDATE runs SET status=?, stats=?, error=?, out_dir=?, "
+            "UPDATE runs SET status=?, stats=?, error=?, out_dir=COALESCE(?,out_dir), "
             "started_at=COALESCE(started_at,?), finished_at=? WHERE id=?",
             (status,
              json.dumps(stats, ensure_ascii=False) if stats else None,
@@ -182,14 +203,15 @@ class Store:
             self._conn.executemany(
                 "INSERT INTO alerts(run_id, rule_id, engine, severity, path, "
                 "line, message, cwe, provenance, triage, status, fingerprint, "
-                "evidence) VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?,?)",
+                "evidence, properties) VALUES (?,?,?,?,?,?,?,?,?,?,'pending',?,?,?)",
                 [(run_id, a["rule_id"], a["engine"], a["severity"], a["path"],
                   a["line"], a["message"], a.get("cwe"),
                   a["provenance"],
                   json.dumps(a["triage"], ensure_ascii=False)
                   if a.get("triage") else None,
                   a.get("fingerprint", ""),
-                  json.dumps(a.get("evidence") or [], ensure_ascii=False))
+                  json.dumps(a.get("evidence") or [], ensure_ascii=False),
+                  json.dumps(a.get("properties") or {}, ensure_ascii=False))
                  for a in alerts])
             self._conn.commit()
 
@@ -223,6 +245,7 @@ class Store:
             d = dict(r)
             d["triage"] = json.loads(d["triage"]) if d["triage"] else None
             d["evidence"] = json.loads(d["evidence"]) if d.get("evidence") else []
+            d["properties"] = json.loads(d["properties"]) if d.get("properties") else {}
             out.append(d)
         return out
 
@@ -234,6 +257,7 @@ class Store:
         d = dict(row)
         d["triage"] = json.loads(d["triage"]) if d["triage"] else None
         d["evidence"] = json.loads(d["evidence"]) if d["evidence"] else []
+        d["properties"] = json.loads(d["properties"]) if d.get("properties") else {}
         return d
 
     def summary(self) -> dict:

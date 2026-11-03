@@ -128,6 +128,30 @@ class WebUI:
                 out = Path(run.get("out_dir") or "")
                 return h._file(out / "results.sarif",
                                "application/json; charset=utf-8")
+            if parts[3] == "codechecker" and len(parts) in (4, 5):
+                if not run.get("out_dir"):
+                    return h._json(404, {"error": "本次运行没有分析产物目录"})
+                base = (Path(run.get("out_dir") or "") / "codechecker").resolve()
+                latest = base / "latest.json"
+                if not latest.is_file():
+                    return h._json(404, {"error": "本次运行没有 CodeChecker 原生报告"})
+                manifest = json.loads(latest.read_text(encoding="utf-8"))
+                if len(parts) == 4:
+                    return h._json(200, manifest)
+                allowed = {"manifest.json", "catalog.json", "effective-config.json",
+                           "results.json", "results.sarif", "reports.baseline",
+                           "ctu-collect.log", "analyze.log", "parse-json.log",
+                           "diff-new.json", "diff-resolved.json", "diff-unresolved.json"}
+                if parts[4] not in allowed:
+                    return h._json(404, {"error": "分析产物不存在"})
+                work = Path(manifest["run_dir"]).resolve()
+                artifact = (work / parts[4]).resolve()
+                try:
+                    artifact.relative_to(base)
+                except ValueError:
+                    return h._json(400, {"error": "无效的分析产物路径"})
+                mime = "text/plain" if parts[4].endswith(".log") else "application/json"
+                return h._file(artifact, mime + "; charset=utf-8")
             if parts[3] == "fixes":
                 job = self.store.latest_fix_job(run_id)
                 return h._json(200, {"job": job,
@@ -253,7 +277,7 @@ class WebUI:
                             data["git_url"])
                     else:
                         return h._json(400, {"error": f"未知来源 {stype}"})
-            except (ValueError, KeyError) as e:
+            except (ValueError, KeyError, OSError) as e:
                 return h._json(400, {"error": str(e)})
             return h._json(200, {"project_id": pid, "workspace": ws})
 
@@ -269,6 +293,8 @@ class WebUI:
                 "dynamic": bool(data.get("dynamic", False)),
                 "no_build": bool(data.get("no_build", False)),
                 "disable": data.get("disable") or [],
+                "enable": data.get("enable") or [],
+                "build_command": data.get("build_command") or None,
             }
             run_id = self.runner.submit(project["id"], params)
             return h._json(200, {"run_id": run_id})

@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -34,7 +35,10 @@ from ecdet.eval import (  # noqa: E402
     run_baseline,
     run_ecdet_config,
 )
-from ecdet.l3_analysis.engine import DEFAULT_ENGINES  # noqa: E402
+from ecdet.l3_analysis.engine import (  # noqa: E402
+    ClangTidyAdapter, CodeCheckerEngine, CppcheckAdapter,
+)
+from ecdet.l3_analysis.adapters.esbmc import ESBMCAdapter  # noqa: E402
 
 
 def main(argv=None) -> int:
@@ -74,17 +78,13 @@ def main(argv=None) -> int:
         if key not in wanted:
             continue
         if args.profile:
-            cfg = AblationConfig(cfg.name, use_llm=cfg.use_llm,
-                                 use_hw=cfg.use_hw, use_rag=cfg.use_rag,
-                                 profile=args.profile, note=cfg.note)
+            cfg = replace(cfg, profile=args.profile)
         print(f"运行 {cfg.name} …")
         run = run_ecdet_config(corpus, cfg, svd_path=svd)
         runs.append((run, compute_metrics(run.alerts, gt)))
 
     if args.with_baselines:
-        for eng in DEFAULT_ENGINES:
-            if eng.name == "builtin":
-                continue
+        for eng in (CodeCheckerEngine(), CppcheckAdapter(), ClangTidyAdapter(), ESBMCAdapter()):
             print(f"运行基线 {eng.name} …")
             br = run_baseline(corpus, eng)
             runs.append((br, compute_metrics(br.alerts, gt) if br.available
@@ -100,6 +100,7 @@ def main(argv=None) -> int:
             "provenance_ratio": round(run.provenance_ratio, 4),
             "triage_counts": run.triage_counts,
             "n_alerts": len(run.alerts),
+            "analysis": run.analysis_metadata,
             "metrics": m,
         })
     (out / "eval_results.json").write_text(

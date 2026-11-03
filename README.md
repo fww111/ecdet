@@ -8,20 +8,20 @@
 |----|------|-----------|
 | L1 编译环境复现 | `ecdet.l1_build` | P1：任意嵌入式工程 → compile_commands.json |
 | L2 统一表示 | `ecdet.l2_ir` | P3：多引擎输出统一为 SARIF 单一数据模型，注入硬件语义（P2） |
-| L3 双通道分析 | `ecdet.l3_analysis` | 静态：规则引擎/抽象解释/BMC（P2/P3/P4）；动态：激励建模 + harness 闭环 + 仿真执行（P7，`ecdet.l3_analysis.dynamic`） |
+| L3 双通道分析 | `ecdet.l3_analysis` | 静态：CodeChecker + 自研规则/抽象解释/BMC（P2/P3/P4）；动态：激励建模 + harness 闭环 + 仿真执行（P7，`ecdet.l3_analysis.dynamic`） |
 | L4 多智能体协同 | `ecdet.l4_llm` | P5：规划/研判/动态测试/监控/修复/报告六类智能体 + 工具验证闭环 |
 | L5 聚合与输出 | `ecdet.l5_report` | P3/P4：去重、CWE↔MISRA↔GJB 映射、Proven/Detected/Suspected 三级、合规报告 |
 
 ## 快速开始
 
 ```bash
-uv sync                                    # 安装（核心零第三方依赖）
+uv sync                                    # 安装 ecdet 与 CodeChecker 核心依赖
 uv run ecdet scan examples/demo_rtos       # 全量扫描（L1→L3→L5 一条龙）
 uv run ecdet scan examples/demo_rtos --profile automotive
 uv run ecdet init-ccdb path/to/project     # 仅 L1 构建复现
 uv run ecdet rules                         # 查看规则集
 uv run ecdet report results.sarif          # 从 SARIF 重新生成 HTML 报告
-uv run pytest                              # 运行测试（57 项）
+uv run pytest                              # 运行测试（包含真实分析器集成测试）
 ```
 
 ## 检测流水线
@@ -29,7 +29,7 @@ uv run pytest                              # 运行测试（57 项）
 ```
 目标工程 ──L1 构建复现──> compile_commands.json
    │                        │
-   │              ┌── L3 静态通道：规则引擎（28 条）+ 硬件语义（P2）+ 抽象解释（P4）
+   │              ┌── L3 静态通道：CodeChecker + 自研规则（28 条）+ 硬件语义（P2）+ 抽象解释（P4）
    │              └── L3 动态通道：激励建模 → harness 闭环 → 原生/仿真执行 → PoC oracle（P7）
    └──源码直扫──────────────┤
                             ▼
@@ -42,6 +42,19 @@ uv run pytest                              # 运行测试（57 项）
                             ▼
               results.sarif + report.html（含证据链、PoC 与合规记录）
 ```
+
+## CodeChecker 核心静态分析
+
+CodeChecker 是必跑的 L3 静态分析核心。默认开启可用的 CTU 跨文件分析、安全与污点检查，动态导入检查器目录及 CWE/指南标签；规则启停、项目模型、源码抑制、原生差分和完整路径证据进入现有流水线。优先复用工程真实编译数据库；Linux/macOS 支持 `--build-command` 通过 CodeChecker 记录构建。
+
+```bash
+uv sync
+# Windows ARM 工程：安装 LLVM/Clang 与 arm-none-eabi-gcc/Newlib，并将工具加入 PATH
+uv run CodeChecker analyzers --output json
+uv run ecdet scan path/to/project
+```
+
+每次扫描的原生报告、配置、数据库、能力清单和失败日志保存在报告目录 `codechecker/runs/` 下。项目配置从 `.ecdet/codechecker.json`、`.ecdet/taint.yaml`、`.clang-tidy` 等文件自动读取。Windows CTU 的工具与路径兼容已补齐；统计分析需要额外的 Clang 插件，Infer 在 Linux 容器中提供。完整能力对照、配置格式和环境限制见 [CodeChecker 接入审计](docs/codechecker-integration.md)。
 
 ## Juliet 测试集接入（阶段一里程碑）
 
@@ -81,14 +94,14 @@ uv run ecdet scan <工程> --baseline out/baseline.json -o out
 uv run ecdet triage out/results.sarif --only-new out/baseline.json --mock
 ```
 
-局限（MVP）：告警指纹含行号，代码移动会使告警计为"新增+已解决"，上下文哈希缓解留待后续。
+CodeChecker 告警采用原生 context-free-v2 指纹，普通注释插入不会改变缺陷身份；内置规则的指纹仍含行号。部分扫描会保留未复扫文件的旧告警，避免把它们误计为已解决。
 
 ## L4 修复建议与验证闭环（阶段三后半，P5）
 
 `ecdet fix` 对分诊后的 TRUE_POSITIVE 告警生成函数级补丁，并以 **ToolLoopVerify** 三道验证把关（方案 3.3.5）：
 
-1. **静态重扫**：补丁应用后原告警必须消除，且不得引入新的 error 级告警；
-2. **gcc 语法检查**：`-fsyntax-only -std=gnu89`（gcc 可用时自动启用）；
+1. **完整静态重扫**：在工程副本中保留真实编译数据库和头文件，运行 CodeChecker 与内置规则；原告警必须消除，且不得引入新的 error 级告警；
+2. **编译上下文检查**：由真实分析器验证语法与构建参数；纯 C 源码直扫时可额外执行宿主 gcc 语法检查；
 3. 通过验证才产出统一 diff 补丁与修复记录，未通过一律拒绝并记录原因。
 
 ```bash
@@ -103,17 +116,13 @@ uv run ecdet fix out/results.sarif --project <工程> --mock -o out
 
 - **指标**：函数级 Precision/Recall/F1（主口径）+ 告警级计数、每千行耗时（全量/增量）、可证明性比例、**动态贡献率**（3.5.2 之 6：动态新发现且静态未报占全部已确认缺陷之比）、LLM 误报过滤量；
 - **消融**：A0 完整 / A1 去 LLM / A2 去硬件语义 / A3 去 RAG / A5 去动态通道 / A6 单智能体串行（A4 去验证闭环作用于修复验收率）；
-- **基线**：cppcheck / clang-tidy / ESBMC 检测到安装即对比（方案 3.5.1）。
+- **基线**：CodeChecker / cppcheck / clang-tidy / ESBMC 检测到安装即对比（方案 3.5.1）。
 
 ```bash
 uv run python scripts/run_eval.py --corpus tests/fixtures/eval_corpus     --vuln-funcs "buf_copy_bad,TIM6_IRQHandler,gpio_ro_write,unprotected_reader,scale_value,read_selected"     --svd tests/fixtures/eval_corpus/chip.svd --out eval_out
 ```
 
-示例语料六配置消融结果（填充 V1.2 表 3-5）：A0 完整系统 P/R=100%（动态贡献率 33%）；A1 去 LLM 精确率降至 50%（8 条误报未过滤，P5 净贡献）；A2 去硬件语义召回降至 50%（P2 净贡献）；A5 去动态通道召回降至 66.7% 且耗时 62s→0.2s（双通道互补性与动态成本同时可见）；A6 与 A0 检测能力等价（组织学消融）。
-```
-
-在示例语料上的消融结果（报告填充方案表 3-4 模板）：A1 去 LLM 精确率 44%→100%（LLM 过滤 10 条误报），A2 去硬件语义召回 100%→25%（P2 建模净贡献）。
-
+评测与全部消融配置均运行 CodeChecker 核心，结果 JSON 记录实际分析器和原生清单路径。旧版仅内置规则的示例指标已不适用；请按当前工具版本重新运行脚本。小型 Mock 语料只验证评测流程，不能代替独立标注的真实工程基准。
 ### Juliet 基准评测（方案 3.4.1 → 3.5 打通）
 
 ```bash
@@ -165,7 +174,7 @@ docker build -t ecdet:latest .
 docker run --rm -v /path/to/firmware:/work ecdet:latest scan /work
 ```
 
-镜像内置 cppcheck 基线引擎；LLM 分诊通过 `ECODET_LLM_BASE_URL` 环境变量指向宿主 vLLM 服务。
+镜像内置 CodeChecker、Clang SA/CTU、Clang-Tidy、Cppcheck、GCC analyzer、Infer 和 ARM 编译头文件；LLM 分诊通过 `ECODET_LLM_BASE_URL` 环境变量指向宿主 vLLM 服务。
 
 ## 数据集 GHSA 在线抓取（阶段三后半，P6）
 
@@ -225,7 +234,7 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
   - `ECDET-VOLATILE`：ISR 共享变量未声明 volatile
   - `ECDET-ISR-BLOCK`：ISR 中调用阻塞 API（FreeRTOS/RT-Thread/CMSIS-OS2 语义标注表，提示 FromISR 变体）
 
-外部引擎 cppcheck、clang-tidy、ESBMC 检测到安装即自动接入。
+Clang Static Analyzer、Clang-Tidy、Cppcheck 由 CodeChecker 统一调度；ESBMC 检测到安装时独立接入。
 
 ## 可证明性分级（P4 机制，阶段二）
 
@@ -247,6 +256,6 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 - [x] Web 控制台：工程三源注册（路径/zip/Git）+ 扫描任务队列 + 告警浏览/人工复核状态流转（零依赖）
 - [x] Web 一键修复（补丁 diff 展示 + 验证闭环）+ 前端大模型设置（API Key 存本机、测试连接）
 - [x] Web 代码浏览 + 版本对比（v1.2）：运行级源码快照、整文件代码视图（C 高亮 + 告警行标注）、两 run 文件 diff 与告警 New/Resolved 差分、告警抽屉代码上下文
-- [x] 阶段五准备：Docker 容器化封装（内置 cppcheck 基线）
+- [x] 阶段五准备：Docker 容器化封装（内置 CodeChecker 与五类分析器）
 - [ ] 阶段四后半：Juliet/Toyota ITC 全量基准成稿（联网下载后即可运行）、Unicorn/Renode 仿真载体接入（三级吞吐-保真梯度中档与高档）、LLM harness 生成接入动态测试智能体
 - [ ] 2027 Q4 阶段五：试点部署与迭代（真机接入与仿真保真度校准）
