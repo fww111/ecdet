@@ -335,13 +335,13 @@ def _for_control_var(header: list[CToken]) -> str | None:
 
 
 def check_goto(f: FileFacts, ctx: ProjectContext, active: set[str]) -> list[Alert]:
-    """MISRA 15.2：禁止 goto。"""
+    """MISRA 15.1：不建议使用 goto。"""
     out = []
     for func in f.functions:
         for t in func.tokens:
             if t.kind == "keyword" and t.value == "goto":
                 out.append(_alert(
-                    "MISRA C:2012 15.2", Severity.WARNING,
+                    "MISRA C:2012 15.1", Severity.WARNING,
                     f"函数 {func.name} 中使用了 goto，破坏单入单出结构",
                     f.path, t.line, "CWE-670",
                     [_evidence(f.path, t.line, "code", "goto 语句")],
@@ -407,12 +407,22 @@ def check_recursion(f: FileFacts, ctx: ProjectContext, active: set[str]) -> list
 
 # 禁用 API 清单（调用名 -> (规则, 严重级, 消息前缀, CWE)）
 _BANNED_APIS: dict[str, tuple[str, Severity, str, str | None]] = {
-    **{n: ("MISRA C:2012 21.3", Severity.WARNING, "stdca 禁用的内存分配/转换函数", "CWE-676")
+    **{n: ("MISRA C:2012 21.3", Severity.WARNING,
+           "stdca 禁用的内存分配/释放函数", "CWE-676")
        for n in ("malloc", "calloc", "realloc", "free")},
-    **{n: ("MISRA C:2012 21.3", Severity.WARNING, "禁止使用的数值转换函数", "CWE-190")
+    **{n: ("MISRA C:2012 21.7", Severity.WARNING,
+           "禁止使用的字符串转换函数", "CWE-190")
        for n in ("atof", "atoi", "atol", "atoll")},
-    **{n: ("MISRA C:2012 21.3", Severity.WARNING, "禁止使用的进程控制函数", "CWE-676")
-       for n in ("exit", "abort", "getenv", "bsearch", "qsort", "system")},
+    **{n: ("MISRA C:2012 21.8", Severity.WARNING,
+           "禁止使用的进程终止函数", "CWE-676")
+       for n in ("exit", "abort", "atexit", "_Exit", "quick_exit", "at_quick_exit")},
+    **{n: ("MISRA C:2012 21.9", Severity.WARNING,
+           "禁止使用的搜索/排序库函数", "CWE-676")
+       for n in ("bsearch", "qsort")},
+    "getenv": ("MISRA C:2012 21.10", Severity.WARNING,
+               "禁止使用的环境变量读取函数", "CWE-676"),
+    "system": ("ECDET-CWE-78", Severity.ERROR,
+               "调用外部命令执行接口，存在命令注入风险", "CWE-78"),
     **{n: ("MISRA C:2012 21.6", Severity.NOTE, "嵌入式场景禁用的 stdio 输入/输出函数", "CWE-676")
        for n in ("printf", "fprintf", "sprintf", "snprintf", "vprintf", "vsprintf",
                  "vsnprintf", "scanf", "fscanf", "sscanf", "getchar", "putchar",
@@ -522,9 +532,9 @@ def check_macro_parens(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
             next_ok = i + 1 < len(body_toks) and body_toks[i + 1].value == ")"
             if not (prev_ok and next_ok):
                 out.append(_alert(
-                    "CERT C PRE31-C", Severity.WARNING,
+                    "MISRA C:2012 20.7", Severity.WARNING,
                     f"宏 {p.macro_name} 的参数 {bt.value} 在宏体中未加括号，"
-                    "展开后可能因运算符优先级出错", f.path, p.line, "CWE-789",
+                    "展开后可能因运算符优先级出错", f.path, p.line, "CWE-783",
                     [_evidence(f.path, p.line, "macro", f"#define {p.macro_name}(...) {p.body}")],
                 ))
                 break
@@ -717,7 +727,7 @@ def _name_usage_map(ctx: ProjectContext) -> dict[str, set[str]]:
 
 
 def check_single_tu_funcs(ctx: ProjectContext, active: set[str]) -> list[Alert]:
-    """MISRA 8.7：仅单翻译单元引用的函数应 static。"""
+    """MISRA 8.7：仅单翻译单元引用的函数或对象应 static。"""
     out: list[Alert] = []
     name_files = _name_usage_map(ctx)
     for f in ctx.facts:
@@ -740,24 +750,42 @@ def check_single_tu_funcs(ctx: ProjectContext, active: set[str]) -> list[Alert]:
                     evidence=[_evidence(f.path, func.def_line, "code", func.signature)],
                     provenance=Provenance.SUSPECTED,
                 ))
-    return out
-
-
-def check_single_tu_vars(ctx: ProjectContext, active: set[str]) -> list[Alert]:
-    """MISRA 8.9：仅单翻译单元引用的全局变量应 static。"""
-    out: list[Alert] = []
-    name_files = _name_usage_map(ctx)
-    for f in ctx.facts:
-        if not f.path.endswith(".c"):
-            continue
         for gname, gline, is_static in f.global_vars:
             if is_static:
                 continue
             files = name_files.get(gname, {f.path})
             if len(files) == 1:
                 out.append(_alert(
+                    "MISRA C:2012 8.7", Severity.NOTE,
+                    f"对象 {gname} 仅在 {f.path} 中被引用，建议声明为 static 收窄链接域",
+                    f.path, gline,
+                    evidence=[_evidence(f.path, gline, "code", "全局定义")],
+                    provenance=Provenance.SUSPECTED,
+                ))
+    return out
+
+
+def check_single_tu_vars(ctx: ProjectContext, active: set[str]) -> list[Alert]:
+    """MISRA 8.9：仅在单个函数中使用的对象应在块作用域定义。"""
+    out: list[Alert] = []
+    usage: dict[str, set[str]] = {}
+    for f in ctx.facts:
+        if not f.path.endswith(".c"):
+            continue
+        for func in f.functions:
+            for t in func.tokens:
+                if t.kind == "ident":
+                    usage.setdefault(t.value, set()).add(func.name)
+    for f in ctx.facts:
+        if not f.path.endswith(".c"):
+            continue
+        for gname, gline, is_static in f.global_vars:
+            if is_static:
+                continue
+            if len(usage.get(gname, set())) == 1:
+                out.append(_alert(
                     "MISRA C:2012 8.9", Severity.NOTE,
-                    f"全局变量 {gname} 仅在 {f.path} 中被引用，建议声明为 static",
+                    f"对象 {gname} 仅在单个函数中使用，应改在块作用域定义",
                     f.path, gline,
                     evidence=[_evidence(f.path, gline, "code", "全局定义")],
                     provenance=Provenance.SUSPECTED,
@@ -1032,7 +1060,7 @@ FILE_RULES = {
     "MISRA C:2012 7.2": check_unsigned_suffix,
     "MISRA C:2012 13.5": check_logic_side_effect,
     "MISRA C:2012 14.2": check_for_counter,
-    "MISRA C:2012 15.2": check_goto,
+    "MISRA C:2012 15.1": check_goto,
     "MISRA C:2012 15.5": check_single_return,
     "MISRA C:2012 16.4": check_switch_rules,
     "MISRA C:2012 16.6": check_switch_rules,
@@ -1040,12 +1068,17 @@ FILE_RULES = {
     "MISRA C:2012 21.1": check_reserved_ident,
     "MISRA C:2012 21.3": check_banned_apis,
     "MISRA C:2012 21.6": check_banned_apis,
-    "CERT C PRE31-C": check_macro_parens,
+    "MISRA C:2012 21.7": check_banned_apis,
+    "MISRA C:2012 21.8": check_banned_apis,
+    "MISRA C:2012 21.9": check_banned_apis,
+    "MISRA C:2012 21.10": check_banned_apis,
+    "MISRA C:2012 20.7": check_macro_parens,
     "CERT C MSC30-C": check_banned_apis,
     "CERT C STR31-C": check_buffer_copy,
     "CERT C ARR30-C": check_array_index,
     "CERT C FIO30-C": check_format_string,
     "ECDET-CWE-242": check_banned_apis,
+    "ECDET-CWE-78": check_banned_apis,
     "ECDET-CWE-1284": check_scanf_unbounded,
     "ECDET-CWE-197": check_literal_truncation,
     "ECDET-CWE-563": check_unused_params,
@@ -1058,3 +1091,16 @@ PROJECT_RULES = {
     "MISRA C:2012 8.9": check_single_tu_vars,
     "MISRA C:2012 17.3": check_implicit_decl,
 }
+
+# 2026-11 缺口核验批次的新增/替代实现（模块置于文末导入以避免循环依赖）
+from ecdet.l3_analysis.builtin_rules.checks_verified import (  # noqa: E402
+    FILE_RULES_EXTRA,
+    PROJECT_RULES_EXTRA,
+    check_goto_later,
+    check_macro_side_effect,
+)
+
+FILE_RULES.update(FILE_RULES_EXTRA)
+FILE_RULES["MISRA C:2012 15.2"] = check_goto_later
+FILE_RULES["CERT C PRE31-C"] = check_macro_side_effect
+PROJECT_RULES.update(PROJECT_RULES_EXTRA)

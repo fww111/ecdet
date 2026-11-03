@@ -73,16 +73,32 @@ class AggregationResult:
 
 
 def _equivalence_classes() -> dict[str, str]:
-    """从映射表构造 规则ID → 等价类代表 的归并关系。"""
-    rep: dict[str, str] = {}
+    """规则ID → 等价类代表。
+
+    仅使用映射表中显式声明、经核验的 `equivalences` 组；不再按"同一 CWE"
+    泛化合并，避免把同一 CWE 下的不同缺陷（如越界写与越界读）错误去重。
+    """
     data = _load_cwe_map()
-    for m in data.get("mappings", []):
-        group = [r for r in (m.get("misra", []) + m.get("cert", []))
-                 if not r.endswith(".x")]
-        group.append(m["cwe"])
+    rep: dict[str, str] = {}
+    parent: dict[str, str] = {}
+
+    def find(x: str) -> str:
+        parent.setdefault(x, x)
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for group in data.get("equivalences", []):
+        if not group:
+            continue
         anchor = group[0]
-        for r in group:
-            rep.setdefault(r, anchor)
+        for rule in group:
+            parent.setdefault(rule, find(anchor))
+            if find(rule) != find(anchor):
+                parent[find(rule)] = find(anchor)
+    for rule in parent:
+        rep[rule] = find(rule)
     return rep
 
 

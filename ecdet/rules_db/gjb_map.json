@@ -18,7 +18,7 @@
     },
     {
       "rule_id": "MISRA C:2012 8.9",
-      "gjb_topic": "变量作用域应最小化（变量内部链接）",
+      "gjb_topic": "变量作用域应最小化（单函数使用应改为块作用域）",
       "verified": false
     },
     {
@@ -32,8 +32,13 @@
       "verified": false
     },
     {
-      "rule_id": "MISRA C:2012 15.2",
+      "rule_id": "MISRA C:2012 15.1",
       "gjb_topic": "禁止使用 goto 语句",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 15.2",
+      "gjb_topic": "goto 仅允许前向跳转到同一函数内的标签",
       "verified": false
     },
     {
@@ -68,7 +73,27 @@
     },
     {
       "rule_id": "MISRA C:2012 21.3",
-      "gjb_topic": "禁用易出错的标准库函数（分配/转换类）",
+      "gjb_topic": "禁用动态内存分配/释放函数",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 21.7",
+      "gjb_topic": "禁用字符串转数值函数 atoi/atol 等",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 21.8",
+      "gjb_topic": "禁用进程终止函数 abort/exit 等",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 21.9",
+      "gjb_topic": "禁用 bsearch/qsort 库函数",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 21.10",
+      "gjb_topic": "禁用 getenv 环境变量读取函数",
       "verified": false
     },
     {
@@ -78,6 +103,11 @@
     },
     {
       "rule_id": "CERT C PRE31-C",
+      "gjb_topic": "宏参数不得包含副作用",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 20.7",
       "gjb_topic": "带参数宏的每个参数应加括号",
       "verified": false
     },
@@ -149,6 +179,151 @@
     {
       "rule_id": "MISRA C:2012 10.4",
       "gjb_topic": "禁止有符号数与无符号数混合运算",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 2.1",
+      "gjb_topic": "禁止不可达代码",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 6.1",
+      "gjb_topic": "位域应使用允许的基础类型",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 8.5",
+      "gjb_topic": "外部对象/函数只应在一处定义",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 11.3",
+      "gjb_topic": "禁止不同对象类型指针间强制转换",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 11.4",
+      "gjb_topic": "禁止指针与整数间强制转换",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 11.8",
+      "gjb_topic": "禁止移除 const/volatile 限定",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 12.2",
+      "gjb_topic": "移位计数不得越界",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 13.6",
+      "gjb_topic": "sizeof 操作数不得含副作用",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 14.3",
+      "gjb_topic": "控制表达式不得为不变量",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 16.3",
+      "gjb_topic": "switch 每个子句应以 break 终止",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 18.6",
+      "gjb_topic": "禁止返回局部对象地址",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 18.8",
+      "gjb_topic": "禁止使用可变长度数组",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 20.8",
+      "gjb_topic": "#if 控制表达式应求值为 0 或 1",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 20.10",
+      "gjb_topic": "禁止使用 # 与 ## 预处理运算符",
+      "verified": false
+    },
+    {
+      "rule_id": "MISRA C:2012 21.17",
+      "gjb_topic": "禁用长度不受约束的字符串/内存函数",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C INT30-C",
+      "gjb_topic": "无符号整数运算不得回绕",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C INT32-C",
+      "gjb_topic": "有符号整数运算不得溢出",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C INT34-C",
+      "gjb_topic": "移位计数不得为负或超宽",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C INT36-C",
+      "gjb_topic": "禁止指针与整数转换",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C EXP45-C",
+      "gjb_topic": "控制表达式中禁止赋值",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C MEM34-C",
+      "gjb_topic": "禁止释放非堆分配内存",
+      "verified": false
+    },
+    {
+      "rule_id": "CERT C MSC41-C",
+      "gjb_topic": "禁止硬编码敏感信息",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-CWE-190",
+      "gjb_topic": "常量算术表达式不得溢出/回绕",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-CWE-785",
+      "gjb_topic": "函数栈帧不得过大",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-CWE-78",
+      "gjb_topic": "禁止调用 system() 执行外部命令",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-HW-CRITICAL-PAIR",
+      "gjb_topic": "临界区进入/退出必须配对",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-HW-ISR-HEAP",
+      "gjb_topic": "ISR 中禁止调用堆分配/stdio 等非 async-safe 函数",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-HW-VOLATILE-RMW",
+      "gjb_topic": "共享 volatile 变量的读改写应保证原子性",
+      "verified": false
+    },
+    {
+      "rule_id": "ECDET-HW-BITFIELD",
+      "gjb_topic": "位域赋值不得超出声明位宽",
       "verified": false
     }
   ]

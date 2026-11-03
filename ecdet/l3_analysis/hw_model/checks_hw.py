@@ -358,7 +358,11 @@ def _unprotected_ref_lines(func, var: str, hw: HwContext) -> list[int]:
 
 def check_isr_blocking(ctx: ProjectContext, hw: HwContext,
                        active: set[str]) -> list[Alert]:
-    """ECDET-ISR-BLOCK：ISR 中调用阻塞 / 非 FromISR 安全 API。"""
+    """ECDET-ISR-BLOCK（含缺口清单别名 ECDET-HW-FROMISR）。
+
+    除阻塞 API 外，只要该 API 存在 FromISR 变体（如 xSemaphoreGive），
+    在 ISR 中直接调用非 FromISR 版本同样不安全，一并报告。
+    """
     if "ECDET-ISR-BLOCK" not in active:
         return []
     out: list[Alert] = []
@@ -368,16 +372,367 @@ def check_isr_blocking(ctx: ProjectContext, hw: HwContext,
                 continue
             for callee, line in func.calls_in_body():
                 api = hw.blocking_apis.get(callee)
-                if api is None or not api.is_blocking:
+                if api is None:
                     continue
+                if not api.is_blocking and api.isr_safe_variant is None:
+                    continue
+                kind = "阻塞" if api.is_blocking else "非 FromISR 版本"
                 hint = f"，应改用 {api.isr_safe_variant}" if api.isr_safe_variant \
                     else "，ISR 上下文应轮询或置标志由任务处理"
                 out.append(_alert(
                     "ECDET-ISR-BLOCK", Severity.ERROR,
-                    f"ISR {func.name} 中调用阻塞 API {callee}(){hint}",
+                    f"ISR {func.name} 中调用{kind} API {callee}(){hint}",
                     f.path, line, "CWE-676",
                     [_evidence(f.path, line, "api",
-                               f"{callee} 为阻塞调用（RTOS 语义标注表）")],
+                               f"{callee} 为{kind}调用（RTOS 语义标注表）")],
+                ))
+    return out
+
+
+def check_critical_pair(ctx: ProjectContext, hw: HwContext,
+                        active: set[str]) -> list[Alert]:
+    """ECDET-HW-CRITICAL-PAIR：临界区进入/退出未配对。"""
+    if "ECDET-HW-CRITICAL-PAIR" not in active:
+        return []
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            stack: list[int] = []
+            for t in func.tokens:
+                if t.kind != "ident":
+                    continue
+                if t.value in hw.critical_enter:
+                    stack.append(t.line)
+                elif t.value in hw.critical_exit:
+                    if not stack:
+                        out.append(_alert(
+                            "ECDET-HW-CRITICAL-PAIR", Severity.ERROR,
+                            f"函数 {func.name} 中退出临界区但此前没有进入操作",
+                            f.path, t.line, "CWE-667",
+                            [_evidence(f.path, t.line, "api", "多余的退出临界区调用")],
+                        ))
+                    else:
+                        stack.pop()
+            for line in stack:
+                out.append(_alert(
+                    "ECDET-HW-CRITICAL-PAIR", Severity.ERROR,
+                    f"函数 {func.name} 进入临界区后未退出，中断可能长期被关闭",
+                    f.path, line, "CWE-667",
+                    [_evidence(f.path, line, "api", "缺失配对的退出临界区调用")],
+                ))
+    return out
+
+
+# ISR 中非 async-safe 的库函数（堆、stdio、字符串分词、进程/环境等）
+_ASYNC_UNSAFE = {
+    "malloc", "calloc", "realloc", "free",
+    "printf", "fprintf", "sprintf", "snprintf", "vprintf", "vsprintf",
+    "vsnprintf", "puts", "putchar", "scanf", "sscanf", "fopen", "fclose",
+    "fread", "fwrite", "fflush", "setbuf", "setvbuf",
+    "strtok", "strerror", "getenv", "setlocale", "system",
+    "exit", "abort", "atexit", "_Exit", "quick_exit",
+    "qsort", "bsearch", "rand", "srand", "time", "localtime", "gmtime",
+}
+
+
+def check_isr_async_unsafe(ctx: ProjectContext, hw: HwContext,
+                           active: set[str]) -> list[Alert]:
+    """ECDET-HW-ISR-HEAP：ISR 中调用非 async-safe 函数。"""
+    if "ECDET-HW-ISR-HEAP" not in active:
+        return []
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            if func.name not in hw.isr_names:
+                continue
+            for callee, line in func.calls_in_body():
+                if callee not in _ASYNC_UNSAFE:
+                    continue
+                out.append(_alert(
+                    "ECDET-HW-ISR-HEAP", Severity.ERROR,
+                    f"ISR {func.name} 中调用非 async-safe 函数 {callee}()",
+                    f.path, line, "CWE-676",
+                    [_evidence(f.path, line, "api",
+                               f"{callee}() 不保证中断上下文可重入/安全")],
+                ))
+    return out
+
+
+_COMPOUND_OPS = {"+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="}
+
+
+def _is_rmw(toks, i: int, name: str) -> bool:
+    nxt = toks[i + 1].value if i + 1 < len(toks) else ""
+    prv = toks[i - 1].value if i > 0 else ""
+    if nxt in ("++", "--") or prv in ("++", "--") or nxt in _COMPOUND_OPS:
+        return True
+    if nxt == "=":
+        for k in range(i + 2, min(i + 6, len(toks))):
+            if toks[k].kind == "ident" and toks[k].value == name:
+                return True
+    return False
+
+
+def check_volatile_rmw(ctx: ProjectContext, hw: HwContext,
+                       active: set[str]) -> list[Alert]:
+    """ECDET-HW-VOLATILE-RMW：共享 volatile 变量的非原子读改写。"""
+    if "ECDET-HW-VOLATILE-RMW" not in active:
+        return []
+    globals_info: dict[str, tuple[str, int, bool]] = {}
+    for f in ctx.facts:
+        for gname, gline, _static in f.global_vars:
+            decl = f.lex.source_lines[gline - 1] if gline - 1 < len(f.lex.source_lines) else ""
+            globals_info.setdefault(gname, (f.path, gline, "volatile" in decl))
+    isr_refs: dict[str, set[str]] = {}
+    task_refs: dict[str, set[tuple[str, str]]] = {}
+    for f in ctx.facts:
+        for func in f.functions:
+            if func.name == "main":
+                continue
+            refs = {t.value for t in func.tokens if t.kind == "ident"}
+            for g in refs & globals_info.keys():
+                if func.name in hw.isr_names:
+                    isr_refs.setdefault(g, set()).add(func.name)
+                else:
+                    task_refs.setdefault(g, set()).add((f.path, func.name))
+    out: list[Alert] = []
+    for g in sorted(set(isr_refs) & set(task_refs)):
+        gpath, gline, is_volatile = globals_info[g]
+        if not is_volatile:
+            continue
+        for f in ctx.facts:
+            for func in f.functions:
+                if (f.path, func.name) not in task_refs[g]:
+                    continue
+                intervals = _critical_intervals(func, hw)
+                for i, t in enumerate(func.tokens):
+                    if t.kind != "ident" or t.value != g or not _is_rmw(func.tokens, i, g):
+                        continue
+                    if any(lo <= t.line <= hi for lo, hi in intervals):
+                        continue
+                    out.append(_alert(
+                        "ECDET-HW-VOLATILE-RMW", Severity.WARNING,
+                        f"volatile 共享变量 {g} 在临界区外执行读改写（自增/复合赋值），"
+                        "操作本身非原子",
+                        f.path, t.line, "CWE-362",
+                        [_evidence(gpath, gline, "code",
+                                   f"ISR 写：{sorted(isr_refs[g])}；任务 RMW 未受保护")],
+                    ))
+                    break
+    return out
+
+
+def _int_value(text: str) -> int | None:
+    try:
+        base = 16 if text.lower().startswith("0x") else 8 if text.startswith("0") \
+            and len(text) > 1 and text.isdigit() else 10
+        return int(text.rstrip("uUlL"), base)
+    except ValueError:
+        return None
+
+
+def _match_brace(tokens: list, open_idx: int) -> int:
+    """返回与 open_idx 处括号配对的闭括号下标（支持 () [] {}）。"""
+    pairs = {"(": ")", "[": "]", "{": "}"}
+    if open_idx >= len(tokens) or tokens[open_idx].kind != "punct":
+        return -1
+    open_v = tokens[open_idx].value
+    closer = pairs.get(open_v)
+    if closer is None:
+        return -1
+    depth = 0
+    for j in range(open_idx, len(tokens)):
+        tk = tokens[j]
+        if tk.kind != "punct":
+            continue
+        if tk.value == open_v:
+            depth += 1
+        elif tk.value == closer:
+            depth -= 1
+            if depth == 0:
+                return j
+    return -1
+
+
+def _bitfield_signed(type_text: str) -> bool:
+    t = type_text.lstrip()
+    return not (t.startswith("unsigned") or t.startswith("u")
+                or t.startswith("UINT"))
+
+
+def _extract_bitfield(toks: list, start: int, end: int,
+                      fields: dict) -> None:
+    """从一条声明 token 段提取 `NAME : WIDTH` 位域成员。"""
+    for idx in range(start, end - 1):
+        if (toks[idx].kind == "ident" and toks[idx + 1].kind == "punct"
+                and toks[idx + 1].value == ":" and toks[idx + 2].kind == "number"):
+            width = _int_value(toks[idx + 2].value)
+            if width is None or width <= 0:
+                continue
+            type_words = [tt.value for tt in toks[start:idx]
+                          if tt.value not in ("struct", "union", "enum")
+                          and tt.kind in ("keyword", "ident")]
+            type_text = " ".join(type_words)
+            fields[toks[idx].value] = (width, _bitfield_signed(type_text),
+                                       type_text)
+
+
+def _parse_struct_bitfields(toks: list, start: int, end: int) -> dict:
+    """解析结构体 body token 区间 [start, end] 内的位域成员。"""
+    fields: dict = {}
+    seg_start = start
+    k = start
+    while k <= end:
+        tk = toks[k]
+        if tk.kind == "punct" and tk.value == ";":
+            _extract_bitfield(toks, seg_start, k, fields)
+            seg_start = k + 1
+        elif tk.kind == "punct" and tk.value == "{":
+            inner = _match_brace(toks, k)
+            if inner != -1:
+                k = inner
+                seg_start = k + 1
+        k += 1
+    return fields
+
+
+def _collect_struct_defs(toks: list, bitfields: dict, type_names: set) -> None:
+    """收集 `struct TAG { ... }` 定义（含 typedef 别名）到位域表。"""
+    n = len(toks)
+    i = 0
+    while i < n:
+        t = toks[i]
+        if t.kind != "keyword" or t.value != "struct":
+            i += 1
+            continue
+        j = i + 1
+        tag = None
+        if j < n and toks[j].kind == "ident":
+            tag = toks[j].value
+            j += 1
+        if j >= n or toks[j].kind != "punct" or toks[j].value != "{":
+            i = j if j < n else i + 1   # 前向声明/变量声明，交变量收集处理
+            continue
+        close = _match_brace(toks, j)
+        if close == -1:
+            i = j + 1
+            continue
+        fields = _parse_struct_bitfields(toks, j + 1, close)
+        names = []
+        if tag:
+            names.append(tag)
+        k = close + 1
+        while k < n and toks[k].value != ";":
+            if toks[k].kind == "ident":
+                names.append(toks[k].value)
+            k += 1
+        for nm in names:
+            type_names.add(nm)
+            slot = bitfields.setdefault(nm, {})
+            for member, val in fields.items():
+                slot.setdefault(member, val)
+        i = k + 1
+
+
+def _collect_struct_vars(toks: list, type_names: set, var_tags: dict) -> None:
+    """收集 `struct TAG var` / `TAG var` 变量声明 → 变量名 → 结构体类型名。"""
+    n = len(toks)
+    i = 0
+    while i < n:
+        t = toks[i]
+        tag = None
+        j = i
+        if t.kind == "keyword" and t.value == "struct":
+            j = i + 1
+            if j < n and toks[j].kind == "ident":
+                tag = toks[j].value
+                j += 1
+            if j < n and toks[j].kind == "punct" and toks[j].value == "{":
+                i = j
+                continue
+        elif t.kind == "ident" and t.value in type_names:
+            tag = t.value
+            j = i + 1
+            if j < n and toks[j].kind == "punct" and toks[j].value == "{":
+                i = j
+                continue
+        else:
+            i += 1
+            continue
+        if tag is None:
+            i += 1
+            continue
+        while j < n and toks[j].kind == "punct" and toks[j].value == "*":
+            j += 1
+        k = j
+        while k < n:
+            tk = toks[k]
+            if tk.kind == "ident":
+                var_tags[tk.value] = tag
+            elif tk.kind == "punct" and tk.value in (";", "="):
+                break
+            k += 1
+        i = k + 1
+
+
+def _struct_bitfield_model(facts: list) -> tuple[dict, dict]:
+    """返回 (bitfields, var_tags)：位域表与变量→结构体类型映射。"""
+    bitfields: dict = {}
+    type_names: set = set()
+    for f in facts:
+        _collect_struct_defs(f.lex.tokens, bitfields, type_names)
+    var_tags: dict = {}
+    for f in facts:
+        _collect_struct_vars(f.lex.tokens, type_names, var_tags)
+    return bitfields, var_tags
+
+
+def check_bitfield_overflow(ctx: ProjectContext, hw: HwContext,
+                            active: set[str]) -> list[Alert]:
+    """ECDET-HW-BITFIELD：位域成员常量赋值超出声明位宽。
+
+    仅识别 `obj.member = 常量` / `obj->member = 常量`，并按 obj 的实际
+    结构体类型解析 member 位宽；同名普通变量或不同结构体同名字段不会误报。
+    """
+    if "ECDET-HW-BITFIELD" not in active:
+        return []
+    bitfields, var_tags = _struct_bitfield_model(ctx.facts)
+    out: list[Alert] = []
+    for f in ctx.facts:
+        for func in f.functions:
+            toks = func.tokens
+            for i, t in enumerate(toks):
+                if t.kind != "ident" or i + 4 >= len(toks):
+                    continue
+                if toks[i + 1].kind != "punct" or toks[i + 1].value not in (".", "->"):
+                    continue
+                if toks[i + 2].kind != "ident":
+                    continue
+                if toks[i + 3].value != "=" or toks[i + 4].kind != "number":
+                    continue
+                tag = var_tags.get(t.value)
+                if tag is None:
+                    continue
+                spec = bitfields.get(tag, {}).get(toks[i + 2].value)
+                if spec is None:
+                    continue
+                width, signed, ftype = spec
+                value = _int_value(toks[i + 4].value)
+                if value is None:
+                    continue
+                lo, hi = (-(1 << (width - 1)), (1 << (width - 1)) - 1) if signed \
+                    else (0, (1 << width) - 1)
+                if lo <= value <= hi:
+                    continue
+                out.append(_alert(
+                    "ECDET-HW-BITFIELD", Severity.WARNING,
+                    f"位域 {t.value}.{toks[i + 2].value}（{ftype}:{width}）被赋常量 "
+                    f"{value}，超出可表示范围 {lo}..{hi}，高位被截断",
+                    f.path, toks[i + 4].line, "CWE-197",
+                    [_evidence(f.path, toks[i + 4].line, "code",
+                               f"{t.value}.{toks[i + 2].value} = {toks[i + 4].value}，"
+                               f"位宽 {width}")],
+                    provenance=Provenance.SUSPECTED,
                 ))
     return out
 
@@ -388,4 +743,8 @@ HW_RULES = {
     "ECDET-ISR-RACE": check_isr_race,
     "ECDET-VOLATILE": check_isr_race,
     "ECDET-ISR-BLOCK": check_isr_blocking,
+    "ECDET-HW-CRITICAL-PAIR": check_critical_pair,
+    "ECDET-HW-ISR-HEAP": check_isr_async_unsafe,
+    "ECDET-HW-VOLATILE-RMW": check_volatile_rmw,
+    "ECDET-HW-BITFIELD": check_bitfield_overflow,
 }

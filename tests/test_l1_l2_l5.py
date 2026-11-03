@@ -148,6 +148,30 @@ def test_aggregate_equivalence_merge():
     assert set(result.clusters[0].related_rules) == {"CERT C STR31-C", "CWE-120"}
 
 
+def test_aggregate_same_cwe_not_merged_without_equivalence():
+    """同 CWE-120 但未显式声明等价的规则（STR31-C 与 21.17）不得被合并。"""
+    a1 = Alert(rule_id="CERT C STR31-C", engine="builtin", severity=Severity.ERROR,
+               message="strcpy 目标空间不足", location=Location(path="a.c", line=9),
+               cwe="CWE-120")
+    a2 = Alert(rule_id="MISRA C:2012 21.17", engine="builtin", severity=Severity.ERROR,
+               message="memcpy 源越界读", location=Location(path="a.c", line=9),
+               cwe="CWE-120")
+    result = aggregate([a1, a2], _sample_metas())
+    assert result.total == 2, [c.related_rules for c in result.clusters]
+
+
+def test_aggregate_declared_equivalence_merge():
+    """显式等价组（11.4 ↔ INT36-C）同位置应合并为一簇。"""
+    a1 = Alert(rule_id="MISRA C:2012 11.4", engine="builtin", severity=Severity.WARNING,
+               message="整数转指针", location=Location(path="a.c", line=12))
+    a2 = Alert(rule_id="CERT C INT36-C", engine="codechecker", severity=Severity.ERROR,
+               message="pointer-integer conversion", location=Location(path="a.c", line=12))
+    result = aggregate([a1, a2], _sample_metas())
+    assert result.total == 1
+    assert set(result.clusters[0].related_rules) == {
+        "MISRA C:2012 11.4", "CERT C INT36-C"}
+
+
 def test_compliance_records():
     result = aggregate(_sample_alerts(), _sample_metas())
     records = {r.rule_id: r for r in build_compliance_records(result)}

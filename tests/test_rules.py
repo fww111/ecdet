@@ -40,6 +40,11 @@ def _rule_ids(alerts):
 
 def test_rule_goto():
     alerts = _run_file("void f(void) { goto end; end: ; }")
+    assert "MISRA C:2012 15.1" in _rule_ids(alerts)
+
+
+def test_rule_goto_backward():
+    alerts = _run_file("void f(void) { loop: ; goto loop; }")
     assert "MISRA C:2012 15.2" in _rule_ids(alerts)
 
 
@@ -103,6 +108,13 @@ def test_rule_rand():
 def test_rule_macro_parens():
     src = "#define MUL(a, b) (a * b)\nvoid f(void) { int r = MUL(1, 2); (void)r; }"
     alerts = _run_file(src)
+    assert "MISRA C:2012 20.7" in _rule_ids(alerts)
+
+
+def test_rule_macro_side_effect():
+    src = ("#define MAX(a, b) ((a) > (b) ? (a) : (b))\n"
+           "int f(void) { int i = 0; int r = MAX(i++, 0); return r + i; }")
+    alerts = _run_file(src)
     assert "CERT C PRE31-C" in _rule_ids(alerts)
 
 
@@ -131,7 +143,7 @@ def test_rule_reserved_ident():
 
 def test_rule_banned_atoi():
     alerts = _run_file('void f(const char *s) { (void)atoi(s); }')
-    assert "MISRA C:2012 21.3" in _rule_ids(alerts)
+    assert "MISRA C:2012 21.7" in _rule_ids(alerts)
 
 
 def test_rule_stdio_printf():
@@ -196,7 +208,8 @@ int main(void)
     assert not (ids & {
         "CERT C STR31-C", "CERT C ARR30-C", "CERT C FIO30-C", "CERT C MSC30-C",
         "CERT C PRE31-C", "ECDET-CWE-242", "ECDET-CWE-197", "ECDET-CWE-1284",
-        "MISRA C:2012 15.2", "MISRA C:2012 16.4", "MISRA C:2012 17.2",
+        "MISRA C:2012 15.1", "MISRA C:2012 15.2",
+        "MISRA C:2012 16.4", "MISRA C:2012 17.2",
         "MISRA C:2012 13.5", "MISRA C:2012 14.2", "MISRA C:2012 21.1",
         "MISRA C:2012 21.3", "MISRA C:2012 17.3", "MISRA C:2012 8.9",
     }), alerts
@@ -250,3 +263,280 @@ def ctx_rule17(ctx):
     from ecdet.l3_analysis.builtin_rules.checks import PROJECT_RULES
     fn = PROJECT_RULES["MISRA C:2012 17.3"]
     return fn(ctx, {"MISRA C:2012 17.3"})
+
+
+# ---------------- 2026-11 缺口核验批次：触发用例 ----------------
+
+def test_rule_bitfield_type():
+    alerts = _run_file("struct S { unsigned char a : 3; };")
+    assert "MISRA C:2012 6.1" in _rule_ids(alerts)
+
+
+def test_rule_bitfield_type_ok():
+    alerts = _run_file("struct S { unsigned int a : 3; };",
+                       rules={"MISRA C:2012 6.1"})
+    assert alerts == []
+
+
+def test_rule_ptr_to_int():
+    alerts = _run_file("unsigned int f(int *p) { return (unsigned int)p; }")
+    assert "MISRA C:2012 11.4" in _rule_ids(alerts)
+
+
+def test_rule_int_to_ptr():
+    alerts = _run_file("void f(void) { char *p = (char *)0x40000000; (void)p; }")
+    assert "MISRA C:2012 11.4" in _rule_ids(alerts)
+
+
+def test_rule_const_qualifier_removed():
+    alerts = _run_file("void f(const char *s) { char *p = (char *)s; (void)p; }")
+    assert "MISRA C:2012 11.8" in _rule_ids(alerts)
+
+
+def test_rule_ptr_type_mismatch():
+    alerts = _run_file("void f(char *p) { int *q = (int *)p; (void)q; }")
+    assert "MISRA C:2012 11.3" in _rule_ids(alerts)
+
+
+def test_rule_ptr_cast_same_type_ok():
+    alerts = _run_file("void f(char *p) { char *q = (char *)p; (void)q; }",
+                       rules={"MISRA C:2012 11.3", "MISRA C:2012 11.4",
+                              "MISRA C:2012 11.8", "CERT C INT36-C"})
+    assert alerts == []
+
+
+def test_rule_const_overflow_signed():
+    alerts = _run_file("int f(void) { int x = 2000000000 + 1000000000; return x; }")
+    assert "CERT C INT32-C" in _rule_ids(alerts)
+
+
+def test_rule_const_wrap_unsigned():
+    alerts = _run_file("unsigned f(void) { unsigned x = 4294967295u + 2u; return x; }")
+    assert "CERT C INT30-C" in _rule_ids(alerts)
+
+
+def test_rule_const_arithmetic_in_range_ok():
+    alerts = _run_file("int f(void) { int x = 100 + 200; return x; }",
+                       rules={"CERT C INT32-C", "CERT C INT30-C", "ECDET-CWE-190"})
+    assert alerts == []
+
+
+def test_rule_shift_count_overflow():
+    alerts = _run_file("int f(void) { unsigned int x = 1u; return (int)(x << 32); }")
+    assert "MISRA C:2012 12.2" in _rule_ids(alerts)
+
+
+def test_rule_shift_count_literal():
+    alerts = _run_file("int f(void) { return 1 << 40; }")
+    assert "MISRA C:2012 12.2" in _rule_ids(alerts)
+
+
+def test_rule_shift_count_boundary_ok():
+    alerts = _run_file("int f(void) { return 1 << 31; }",
+                       rules={"MISRA C:2012 12.2"})
+    assert alerts == []
+
+
+def test_rule_sizeof_side_effect():
+    alerts = _run_file("int f(void) { int x = 1; return (int)sizeof(x++); }")
+    assert "MISRA C:2012 13.6" in _rule_ids(alerts)
+
+
+def test_rule_sizeof_plain_operand_ok():
+    alerts = _run_file("int f(void) { int x = 1; return (int)sizeof(x); }",
+                       rules={"MISRA C:2012 13.6"})
+    assert alerts == []
+
+
+def test_rule_invariant_condition():
+    alerts = _run_file("int f(void) { if (1) { return 2; } return 0; }")
+    assert "MISRA C:2012 14.3" in _rule_ids(alerts)
+
+
+def test_rule_unreachable_after_return():
+    alerts = _run_file("int f(void) { return 1; int x = 2; return x; }")
+    assert "MISRA C:2012 2.1" in _rule_ids(alerts)
+
+
+def test_rule_switch_case_fallthrough():
+    src = ("int f(int x) { switch (x) { case 1: x = 2; case 2: return 3; "
+           "default: return 0; } }")
+    alerts = _run_file(src)
+    assert "MISRA C:2012 16.3" in _rule_ids(alerts)
+
+
+def test_rule_return_local_address():
+    alerts = _run_file("int *f(void) { int x = 1; return &x; }")
+    assert "MISRA C:2012 18.6" in _rule_ids(alerts)
+
+
+def test_rule_vla():
+    alerts = _run_file("int f(int n) { int a[n]; a[0] = 1; return a[0]; }")
+    assert "MISRA C:2012 18.8" in _rule_ids(alerts)
+
+
+def test_rule_fixed_array_ok():
+    alerts = _run_file("int f(void) { int a[4]; a[0] = 1; return a[0]; }",
+                       rules={"MISRA C:2012 18.8"})
+    assert alerts == []
+
+
+def test_rule_pp_condition_not_boolean():
+    alerts = _run_file("#if 2\nint x;\n#endif\n")
+    assert "MISRA C:2012 20.8" in _rule_ids(alerts)
+
+
+def test_rule_pp_stringize_operator():
+    alerts = _run_file("#define STR(x) #x\nint f(void) { return 0; }")
+    assert "MISRA C:2012 20.10" in _rule_ids(alerts)
+
+
+def test_rule_copy_source_oob():
+    src = "void f(void) { char src[4]; char dst[8]; memcpy(dst, src, 8); }"
+    alerts = _run_file(src)
+    assert "MISRA C:2012 21.17" in _rule_ids(alerts)
+
+
+def test_rule_copy_source_in_bounds_ok():
+    src = "void f(void) { char src[4]; char dst[8]; memcpy(dst, src, 4); }"
+    alerts = _run_file(src, rules={"MISRA C:2012 21.17"})
+    assert alerts == []
+
+
+def test_rule_assignment_in_if():
+    alerts = _run_file("int f(int a, int b) { if (a = b) { return a; } return 0; }")
+    assert "CERT C EXP45-C" in _rule_ids(alerts)
+
+
+def test_rule_free_address_of_object():
+    alerts = _run_file("void f(void) { int x; free(&x); }")
+    assert "CERT C MEM34-C" in _rule_ids(alerts)
+
+
+def test_rule_free_array():
+    alerts = _run_file("void f(void) { char b[4]; free(b); }")
+    assert "CERT C MEM34-C" in _rule_ids(alerts)
+
+
+def test_rule_hardcoded_secret():
+    alerts = _run_file('char *password = "secret123";')
+    assert "CERT C MSC41-C" in _rule_ids(alerts)
+
+
+def test_rule_secret_in_comment_not_flagged():
+    alerts = _run_file('// password = "secret123"\nint f(void) { return 0; }',
+                       rules={"CERT C MSC41-C"})
+    assert alerts == []
+
+
+def test_rule_large_stack_array():
+    alerts = _run_file("void f(void) { int big[512]; big[0] = 1; }")
+    assert "ECDET-CWE-785" in _rule_ids(alerts)
+
+
+def test_rule_small_stack_array_ok():
+    alerts = _run_file("void f(void) { int a[64]; a[0] = 1; }",
+                       rules={"ECDET-CWE-785"})
+    assert alerts == []
+
+
+def test_rule_external_object_defined_twice():
+    ctx = finalize_facts([
+        build_file_facts("a.c", "int g_dup = 1;\n"),
+        build_file_facts("b.c", "int g_dup = 2;\n"),
+    ])
+    fn = PROJECT_RULES["MISRA C:2012 8.5"]
+    alerts = fn(ctx, {"MISRA C:2012 8.5"})
+    assert len(alerts) == 2
+    assert all(a.rule_id == "MISRA C:2012 8.5" for a in alerts)
+
+
+def test_rule_external_object_static_ok():
+    ctx = finalize_facts([
+        build_file_facts("a.c", "static int g_a = 1;\n"),
+        build_file_facts("b.c", "static int g_a = 2;\n"),
+    ])
+    fn = PROJECT_RULES["MISRA C:2012 8.5"]
+    assert fn(ctx, {"MISRA C:2012 8.5"}) == []
+
+
+def test_rule_goto_forward_ok():
+    alerts = _run_file("void f(void) { goto end; end: ; }",
+                       rules={"MISRA C:2012 15.2"})
+    assert alerts == []
+
+
+# ---------------- 代码评审回归（PR #2 留言） ----------------
+
+def test_rule_memcpy_int_array_in_bounds_ok():
+    """int 数组字节容量 = 元素数 × 4，8 字节拷贝不越界。"""
+    src = "void f(void) { int src[4]; int dst[4]; memcpy(dst, src, 8); }"
+    alerts = _run_file(src, rules={"MISRA C:2012 21.17"})
+    assert alerts == []
+
+
+def test_rule_memcpy_uint16_array_oob():
+    """uint16_t 数组字节容量 = 元素数 × 2，5 字节拷贝越界。"""
+    src = "void f(void) { uint16_t src[2]; uint8_t dst[8]; memcpy(dst, src, 5); }"
+    alerts = _run_file(src)
+    assert "MISRA C:2012 21.17" in _rule_ids(alerts)
+
+
+def test_rule_local_pointer_qual_cast():
+    src = 'void f(void) { const char *s = "x"; char *p = (char *)s; (void)p; }'
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.8" in _rule_ids(alerts)
+
+
+def test_rule_global_pointer_qual_cast():
+    src = 'const int *gp; void f(void) { int *p = (int *)gp; (void)p; }'
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.8" in _rule_ids(alerts)
+
+
+def test_rule_local_ptr_to_int():
+    src = "unsigned int f(void) { char *p = 0; return (unsigned int)p; }"
+    alerts = _run_file(src)
+    assert "MISRA C:2012 11.4" in _rule_ids(alerts)
+
+
+def test_rule_const_expr_precedence_no_false_positive():
+    """乘法优先级高于加法：2000000000 + 1000000000 * 0 不溢出。"""
+    alerts = _run_file("int f(void) { int x = 2000000000 + 1000000000 * 0; return x; }",
+                       rules={"CERT C INT32-C", "CERT C INT30-C", "ECDET-CWE-190"})
+    assert alerts == []
+
+
+def test_rule_const_expr_precedence_real_overflow():
+    """1 + 2 * 2000000000 = 4000000001，超出 int32。"""
+    alerts = _run_file("int f(void) { int x = 1 + 2 * 2000000000; return x; }")
+    assert "CERT C INT32-C" in _rule_ids(alerts)
+
+
+def test_rule_const_expr_paren_overflow():
+    alerts = _run_file("int f(void) { int x = (2000000000 + 1000000000) * 0; return x; }")
+    assert "CERT C INT32-C" in _rule_ids(alerts)
+
+
+def test_rule_static_local_addr_not_flagged():
+    src = "int *f(void) { static int x; return &x; }"
+    alerts = _run_file(src, rules={"MISRA C:2012 18.6", "ECDET-CWE-562"})
+    assert alerts == []
+
+
+def test_rule_const_division_precedence_no_false_positive():
+    alerts = _run_file("int f(void) { return 2000000000 + 1000000000 / 1000000000; }",
+                       rules={"CERT C INT32-C"})
+    assert alerts == []
+
+
+def test_rule_const_remainder_precedence_no_false_positive():
+    alerts = _run_file("int f(void) { return 2147483647 + 4 % 2; }",
+                       rules={"CERT C INT32-C"})
+    assert alerts == []
+
+
+def test_rule_const_division_real_overflow():
+    alerts = _run_file("int f(void) { return 2147483647 + 4 / 2; }",
+                       rules={"CERT C INT32-C"})
+    assert "CERT C INT32-C" in _rule_ids(alerts)
