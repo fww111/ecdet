@@ -1,0 +1,4 @@
+{
+  "description": "Portable selected acceptance summaries; local tool paths, credentials and databases omitted.",
+  "raw_test_evidence": "Retained in the local validation workspace; run scripts/validate_*.py to reproduce."
+}

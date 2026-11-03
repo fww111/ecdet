@@ -24,7 +24,7 @@ from ecdet.l3_analysis.engine import AnalysisTarget, BuiltinEngine
 from ecdet.l4_llm.client import MockLlmClient
 from ecdet.l4_llm.triage import triage_alerts
 
-HW_RULE_IDS = {"ECDET-MMIO-ACCESS", "ECDET-ISR-RACE", "ECDET-VOLATILE",
+HW_RULE_IDS = {"ECDET-MMIO-ACCESS", "ECDET-MMIO-W1C", "ECDET-ISR-RACE", "ECDET-VOLATILE",
                "ECDET-ISR-BLOCK"}
 
 SKIP_DIRS = {".git", "build", "ecdet_build", "ecdet_reports", ".venv",
@@ -104,6 +104,7 @@ class AblationConfig:
     single_agent: bool = False     # A6 开（单智能体串行）
     profile: str = ""              # 规则配置文件（如 juliet：屏蔽工程级规则）
     note: str = ""
+    max_llm_calls: int = 64
 
 
 DEFAULT_ABLATIONS = [
@@ -128,6 +129,7 @@ class ToolRun:
     provenance_ratio: float = 0.0
     triage_counts: dict = field(default_factory=dict)
     available: bool = True
+    llm_budget: dict = field(default_factory=dict)
 
 
 def _corpus_files(corpus: Path) -> list[Path]:
@@ -164,10 +166,12 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
     scan_seconds = time.perf_counter() - t0
 
     triage_counts: dict = {}
+    from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
+    call_budget = LlmCallBudget(config.max_llm_calls)
     if config.use_llm and alerts:
         client = llm_client or MockLlmClient()
         t1 = time.perf_counter()
-        _, _ = triage_alerts(alerts, corpus, client=client,
+        _, _ = triage_alerts(alerts, corpus, client=BudgetedClient(client, call_budget, 'triage'),
                              rag_conf_threshold=(rag_conf_threshold
                                                  if config.use_rag else 0.0))
         scan_seconds += time.perf_counter() - t1
@@ -180,7 +184,9 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
             v = (a.triage or {}).get("verdict", "UNTRIAGED")
             triage_counts[v] = triage_counts.get(v, 0) + 1
         alerts = [a for a in alerts
-                  if (a.triage or {}).get("verdict") != "FALSE_POSITIVE"]
+                  if not ((a.triage or {}).get("verdict") == "FALSE_POSITIVE"
+                          and (a.triage or {}).get('verified')
+                          and not (a.triage or {}).get('review_pending'))]
 
     # L3 动态通道（3.3.5）：真触发 PoC → Detected 级告警
     if config.use_dynamic:
@@ -203,6 +209,7 @@ def run_ecdet_config(corpus: Path, config: AblationConfig,
         seconds=scan_seconds, kloc=_kloc(corpus),
         provenance_ratio=(n_prov / len(alerts)) if alerts else 0.0,
         triage_counts=triage_counts,
+        llm_budget=call_budget.snapshot(),
     )
 
 

@@ -1,15 +1,15 @@
 # ecdet —— 嵌入式软件代码缺陷与安全漏洞检测系统
 
-面向汽车电子与工业控制场景的嵌入式 C/C++ 代码检测系统。依据《嵌入式软件代码缺陷与安全漏洞检测系统调研与技术方案》**V1.2** 实施，采用"**静态与动态双通道为骨架、LLM 多智能体协同为中枢、工具验证与证据链为约束**"的混合式五层架构（P1–P7 全覆盖）。
+面向汽车电子与工业控制场景的嵌入式C/C++代码检测系统。静态规则与动态测试产生初始告警，LLM提供研判、函数补丁和测试驱动修正建议，工具检查分别记录证据与验证状态。已实现的保护和测试范围见[LLM整改结果](调研/LLM约束整改与验证结果_20261103.md)。
 
-## 五层架构（V1.2：L3 静动双通道，L4 六类智能体）
+## 五层架构
 
 | 层 | 模块 | 解决的问题 |
 |----|------|-----------|
 | L1 编译环境复现 | `ecdet.l1_build` | P1：任意嵌入式工程 → compile_commands.json |
 | L2 统一表示 | `ecdet.l2_ir` | P3：多引擎输出统一为 SARIF 单一数据模型，注入硬件语义（P2） |
 | L3 双通道分析 | `ecdet.l3_analysis` | 静态：规则引擎/抽象解释/BMC（P2/P3/P4）；动态：激励建模 + harness 闭环 + 仿真执行（P7，`ecdet.l3_analysis.dynamic`） |
-| L4 多智能体协同 | `ecdet.l4_llm` | P5：规划/研判/动态测试/监控/修复/报告六类智能体 + 工具验证闭环 |
+| L4任务编排 | `ecdet.l4_llm` | 规划、研判、动态测试、监控、修复和报告六类任务；LLM参与研判与修复建议 |
 | L5 聚合与输出 | `ecdet.l5_report` | P3/P4：去重、CWE↔MISRA↔GJB 映射、Proven/Detected/Suspected 三级、合规报告 |
 
 ## 快速开始
@@ -23,6 +23,38 @@ uv run ecdet rules                         # 查看规则集
 uv run ecdet report results.sarif          # 从 SARIF 重新生成 HTML 报告
 uv run pytest                              # 运行测试（57 项）
 ```
+
+## 寄存器描述增强与写1清零检查
+
+安装硬件解析扩展后，扫描会自动使用cmsis-svd 0.6展开寄存器数组、分组偏移和外设继承，并读取位字段的权限和写入语义。源码与许可证见[cmsis-svd仓库](https://github.com/cmsis-svd/cmsis-svd)，解析器采用Apache-2.0许可，厂商SVD数据按各自许可使用。
+
+```bash
+python -m pip install -e ".[hardware]"
+python -m ecdet scan examples/svd_enhanced_demo --no-build -o ecdet_reports/svd_enhanced
+```
+
+`ECDET-MMIO-W1C`检查明确具有写1清零语义的寄存器读改写，包括复合赋值、自增减和同一语句中的寄存器读回赋值。报告包含源码位置、寄存器地址和写1清零位掩码，混合字段的写入方式需依据字段语义核对。例如，`STATUS |= FLAG_A`可能把读取到的其他置位状态一并写回并清除；直接写入待清除位的掩码不触发这条读改写规则。
+
+基础安装继续支持简单SVD及字段解析，并提示当前解析能力。数组、分组和继承需要硬件扩展；缺少扩展或SVD无效时会明确记录MMIO检查跳过。损坏文件、未知访问权限和非法数值不会静默转换为默认可读写寄存器。
+
+clang-tidy适配器同时解析标准输出与标准错误，支持Windows路径并去重。运行日志区分工具缺失、编译数据库无效、超时、编译失败和正常完成；超时保留已产生的诊断。
+
+## 可选C语法结构分析
+
+```powershell
+python -m pip install -e ".[hardware,syntax]"
+```
+
+`syntax`扩展使用Tree-sitter提取C函数、直接和间接调用、条件与赋值的精确源码范围。LLM上下文优先使用可靠AST，并记录结构来源、实际片段与未解析调用。宏、指针和条件编译不被当作已解决的语义；依赖缺失、语法恢复或后端错误时明确回退基础结构分析。现有规则索引继续保留。
+
+真实接入可用以下脚本复查：
+
+```powershell
+python scripts/validate_clang_tidy.py --binary path/to/clang-tidy --output-dir ecdet_reports/clang_tidy_live
+python scripts/validate_llm_endpoint.py --settings-db path/to/ecdet_web.db --output-dir ecdet_reports/llm_controlled
+```
+
+生产扫描可通过`ECDET_CLANG_TIDY`指定工具路径，使用与可用性检测一致的二进制。LLM验收只发送4个受控候选，密钥从环境变量或只读设置库读取；没有配置时记录未执行。真实运行记录、测试范围与安装说明见[Tree-sitter与真实接入验收结果](调研/Tree-sitter与真实接入验收结果_20261103.md)。
 
 ## 检测流水线
 
@@ -52,19 +84,19 @@ uv run python scripts/fetch_juliet.py --download --limit 300  # 下载并评测�
 
 ## L4 LLM 告警分诊（阶段三，P5）
 
-分诊管线（方案 3.3.5 的工程化）：**上下文裁剪**（告警函数 + 深度 2 调用闭包 + 引用宏，按字符预算截取）→ **LLM 首判**（强制结构化 JSON）→ **A-RAG**（置信度 < 0.6 触发本地知识库检索后重判）→ **证据行号核对**（引用行必须在函数区间内、为真实代码、且包含告警行本身，否则降级 NEEDS_REVIEW）→ 结论回写 SARIF 与报告。
+分诊管线：上下文裁剪→LLM建议→低置信检索重判→引用与采纳条件核对→回写SARIF与报告。默认低于0.6触发一次规则知识检索重判，最终仍低置信时需复核。TP与FP使用相同的引用门槛；error级误报建议默认需人工复核。实际提供的片段、未解析调用和截断状态均会记录，引用有效不等于缺陷语义已经证明。
 
 ```bash
 uv run ecdet scan examples/svd_demo --no-build -o out
 # 离线演示（确定性 Mock LLM，覆盖真判/误报/RAG/降级四条路径）
 uv run ecdet triage out/results.sarif --project examples/svd_demo --mock -o out
-# 接本地 vLLM / Ollama / LM Studio（OpenAI 兼容端点，数据不出域）
+# 使用本地端点时，核对实际配置地址与部署范围
 export ECODET_LLM_BASE_URL=http://127.0.0.1:8000/v1
 export ECODET_LLM_MODEL=Qwen2.5-Coder-7B-Instruct
 uv run ecdet triage out/results.sarif --project examples/svd_demo -o out
 ```
 
-幻觉抑制三道闸：输出不可解析 JSON → NEEDS_REVIEW；引用行号越界/指向注释/缺告警行 → 降级；LLM 调用失败 → NEEDS_REVIEW。
+响应结构、有限置信度和整数引用不合格时转需复核。最终调用失败限制在当前告警；有界重试可恢复，尝试历史保留。缺少上下文时覆盖旧研判，避免沿用过时结论。
 
 ## 增量分析（方案 3.3.6）
 
@@ -196,11 +228,11 @@ uv run python scripts/build_dataset.py --manifest data/manifest.json --out data/
 
 ## 动态分析通道与运行时监控（V1.2 新增，P7）
 
-V1.2 将动态分析升格为与静态并列的第一类检测通道（方案 3.3.5/3.3.6）。本仓库实现宿主机原生执行载体（三级吞吐-保真梯度的宿主档；Unicorn/Renode 仿真载体为后续扩展）：
+V1.2将动态分析升格为与静态并列的检测通道。源码函数使用宿主机harness；新增libFuzzer覆盖率测试和Renode固件执行入口，见下方使用说明。
 
 - **激励建模**：确定性特殊值表（0/边界/回绕点）+ 乘法散列采样；SVD 寄存器语义经参数名对齐后收窄取值域（"一次建模、静动两用"）；
 - **harness 生成-编译-修正闭环**：以解析器产出的参数类型为骨架生成模板 harness（激励组合表嵌入 C 数组，每函数一次编译），链接期未解析符号与 GCC 14+ 隐式声明错误自动打桩重编（完整 stderr 扫描，多错误一次收全）；确定性打桩失败后交 **LLM harness 修正器**（编译日志回传重写，产物须再过编译验证）；
-- **执行载体三级吞吐-保真梯度**：宿主原生执行（gcc，可用即用）→ Unicorn CPU 级仿真（`pip install unicorn` 探测即接入，执行回路待固件语料）→ Renode 外设级仿真（renode 二进制探测即接入）；编排日志披露各档可用性；
+- **执行载体**：现有源码harness使用gcc宿主执行；覆盖率引导测试使用`fuzz`命令；Renode的ELF加载、UART输入与输出判据使用`firmware`命令。Unicorn目前仅提供可用性探测；
 - **oracle 三类**：崩溃退出码分类（Windows NTSTATUS：除零 0xC0000094 / 空指针 0xC0000005 / 栈溢出等）、UBSan stderr、看门狗超时（疑似死循环）；
 - **PoC 可复现**：`harness.exe <seed>` 一键重放，实参组合随告警证据落 SARIF（Detected 级）。
 
@@ -212,7 +244,7 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 
 ## 多智能体协同（V1.2 新增，P5）
 
-`ecdet orchestrate` 实现方案 3.3.7 六类智能体的确定性编排（LangGraph 状态机 MVP）：规划 → 静态通道 → 分诊并行扇出 → 动态通道 → 运行时监控裁决 → 修复验证闭环 → 高危人工复核闸门 → L5 聚合。采纳边界：LLM 负责编排与语义推理，**不作最终裁决**；成本控制含分层路由（note 级不过 LLM）与结构化交接（AgentState）；`--single-agent` 为 A6 消融/降级形态。
+`ecdet orchestrate`按确定性流程组织六类任务：规划→静态扫描→分诊→动态测试→监控关联→修复验证→复核状态→报告。规划、调度和汇聚由代码完成，LLM参与研判与修复建议。高危误报建议默认待复核；显式`--auto-accept`也只接受证据合格的建议。分诊、重判、补丁和harness共享`--max-llm-calls`指定的调用次数上限，默认64次，记录模式与调用状态；该上限不代表token或费用预算。
 
 ## 内置规则集（30 条）
 
@@ -248,5 +280,33 @@ uv run ecdet orchestrate <工程> --mock    # 六智能体编排：静态→分�
 - [x] Web 一键修复（补丁 diff 展示 + 验证闭环）+ 前端大模型设置（API Key 存本机、测试连接）
 - [x] Web 代码浏览 + 版本对比（v1.2）：运行级源码快照、整文件代码视图（C 高亮 + 告警行标注）、两 run 文件 diff 与告警 New/Resolved 差分、告警抽屉代码上下文
 - [x] 阶段五准备：Docker 容器化封装（内置 cppcheck 基线）
-- [ ] 阶段四后半：Juliet/Toyota ITC 全量基准成稿（联网下载后即可运行）、Unicorn/Renode 仿真载体接入（三级吞吐-保真梯度中档与高档）、LLM harness 生成接入动态测试智能体
+- [x] 开源组件改造第3—5步：libFuzzer覆盖率测试、Z3局部路径约束、Renode最小STM32F4固件UART执行闭环，提供CLI、SARIF和HTML报告
+- [ ] 阶段四后半：Juliet/Toyota ITC全量基准、Unicorn执行、更多Renode平台与外设、中断场景及LLM动态测试扩展
 - [ ] 2027 Q4 阶段五：试点部署与迭代（真机接入与仿真保真度校准）
+
+## 覆盖率测试、路径约束与固件仿真
+
+三个后端均可独立运行，结果进入现有SARIF和HTML报告，并保存分项状态与原始证据。
+
+```powershell
+python -m pip install -e ".[hardware,syntax,constraints]"
+python -m ecdet constraints examples/constraints_demo/bounds.c
+python -m ecdet scan examples/constraints_demo --no-build --constraints
+
+python -m ecdet fuzz examples/libfuzzer_demo --harness harness.c --source packet_bad.c --clang path/to/clang.exe --runs 5000 --timeout 20
+
+python scripts/validate_renode.py --clang path/to/clang.exe --renode path/to/renode.exe --output-dir ecdet_reports/renode
+python -m ecdet firmware ecdet_reports/renode/good/firmware.elf --platform examples/renode_demo/stm32f4_minimal.repl --renode path/to/renode.exe --input-hex 73 --expect ECDET_BOOT_OK --expect ECDET_STATUS_OK --failure-marker ECDET_SELFTEST_FAIL
+```
+
+`fuzz`使用LLVMFuzzerTestOneInput入口、SanitizerCoverage、AddressSanitizer和UndefinedBehaviorSanitizer；字节缓冲区接口可通过`generate_byte_harness`生成驱动模板。保存输入语料、覆盖记录、可执行文件与输入哈希，并独立重放错误输入；重放确认后才生成Detected事件。LLVM的Windows GNU发行版使用显式compiler-rt链接方式，具体编译参数记录在结果中。环境变量`ECDET_CLANG`可指定工具路径。
+
+`constraints`从源码提取受限C子集的整数类型、分支与数组下标，记录SMT和候选输入。SAT候选保持Suspected；UNSAT只对应记录的局部访问。8位字节、16位short与32位int构成当前模型；不支持的代码、缺少依赖与求解超时有明确状态。`--timeout-ms`限制每次求解的时间。显式请求的检查未完成时，命令使用退出码2；发现候选使用退出码1。
+
+`firmware`使用明确指定的ELF、REPL平台、UART接口、输入和输出判据。在独立UART文件中检查结果，保存重放脚本、版本与哈希；脚本完成哨兵、加载错误和墙钟超时共同控制状态。只有实际输出失败标记才产生固件级事件，缺少预期文本会使验收失败。环境变量`ECDET_RENODE`可指定工具路径。当前示例验证最小STM32F4模型的启动与串口响应；真实硬件与其他外设需要各自验收。
+
+三个后端还可通过网页左侧“专项分析”使用：选择已注册工程与分析类型，填写参数后启动任务，在同页查看状态、历史记录并下载报告和原始证据。展开“工具配置与可用性”可保存Clang、Renode路径；该设置与LLM配置分别保存。原有扫描的动态开关继续执行源码harness。
+
+网页路径以所选工程根目录为基准，固件、REPL、驱动、额外源码与语料均需位于工程内。路径约束可指定单个C文件和函数，留空则检查工程中受支持的代码；覆盖率测试需提供测试驱动及目标源码；固件仿真需提供ELF、平台描述和至少一个输出判据。Z3候选、动态重放问题、部分完成、工具缺失及执行失败分别显示。
+
+使用方法与实证见[第3—5步改造与验收结果](调研/第3至5步改造与验收结果_20261103.md)和[网页接入与验收结果](调研/三项分析功能网页接入与验收结果_20261103.md)。

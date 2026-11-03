@@ -1,0 +1,217 @@
+可接入开源组件与功能提升清单
+核验日期：2026年11月3日
+
+一、结论与首批选择
+
+以ecdet实际代码为依据，第一批优先选择cmsis-svd、Tree-sitter和LLVM libFuzzer：分别补全芯片寄存器描述、增强源码结构提取、增加覆盖率引导的动态测试。Z3用于后续路径约束验证，Renode用于真实固件仿真执行。国内高校公开成果中，FirmAgent值得作为固件分析扩展；其IDA Pro和运行环境依赖决定了它适合后续独立后端。
+
+本次核查13个GitHub仓库的元信息、根目录和许可文件，并补查LLVM官方源码与文档。对cmsis-svd、Tree-sitter和Z3进行了独立环境中的接入验证；其他项目的接入方案依据文档及所列源码检查制定。
+
+当前项目已实现Cppcheck、clang-tidy和ESBMC适配器，因此这三个项目属于既有能力的完善对象。推荐顺序依据新增功能、语言匹配、运行条件和具体接入工作确定。
+
+二、当前代码中的实际接入点
+
+1. 静态引擎：ecdet/l3_analysis/engine.py
+   Engine接收AnalysisTarget，返回Alert；可新增外部引擎适配器。
+   当前默认调度包含内置引擎、Cppcheck、clang-tidy和ESBMC。
+
+2. 寄存器模型：ecdet/l3_analysis/hw_model/svd.py
+   当前为自写XML解析器，Register保留名称、地址、位宽和权限。
+   寄存器数组展开、cluster分组偏移、derivedFrom继承和位字段语义，是本次识别出的扩展点。
+
+3. 源码与上下文：ecdet/l3_analysis/builtin_rules/cstruct.py、ecdet/l4_llm/slicer.py
+   当前按项目内函数名匹配被调函数，最多展开两层并按字符预算裁剪。
+   可增加基于语法树的函数与调用索引，再逐步加入文件作用域、类型和路径信息。
+
+4. 动态执行：ecdet/l3_analysis/dynamic/engine.py、harness.py、carriers.py
+   当前主循环生成宿主机测试驱动，按预设种子运行并检查崩溃、UB日志和超时。
+   Unicorn和Renode目前只提供可用性探测；实际执行循环尚未调用它们。
+
+5. 报告：ecdet/l2_ir/model.py、sarif.py
+   可复用Alert、Evidence、Location及现有SARIF序列化，将新组件输出并入报告。
+
+三、优先接入组件
+
+A. cmsis-svd：优先级P1，接入工作量低至中
+
+代码：https://github.com/cmsis-svd/cmsis-svd
+重点文件：https://github.com/cmsis-svd/cmsis-svd/blob/main/python/cmsis_svd/parser.py
+许可证：Apache-2.0，已读取LICENSE-APACHE。
+依赖：Python、lxml、six；本次在Windows和Python 3.11中安装并运行cmsis-svd 0.6。
+
+新增功能：正确展开寄存器数组、继承的外设和分组寄存器；读取位字段和写入语义，为只读位误写、写1清零等检查提供元数据。
+接法：调用SVDParser.for_xml_file(...).get_device()，遍历peripheral.get_registers()，映射回现有RegisterMap。位字段需要扩展现有Register模型，并增加相应检测规则。
+具体收益：解决当前只读取简单寄存器条目的问题，增加真实厂商SVD文件的覆盖范围。
+验收：固定测试集覆盖数组、分组、继承、字段与访问权限；对每个寄存器核对绝对地址；原STM32样例继续通过。
+注意：解析器许可与芯片描述数据许可分别核对；本次未批量导入厂商SVD数据库。
+
+B. Tree-sitter：优先级P1，接入工作量中
+
+Python接口：https://github.com/tree-sitter/py-tree-sitter
+C语法：https://github.com/tree-sitter/tree-sitter-c
+许可证：两个仓库均为MIT，已读取文件。
+依赖：Python扩展包及语言语法包；本次运行tree-sitter 0.26.0、tree-sitter-c 0.24.2。
+
+新增功能：提取函数定义、调用表达式、条件和赋值节点及其源码范围，为上下文切片、增量索引和自定义检查提供统一结构。
+接法：新增可选语法分析后端，先向现有函数索引和slicer提供节点信息，再逐步迁移需要结构信息的规则；保留原后端作为未安装依赖时的选择。
+具体收益：可以处理未完成构建的源码，减少以字符串规则维护代码结构的工作。
+验收：比较函数、调用和位置的人工标签；分别验证同名static函数、函数指针、宏和条件编译。
+范围：语法树提供结构，指针目标、类型、宏展开和跨函数数据流还需要额外分析。
+
+C. LLVM libFuzzer与Sanitizers：优先级P1，接入工作量中
+
+代码：https://github.com/llvm/llvm-project/tree/main/compiler-rt/lib/fuzzer
+文档：https://llvm.org/docs/LibFuzzer.html
+许可证：https://github.com/llvm/llvm-project/blob/main/LICENSE.TXT
+许可标识：Apache-2.0 with LLVM exceptions；具体文件及第三方组件按各自声明。
+依赖：带相应运行库的Clang/LLVM，以及能在宿主机执行的测试目标。本次未安装或运行该后端。
+
+新增功能：根据代码覆盖率持续变异输入，保存能探索新路径的语料，并用AddressSanitizer等运行检测器定位内存错误。
+接法：扩展harness生成器，增加LLVMFuzzerTestOneInput入口，将字节序列解码为函数参数；在独立子进程运行，收集崩溃输入、栈信息、语料和覆盖率，再转成DynamicFinding/Alert。
+具体收益：把当前“预设有限种子逐个执行”扩展为覆盖率反馈测试；优先测试通信报文解析、缓冲区处理和纯算法模块。
+验收：同一目标、同一时间预算比较覆盖率和真实触发缺陷；保存的崩溃输入必须可重放；修复后重放应不再触发原问题。
+运行条件：依赖硬件的访问需要建模或替身；宿主机结果按其数据模型解释。Windows官方支持要求ASan，并对运行库和链接选项有约束，首轮可在固定Linux工具链中验证。
+
+D. Z3：优先级P2，接入工作量中至高
+
+代码：https://github.com/Z3Prover/z3
+许可：https://github.com/Z3Prover/z3/blob/master/LICENSE.txt
+许可证：MIT，已读取正文；GitHub自动识别返回NOASSERTION，未据此误判为无许可。
+依赖：z3-solver；本次运行5.3.3.0。
+
+新增功能：检查候选缺陷路径条件是否可同时成立，并生成满足条件的具体输入。
+接法：在现有抽象解释与大模型复核之间增加可选约束验证环节。先支持有明确语义的整数比较和数组下标，输出sat、unsat、unknown及其约束和假设。
+具体收益：过滤受矛盾条件保护的疑似告警，将可行路径的模型值转成动态测试输入。
+验收：成对构造有缺陷与已修复案例；覆盖有符号性、位宽、溢出、超时和不支持的表达式。
+主要成本：将C表达式、类型和路径转换为正确约束。安装求解器只完成依赖准备，自动转换仍需实现。
+
+E. Renode：优先级P2，接入工作量高
+
+代码：https://github.com/renode/renode
+许可证：主体MIT，依赖组件采用各自许可，已读取LICENSE。
+依赖：Renode运行时、与目标匹配的平台描述、可执行固件、外设模型及测试脚本。
+
+新增功能：在模拟CPU与外设上运行固件，执行串口输入、定时器、中断等场景，采集运行结果。
+接法：把现有RenodeCarrier从探测扩展为实际启动、加载、执行、超时回收和结果采集；先选一种已有平台模型的开发板作为闭环样例。
+验收：同一固件可重复启动、接收输入并获得可判断的输出；保存测试脚本和固件标识。主流程必须记录实际使用的载体。
+主要成本：设备外设是否受支持、平台配置和异常判定；SVD寄存器描述不能直接替代可执行的外设行为模型。
+
+F. CodeChecker：优先级P2，可选外部分析后端，接入工作量中
+
+代码：https://github.com/Ericsson/codechecker
+重点目录：https://github.com/Ericsson/codechecker/tree/master/analyzer
+许可证：Apache-2.0，已取得LICENSE.TXT。
+依赖：CodeChecker及配置的分析器、准确的compile_commands.json；具体分析器版本需要配套验证。
+
+新增价值：复用成熟的分析编排和报告处理，为现有Clang检查补充更完整的运行管理、路径信息和跨翻译单元分析配置。
+接法：作为独立命令行后端运行，将诊断与路径节点转入Alert/Evidence，继续使用ecdet现有界面。
+验收：相对于现有clang-tidy后端，明确增加了哪些路径证据或检测案例，并验证报告去重。
+范围：现有clang-tidy参数已经启用clang-analyzer-*，因此引入CodeChecker的价值主要是分析与结果管理的完善，检测增益需要相同样本实测。
+
+四、国内公开代码：按接入条件筛选
+
+G. FirmAgent：国内高校合作成果，适合后续固件分析后端
+
+仓库：https://github.com/AxiaoJJ/FirmAgent
+分析入口：https://github.com/AxiaoJJ/FirmAgent/blob/master/LLMATaint.py
+运行记录：https://github.com/AxiaoJJ/FirmAgent/blob/master/FuzzingRecord/taint_monitor.py
+论文署名包括清华大学、信息工程大学等；出处为NDSS 2026。
+许可：LICENSE.txt标题为MIT，正文包含MIT授权和额外的源码/二进制声明保留条件，需随复用文件保留完整许可文本。
+
+可增加的功能：为Linux物联网Web固件收集输入与执行轨迹，基于动态来源进行大模型污点分析和触发样例构造。
+实际依赖：源码入口导入angr和配套分析模块；README要求IDA Pro、Docker、准备好的固件重托管环境、插桩QEMU及可选大模型端点。
+建议接法：通过独立任务进程处理固件，导入其结构化来源、路径和测试结果；从“请求—运行轨迹—输入来源”的记录机制开始复用。
+优先级：P3。当前主要目标是源码检测，若加入路由器或摄像头固件检测，可将其提升为独立功能分支。
+
+H. StagedVulBERT：哈工大相关成果，保留为模型评测候选
+
+代码：https://github.com/YuanJiangGit/StagedVulBERT
+函数级入口：https://github.com/YuanJiangGit/StagedVulBERT/blob/master/Entry/StagedBert_vul.py
+语句级入口：https://github.com/YuanJiangGit/StagedVulBERT/blob/master/Entry/StagedBert_line_vul.py
+能力：预测函数是否有漏洞并排序可疑语句，可用于候选优先级展示。
+接法：独立模型服务接收函数文本，返回分数和行排序；结果作为待核查候选进入ecdet。
+当前条件：README列出PyTorch 2.1.0、Transformers 4.34.0、libclang等固定依赖；模型与数据通过Google Drive链接提供。本次未下载验证权重。
+许可核查：递归仓库树未找到名称含LICENSE或COPYING的文件，根目录也未给出许可；在取得明确许可前，保留为公开代码研究候选。
+
+I. Tencent TscanCode：国内工程项目，作为可选对比工具
+
+代码：https://github.com/Tencent/TscanCode
+许可：GPL-3.0，LICENSE还列出Cppcheck与TinyXML等组件。
+能力：C++、C#、Lua静态检测；与现有Cppcheck能力有重叠。
+接法：需要时作为独立可执行工具，解析输出并统一去重；先用固定测试集确认新增检出价值。
+优先级：P3。当前优先完善既有Cppcheck与clang-tidy适配，再决定是否增加这一引擎。
+
+五、其他候选及未放入首批的具体原因
+
+1. RepoAudit：https://github.com/PurCL/RepoAudit
+   可用于免编译的跨函数空指针、内存泄漏、释放后使用检查。
+   README要求独立环境并介绍JSON输出；可在研究环境中作为外部后端对比。
+   当前LICENSE为Purdue非商业许可，普通产品集成需要相应使用权；本次不将其列入可直接复制到项目的组件。
+   许可：https://github.com/PurCL/RepoAudit/blob/main/LICENSE
+
+2. LLMDFA：https://github.com/chengpeng-wang/LLMDFA
+   值得参考函数摘要、数据流分解及外部验证机制。
+   当前公开实现以Java相关检测为主要入口，迁移到嵌入式C/C++需要重新处理类型、指针和硬件语义；当前同样为Purdue非商业许可。
+   许可：https://github.com/chengpeng-wang/LLMDFA/blob/main/LICENSE
+
+3. SVF：https://github.com/SVF-tools/SVF
+   可增加基于LLVM的指针和值流分析，适合后期需要精确跨函数分析时评估。
+   接入需要LLVM中间表示、匹配版本的工具链及C++侧分析开发；当前LICENSE.TXT为AGPL-3.0-or-later。
+   建议作为独立分析后端评估，依据最终使用与分发方式落实许可条款。
+
+4. AFL++：https://github.com/AFLplusplus/AFLplusplus
+   覆盖率引导测试能力适合ecdet动态通道。
+   本次取得的stable分支主体许可为AGPL-3.0-or-later，部分文件为Apache-2.0，需按具体版本和文件识别。
+   首批选择LLVM libFuzzer形成宿主机函数测试闭环；需要进程式或固件测试能力时，再评估AFL++独立后端。
+
+六、实际验证结果
+
+验证环境：Windows、Python 3.11，依赖安装在ecdet本地检查/reuse_audit_20261103/.venv中。
+完整结果：ecdet本地检查/reuse_audit_20261103/probe_results.json。
+
+1. cmsis-svd
+   受控SVD样例含两个外设，包含数组、分组偏移、继承及位字段；预期展开8个寄存器。
+   当前ecdet解析器输出3条，其中分组寄存器地址错误；它还漏掉数组后续元素和继承的寄存器。
+   cmsis-svd输出全部8个正确地址，并读取到oneToClear字段语义。
+   新结果已在验证脚本中映射为现有RegisterMap；项目原STM32F407.svd样例的4个寄存器地址与旧实现一致。
+
+2. Tree-sitter
+   解析项目examples下6个C文件，得到26个函数定义和27个调用表达式，语法树均未标记解析错误。
+   本验证确认语法提取可运行；函数标签准确率、复杂宏和C++语法需要后续样本验证。
+
+3. Z3
+   对手写的32位无符号下标约束进行验证：长度为8时，index<=8允许越界模型index=8；index<8与越界条件组合不可满足。
+   C源码到约束的自动转换尚未在本验证中实现。
+
+4. 报告接口
+   由寄存器元数据构造验证用Alert，成功经现有build_sarif序列化并回读。
+   probe.sarif记录的是元数据接入验证条目，不能计入项目检出缺陷数。
+
+5. 既有clang-tidy适配器
+   同一条示例诊断放在标准输出时解析1条，放在标准错误流时解析0条；Windows盘符绝对路径诊断也解析0条。
+   原因与代码一致：parse_clang_tidy_output忽略stderr，路径正则不接受盘符中的冒号。
+   最小复现保存在adapter_probe.json。建议先修复并加入针对性回归验证，以免新增工具的结果在接入层丢失。
+
+七、建议实施顺序与验收
+
+第0步：完善已有引擎接入。修复clang-tidy诊断读取与Windows路径解析，明确工具缺失、超时、编译失败及正常零告警状态；ESBMC当前关闭指针检查，也应按目标性质调整配置。
+
+第1步：接入cmsis-svd。保留现有RegisterMap接口，正确展开寄存器，并扩展位字段模型；交付可复现的寄存器解析与规则检测样例。
+
+第2步：接入Tree-sitter结构索引。先用于函数与调用定位、大模型上下文切片；交付同名函数、宏、函数指针的边界案例记录。
+
+第3步：接入libFuzzer和运行检测器。选择能宿主化的C函数，交付覆盖率、可重放崩溃输入和修复前后对比。
+
+第4步：增加Z3约束验证。按缺陷类型逐项实现语义转换，保留unknown结果，验证能否实际减少误报并生成有效测试输入。
+
+第5步：选择一块目标板接入Renode；需要Linux物联网固件安全分析时，再增加FirmAgent后端。
+
+研发中的能力增加分别对应：更多芯片描述可解析、更完整的代码上下文、反馈驱动测试、可验证路径条件和固件运行场景。每一项通过自己的验收样例进入主流程。
+
+八、交付与状态
+
+本次交付为可接入组件调研及独立技术验证。ecdet生产代码、pyproject.toml和已有规则库均未修改。
+仓库许可及文档快照：ecdet本地检查/reuse_audit_20261103/sources/。
+仓库核验记录：ecdet本地检查/reuse_audit_20261103/repositories.json，含下载来源、Git文件哈希和本地SHA-256。
+独立验证入口：ecdet本地检查/reuse_audit_20261103/probe_integration.py。
+验证版本：cmsis-svd==0.6、tree-sitter==0.26.0、tree-sitter-c==0.24.2、z3-solver==5.3.3.0。

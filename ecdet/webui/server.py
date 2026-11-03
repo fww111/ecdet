@@ -6,7 +6,7 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, quote
 
 from ecdet.webui.runner import ScanRunner, register_project
 from ecdet.webui.store import Store
@@ -104,17 +104,51 @@ class WebUI:
             return h._json(404, {"error": "not found"})
         if parts[:2] == ["api", "projects"]:
             return h._json(200, {"projects": self.store.list_projects()})
+        if parts[:2] == ['api', 'analysis-tools']:
+            from ecdet.webui.analysis import tools_view, tool_settings
+            if len(parts) == 2:
+                return h._json(200, tools_view(self.store))
+            if parts[2:] == ['settings']:
+                return h._json(200, tool_settings(self.store))
         if parts[:2] == ["api", "runs"] and len(parts) == 2:
             return h._json(200, {"runs": self.store.list_runs(
                 int(q["project_id"]) if q.get("project_id") else None)})
         if parts[:2] == ["api", "runs"] and len(parts) >= 3:
-            run_id = int(parts[2])
+            try:
+                run_id = int(parts[2])
+            except ValueError:
+                return h._json(400, {'error':'运行编号无效'})
             run = self.store.get_run(run_id)
             if not run:
                 return h._json(404, {"error": "run not found"})
             if len(parts) == 3:
                 run["alert_counts"] = self.store.alert_counts(run_id)
                 return h._json(200, run)
+            if len(parts) == 4 and parts[3] in {'analysis', 'artifact'}:
+                from ecdet.webui.analysis import artifact_path
+                output = run.get('out_dir')
+                if not output:
+                    return h._json(404, {'error':'任务尚未生成产物'})
+                try:
+                    if parts[3] == 'analysis':
+                        payload = artifact_path(Path(output), 'analysis.json')
+                        return h._json(200, json.loads(payload.read_text(encoding='utf-8')))
+                    relative = q.get('path', '')
+                    payload = artifact_path(Path(output), relative)
+                    manifest = json.loads((Path(output)/'analysis.json').read_text(encoding='utf-8'))
+                    if relative not in {a['path'] for a in manifest.get('artifacts', [])}:
+                        raise ValueError('该文件不在本次运行的产物清单中')
+                    body = payload.read_bytes()
+                    h.send_response(200)
+                    h.send_header('Content-Type', 'application/octet-stream')
+                    h.send_header('Content-Disposition', 'attachment; filename="artifact"; filename*=UTF-8\'\'' + quote(payload.name))
+                    h.send_header('X-Content-Type-Options', 'nosniff')
+                    h.send_header('Content-Length', str(len(body)))
+                    h.end_headers()
+                    h.wfile.write(body)
+                    return
+                except (ValueError,OSError,KeyError):
+                    return h._json(400, {'error':'运行产物路径无效或尚未生成'})
             if parts[3] == "alerts":
                 return h._json(200, {"alerts": self.store.list_alerts(
                     run_id, severity=q.get("severity"),
@@ -229,6 +263,21 @@ class WebUI:
         url = urlparse(h.path)
         parts = [p for p in url.path.split("/") if p]
         body = h._body()
+
+        if (parts[:2] == ['api','analysis-tools'] and parts[2:] == ['settings']) or \
+                (parts[:2] == ['api','projects'] and len(parts) == 4 and parts[3] == 'analyze'):
+            from ecdet.webui.analysis import save_tool_settings
+            try:
+                data = json.loads(body.decode('utf-8'))
+                if parts[:2] == ['api','analysis-tools']:
+                    return h._json(200, save_tool_settings(self.store, data))
+                project_id = int(parts[2])
+                if not self.store.get_project(project_id):
+                    return h._json(404, {'error':'工程不存在'})
+                run_id = self.runner.submit_analysis(project_id, data)
+                return h._json(200, {'run_id':run_id})
+            except (ValueError,TypeError,OSError,UnicodeError) as exc:
+                return h._json(400, {'error':str(exc)})
 
         if parts[:2] == ["api", "projects"] and len(parts) == 2:
             ctype = h.headers.get("Content-Type", "")

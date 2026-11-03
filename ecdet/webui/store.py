@@ -323,9 +323,17 @@ class Store:
         sql += " ORDER BY verified DESC, id"
         rows = self._exec(sql, tuple(params)).fetchall()
         out = []
+        job_details = {}
         for r in rows:
             d = dict(r)
             d["verified"] = bool(d["verified"])
+            job = d.get('job_id')
+            if job and job not in job_details:
+                row = self._exec('SELECT final_stats FROM fix_jobs WHERE id=?', (job,)).fetchone()
+                stats = json.loads(row['final_stats']) if row and row['final_stats'] else {}
+                job_details[job] = stats.get('verification', {})
+            details = job_details.get(job, {}).get(str(d['id']), {})
+            d.update({key: details[key] for key in ('validation','client_mode','candidate_status') if key in details})
             out.append(d)
         return out
 

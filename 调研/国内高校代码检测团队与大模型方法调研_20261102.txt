@@ -1,0 +1,224 @@
+国内高校代码检测团队与大模型方法调研
+检索日期：2026年11月2日
+
+一、优先结论
+
+结合现有ecdet项目的嵌入式C/C++源码、硬件语义、静态与动态分析及大模型研判需求，优先关注以下方向：
+1. 嵌入式源码与并发缺陷：哈尔滨工程大学吴艳霞团队、国防科技大学王戟—陈立前相关研究团队。
+2. 固件漏洞与静动结合：清华大学张超团队、上海交通大学陈力波—薛质相关研究团队。
+3. 学习式代码检测与细粒度定位：哈尔滨工业大学苏小红—蒋远团队、华中科技大学邹德清团队。
+4. 通用静态分析基础设施：南京大学李樾—谭添PASCAL研究组。
+5. 大模型辅助物联网测试：香港理工大学Xiapu Luo与南京邮电大学Le Yu等人的合作研究。
+
+上述顺序依据本项目的技术匹配度安排。团队研究对象分别涉及源码、固件二进制和协议实现，工程接入条件不同。
+
+二、现有资料提供的线索
+
+本次读取了项目根目录《论文归纳简介.md》和ecdet/README.md，并检索了文件目录。README将系统描述为五层架构，包含构建复现、统一告警表示、静动双通道、多智能体研判和聚合报告。下文的模块对应关系以这一设计描述为依据。
+
+已有论文中最直接相关的是赵静文《面向嵌入式软件的并发缺陷检测方法研究》（2025）。学位论文记录明确给出培养单位哈尔滨工程大学、导师吴艳霞；本地简介第38条也将其列在哈尔滨工程大学。该线索应归入哈尔滨工程大学。
+来源：https://cnki.istiz.org.cn/kcms/detail/detail.aspx?dbcode=CDFD&dbname=CDFD2026&filename=1025935422.nh
+
+蒋远《数据驱动的程序安全缺陷识别方法研究》（2022）可向哈尔滨工业大学苏小红—蒋远团队延伸。已有简介中的克隆代码重构、故障定位、漏洞报告识别可作为辅助研究线索；它们与直接判断源码是否存在漏洞属于不同任务。
+
+三、嵌入式方向：重点团队及证据
+
+1. 哈尔滨工程大学：吴艳霞团队
+
+团队入口：教师主页明确列出吴艳霞为嵌入式计算与体系结构创新团队负责人。
+直接成果：赵静文2025年博士论文，导师吴艳霞。
+研究内容：中断驱动程序的数据竞争、线程交织、原子性违背和并发缺陷修复；论文摘要包含路径可行性分析、优先级与中断嵌套建模、模糊测试引导的并发探索。
+项目对应：优先参考中断服务程序、共享变量访问、锁和关中断策略的分析与验证，匹配ecdet的硬件语义和并发检测需求。
+教师主页：https://faculty.hrbeu.edu.cn/wuyanxia/zh_CN/skxx/69506/list/index.htm
+论文记录：https://cnki.istiz.org.cn/kcms/detail/detail.aspx?dbcode=CDFD&dbname=CDFD2026&filename=1025935422.nh
+
+2. 国防科技大学：王戟—陈立前相关研究团队
+
+团队入口：学校2026年报道确认陈立前长期参与王戟团队的高可信软件研究。
+直接成果：陈立前、吴国福、姜加红《航天嵌入式软件静态分析技术》，2021。
+研究内容：面向航天嵌入式源码中的数组越界、算术溢出、除零、指针错误和数据竞争，讨论抽象解释、符号执行和数据竞争检测。
+项目对应：参考数值范围、溢出、指针与路径约束分析，为规则扫描增加程序语义依据。
+团队报道：https://www.nudt.edu.cn/xwgg/xydt/8d3ba90000b542fb950a6a4ac3bba71b.htm
+论文：https://aca.spacejournal.cn/article/doi/10.3969/j.issn.1674-1579.2021.02.012
+
+3. 清华大学：张超团队，及FirmAgent合作团队
+
+团队入口：清华大学网络研究院张超主页；研究组为VUL337，主页列有程序分析、固件漏洞挖掘、模糊测试和机器语言模型方向。
+直接成果：FirmAgent，NDSS 2026。论文作者单位包括清华大学、信息工程大学等。
+研究内容：利用模糊测试识别运行时输入点，再由大模型智能体分析相关路径，并改进测试用例以生成漏洞触发样例。
+项目对应：重点参考“运行反馈→针对性分析→可执行触发样例”的衔接方式，匹配ecdet的动态通道与大模型协同需求。论文对象是Linux物联网固件，迁移至MCU或RTOS源码时需要替换运行环境和硬件模型。
+教师主页：https://netsec.ccert.edu.cn/chs/people/chaoz/
+论文：https://www.ndss-symposium.org/wp-content/uploads/2026-s1943-paper.pdf
+作者仓库：https://github.com/AxiaoJJ/FirmAgent
+
+4. 上海交通大学：陈力波—薛质相关研究团队
+
+团队入口：上海交大官方研究报道明确列出陈力波、蔡洤朴、薛质等作者。
+直接成果：SaTC，USENIX Security 2021；包含与清华等单位的合作。
+研究内容：利用嵌入式设备网页前端和后端二进制共享的输入关键字定位输入入口，再跟踪数据是否到达危险操作。
+项目对应：适合后续扩展路由器、摄像头等带Web管理界面的固件分析；对当前源码分析最有价值的是输入源定位和定向污点分析思路。
+学校报道：https://news.sjtu.edu.cn/jdzh/20210225/142057.html
+论文：https://www.usenix.org/system/files/sec21-chen-libo.pdf
+
+5. 香港理工大学、南京邮电大学：LLMIF合作研究
+
+作者及单位：Jincheng Wang、Xiapu Luo来自香港理工大学，Le Yu来自南京邮电大学，按论文发表时署名。
+直接成果：LLMIF，IEEE Symposium on Security and Privacy 2024。
+研究内容：向大模型提供协议规范，提取消息格式和依赖关系，结合设备响应指导模糊测试；论文实验对象为Zigbee设备。
+项目对应：可为动态通道的协议输入生成提供参考。若用于Modbus、CAN等协议，需要各自的规范、接口和异常判定规则。
+出版页：https://ieeexplore.ieee.org/document/10646659/
+作者全文：https://www.jcwang.me/llmif.pdf
+
+四、通用代码检测：可借鉴的团队
+
+6. 哈尔滨工业大学：苏小红—蒋远团队
+
+团队入口：学院教师名录将两位教师列在智能软件工程研究中心；作者论文说明其软件漏洞检测、程序分析与代码表示学习方向。
+代表成果：StagedVulBERT，2024；另有《基于学习的源代码漏洞检测研究与进展》，《计算机学报》2024。
+研究内容：通过预训练代码模型进行多粒度漏洞检测，从函数级判断向语句级定位推进。
+项目对应：用于候选漏洞排序和细粒度定位的研究参考，可与现有静态工具输出组合。StagedVulBERT属于预训练代码模型路线，与对话式大模型智能体的实现方式不同。
+学校名录：https://cs.hit.edu.cn/jsml/list.htm
+研究综述：https://cjc.ict.ac.cn/online/onlinepaper/sxh-202431150215.pdf
+论文：https://arxiv.org/abs/2410.05766
+作者仓库：https://github.com/YuanJiangGit/StagedVulBERT
+
+7. 华中科技大学：邹德清团队
+
+团队入口：学校实验室报道明确说明李珍师从邹德清开展软件漏洞检测研究，并介绍VulDeeLocator。
+研究内容：学习式漏洞检测、细粒度漏洞定位。CCF中国软件大会2024年官方手册介绍了团队的金银湖代码安全大模型及漏洞检测、修复研究。
+项目对应：重点参考代码语义表示、漏洞定位和检测—修复协同；大模型的实际接入方式需要依据其公开模型、接口或代码资料确定。
+学校成果页：https://grid.hust.edu.cn/info/1053/2545.htm
+会议手册：https://chinasoft.ccf.org.cn/images/2024CCF%E4%B8%AD%E5%9B%BD%E8%BD%AF%E4%BB%B6%E5%A4%A7%E4%BC%9A%E4%BC%9A%E8%AE%AE%E6%89%8B%E5%86%8C.pdf
+
+8. 南京大学：李樾—谭添PASCAL研究组
+
+团队入口：PASCAL官网确认所属南京大学及教师信息。
+研究内容：通用静态程序分析、指针分析、污点分析及分析框架。公开平台包括面向Java和Android的Tai-e，以及面向Verilog的Qihe。
+项目对应：借鉴分析框架组织、调用图、指针分析和污点传播机制；嵌入式C/C++检测需要对应的语言前端与语义模型。
+团队主页：https://pascal-lab.net/
+Tai-e：https://tai-e.pascal-lab.net/
+Qihe：https://qihe.pascal-lab.net/
+
+五、大模型如何参与代码检测
+
+以“通信接口取得的长度值最终传给内存复制函数”为例：检测器需要确认长度从哪里来、经过哪些检查、目标缓冲区多大，以及相关路径能否实际执行。大模型可承担代码解释、跨函数信息整理和测试生成，程序分析工具与执行反馈提供可核验的约束和结果。
+
+路径A：静态工具先筛选，大模型复核疑似告警
+代表：LLift。先由静态分析产生候选，再让大模型分析初始化条件等上下文。
+适配建议：在现有告警分诊中补充被调函数、宏和路径条件，输出支持判断的代码位置、条件与缺失上下文。
+证据：https://arxiv.org/abs/2308.00245
+
+路径B：大模型分解数据流问题，外部工具处理精确推理
+代表：LLMDFA。模型参与函数数据流摘要和分析脚本生成，解析器与定理证明工具负责具体任务。
+适配建议：把跨函数分析拆成可缓存的摘要，路径是否可行交给约束求解器。原论文原型和实验以Java相关任务为主，应用到C/C++需要处理指针、宏和硬件访问语义。
+证据：https://papers.nips.cc/paper_files/paper/2024/hash/ed9dcde1eb9c597f68c1d375bbecf3fc-Abstract-Conference.html
+代码：https://github.com/chengpeng-wang/LLMDFA
+
+路径C：智能体按需探索整个代码仓库
+代表：RepoAudit。按需要探索调用关系和函数内数据流，保存分析结果，并通过验证模块减少错误报告。
+适配建议：将固定上下文截取扩展为按证据缺口继续读取相关函数，记录已分析函数与结论。该论文作者署名均为美国普渡大学，列作方法参考。
+证据：https://arxiv.org/html/2501.18160v3
+
+路径D：读取协议规范，生成和调整测试输入
+代表：LLMIF。把规范信息与设备响应引入模糊测试。
+适配建议：为每类设备准备消息格式、状态转换、响应解析和异常判定，再让模型辅助生成测试输入。
+证据：https://ieeexplore.ieee.org/document/10646659/
+
+路径E：结合运行证据，分析并生成漏洞触发样例
+代表：FirmAgent。连接动态输入点、大模型路径分析和测试用例改进。
+适配建议：每条高优先级告警关联具体输入、执行环境、触发条件及运行结果，形成从检测到复现的可追溯记录。
+证据：https://www.ndss-symposium.org/wp-content/uploads/2026-s1943-paper.pdf
+
+六、对ecdet的建议顺序
+
+以下为基于论文机制与README设计的建议。
+第一步：围绕中断、共享变量、边界检查和资源生命周期选定具体缺陷类型，参考哈工程与国防科大的分析方法。
+第二步：参考LLift、LLMDFA和RepoAudit，为告警补充调用上下文、数据流与路径条件。核对引用行号可确保代码位置存在；验证漏洞是否成立还需要相关语义与运行证据。
+第三步：参考FirmAgent与LLMIF，把高优先级告警转成可以执行的测试输入和运行任务。
+第四步：用相同项目和缺陷标签比较“静态工具”“静态工具加大模型”“静态工具加大模型加运行验证”，记录真实缺陷、误报、定位、复现、耗时和模型调用成本。
+
+七、优先阅读文献记录
+
+记录口径：下面列出已经核对的标题、作者、年份、出处和标识。引用数统一记为“未采集”，本次按项目匹配度排序。PDF状态区分已定位公开全文与本地目录记录；本次未执行这些工具的复现实验。
+
+[P1]
+标题：面向嵌入式软件的并发缺陷检测方法研究
+作者：赵静文；导师：吴艳霞
+年份与出处：2025，哈尔滨工程大学博士学位论文；数据库网络出版年期为2026年04期
+标识：CNKI文件号1025935422.nh；DOI/arXiv未提供
+PDF状态：本地压缩包目录中有对应PDF，本次通过已有简介与学位论文记录核对主题和归属
+代码：本次未核实公开仓库
+来源：https://cnki.istiz.org.cn/kcms/detail/detail.aspx?dbcode=CDFD&dbname=CDFD2026&filename=1025935422.nh
+
+[P2]
+标题：航天嵌入式软件静态分析技术
+作者：陈立前、吴国福、姜加红
+年份与出处：2021，《空间控制技术与应用》47(2):86–92
+DOI：10.3969/j.issn.1674-1579.2021.02.012
+PDF状态：出版社公开PDF已定位
+代码：综述论文，本次未核实对应工具仓库
+来源：https://aca.spacejournal.cn/article/doi/10.3969/j.issn.1674-1579.2021.02.012
+
+[P3]
+标题：FirmAgent: Leveraging Fuzzing to Assist LLM Agents with IoT Firmware Vulnerability Discovery
+作者：Jiangan Ji, Chao Zhang, Shuitao Gan, Lin Jian, Hangtian Liu, Teming Liu, Lei Zheng, Zhipeng Jia（按会议PDF首页拼写）
+年份与出处：2026，NDSS
+DOI：10.14722/ndss.2026.231943
+PDF状态：会议公开全文已定位并读取首页与摘要
+代码：https://github.com/AxiaoJJ/FirmAgent
+来源：https://www.ndss-symposium.org/wp-content/uploads/2026-s1943-paper.pdf
+
+[P4]
+标题：Sharing More and Checking Less: Leveraging Common Input Keywords to Detect Bugs in Embedded Systems
+作者：Libo Chen, Yanhao Wang, Quanpu Cai, Yunfan Zhan, Hong Hu, Jiaqi Linghu, Qinsheng Hou, Chao Zhang, Haixin Duan, Zhi Xue
+年份与出处：2021，USENIX Security；工具名SaTC
+标识：本次使用会议官方全文URL，未补录DOI/arXiv
+PDF状态：会议公开全文已定位并读取首页与摘要
+代码：本次未核实作者仓库
+来源：https://www.usenix.org/system/files/sec21-chen-libo.pdf
+
+[P5]
+标题：StagedVulBERT: Multi-Granular Vulnerability Detection with a Novel Pre-trained Code Model
+作者：Yuan Jiang, Yujian Zhang, Xiaohong Su, Christoph Treude, Tiantian Wang
+年份与出处：2024；本次读取arXiv作者版本
+arXiv：2410.05766
+PDF状态：arXiv提供全文入口，本次读取摘要与作者仓库
+代码：https://github.com/YuanJiangGit/StagedVulBERT
+来源：https://arxiv.org/abs/2410.05766
+
+[P6]
+标题：LLMDFA: Analyzing Dataflow in Code with Large Language Models
+作者：Chengpeng Wang, Wuqi Zhang, Zian Su, Xiangzhe Xu, Xiaoheng Xie, Xiangyu Zhang
+年份与出处：2024，NeurIPS
+arXiv：2402.10754；会议页面DOI：10.52202/079017-4181
+PDF状态：会议公开全文已定位并读取首页与摘要
+代码：https://github.com/chengpeng-wang/LLMDFA
+来源：https://papers.nips.cc/paper_files/paper/2024/hash/ed9dcde1eb9c597f68c1d375bbecf3fc-Abstract-Conference.html
+
+[P7]
+标题：RepoAudit: An Autonomous LLM-Agent for Repository-Level Code Auditing
+作者：Jinyao Guo, Chengpeng Wang, Xiangzhe Xu, Zian Su, Xiangyu Zhang
+年份与出处：2025；本次使用arXiv版本v3
+arXiv：2501.18160
+PDF状态：arXiv提供PDF与HTML全文；本次读取HTML中的作者署名和方法摘要
+代码：arXiv摘要提供作者仓库入口，本次未单独检查其运行条件
+来源：https://arxiv.org/abs/2501.18160
+
+[P8]
+标题：The Hitchhiker's Guide to Program Analysis: A Journey with Large Language Models
+作者：Haonan Li, Yu Hao, Yizhuo Zhai, Zhiyun Qian
+年份与出处：2023；本次使用arXiv版本v3；工具名LLift
+arXiv：2308.00245
+PDF状态：arXiv提供全文入口，本次读取摘要
+代码：本次未核实作者仓库
+来源：https://arxiv.org/abs/2308.00245
+
+[P9]
+标题：LLMIF: Augmented Large Language Model for Fuzzing IoT Devices
+作者：Jincheng Wang, Le Yu, Xiapu Luo
+年份与出处：2024，IEEE Symposium on Security and Privacy
+DOI：10.1109/SP54263.2024.00211（按IEEE出版页面）
+PDF状态：作者公开全文已定位并读取首页与摘要
+代码：本次未核实作者仓库
+来源：https://ieeexplore.ieee.org/document/10646659/
+作者全文：https://www.jcwang.me/llmif.pdf

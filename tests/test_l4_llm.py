@@ -19,7 +19,7 @@ EXAMPLES = Path(__file__).parent.parent / "examples"
 # ---------------- JSON 解析（幻觉抑制第一道） ----------------
 
 def test_parse_verdict_json_valid():
-    raw = '前置说明 {"verdict": "TRUE_POSITIVE", "confidence": 0.8, "reason": "r", "evidence_lines": [3]} 后缀'
+    raw = '{"verdict": "TRUE_POSITIVE", "confidence": 0.8, "reason": "r", "evidence_lines": [3]}'
     assert parse_verdict_json(raw)["confidence"] == 0.8
 
 

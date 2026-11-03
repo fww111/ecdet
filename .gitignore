@@ -9,6 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
+# Local credentials
+.env
+.env.*
+!.env.example
+
 # ecdet 产物
 ecdet_reports/
 ecdet_build/

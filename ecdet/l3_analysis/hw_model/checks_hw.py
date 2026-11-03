@@ -2,6 +2,7 @@
 
 寄存器访问、ISR 抢占与 RTOS 阻塞语义显式注入后，以下缺陷可规则化检查：
   ECDET-MMIO-ACCESS  写只读寄存器 / 读只写寄存器（PERIPH->REG 与直接地址解引用）
+  ECDET-MMIO-W1C     对写1清零寄存器进行读改写，可能清除其他已置位状态
   ECDET-ISR-RACE     ISR 与任务上下文共享全局变量且访问侧无临界区保护
   ECDET-VOLATILE     ISR 共享变量未声明 volatile
   ECDET-ISR-BLOCK    ISR 中调用阻塞 / 非 FromISR 安全的 RTOS API
@@ -13,6 +14,7 @@ import re
 
 from ecdet.l2_ir.model import Alert, Evidence, Location, Provenance, Severity
 from ecdet.l3_analysis.builtin_rules.checks import ProjectContext, _evidence
+from ecdet.l3_analysis.builtin_rules.ectypes import resolve_type
 from ecdet.l3_analysis.hw_model.context import HwContext, resolve_base_address
 
 # 直址解引用：*(volatile uint32_t *)0x40021000 = x
@@ -94,6 +96,152 @@ def _check_reg_access(reg, is_write: bool, is_read: bool,
             [_evidence(path, line, "api",
                        f"寄存器 {label} @ 0x{reg.abs_addr:08X}，SVD access={reg.access}")],
         ))
+    return out
+
+
+def _paren_pairs(tokens) -> dict[int, int]:
+    pairs: dict[int, int] = {}
+    stack: list[int] = []
+    for i, token in enumerate(tokens):
+        if token.value == "(":
+            stack.append(i)
+        elif token.value == ")" and stack:
+            start = stack.pop()
+            pairs[start] = i
+            pairs[i] = start
+    return pairs
+
+
+def _w1c_references(tokens, hw: HwContext, pairs: dict[int, int]):
+    """Resolve explicit register references, without guessing pointer aliases."""
+    for i, token in enumerate(tokens):
+        end = i + 1
+        reg = None
+        if (token.kind == "ident" and i + 2 < len(tokens)
+                and tokens[i + 1].value == "->" and tokens[i + 2].kind == "ident"):
+            base = resolve_base_address(token.value, hw)
+            peripheral = hw.regmap.periph_by_base.get(base)
+            if peripheral:
+                reg = hw.regmap.resolve(peripheral, tokens[i + 2].value)
+            end = i + 3
+        elif token.value == "*" and i + 1 in pairs:
+            cast_end = pairs[i + 1]
+            cast = tokens[i + 2:cast_end]
+            if (cast_end <= i + 2 or not any(t.value == "*" for t in cast)
+                    or not all(t.kind in {"ident", "keyword"} or t.value == "*" for t in cast)):
+                continue
+            start = cast_end + 1
+            end = start + 1
+            while start < len(tokens) and tokens[start].value == "(" and start in pairs:
+                end = pairs[start] + 1
+                start += 1
+            if start >= len(tokens) or tokens[start].kind != "number":
+                continue
+            # Only a literal address, optionally wrapped in parentheses.
+            if any(t.value != ")" for t in tokens[start + 1:end]):
+                continue
+            try:
+                address = int(re.sub(r"[uUlL]+$", "", tokens[start].value), 0)
+            except ValueError:
+                continue
+            reg = hw.regmap.lookup(address)
+            if reg is not None and reg.abs_addr != address:
+                reg = None  # Byte offsets have different access semantics.
+        if reg is None:
+            continue
+        start = i
+        while (start > 0 and tokens[start - 1].value == "(" and pairs.get(start - 1) == end
+               and not (start > 1 and tokens[start - 2].kind in {"ident", "keyword"})):
+            start -= 1
+            end += 1
+        yield start, end, reg
+
+
+def _w1c_is_evaluated(tokens, start: int, pairs: dict[int, int]) -> bool:
+    if start and tokens[start - 1].value in {"sizeof", "_Alignof"}:
+        return False
+    for opening, closing in pairs.items():
+        if opening < start <= closing and opening > 0:
+            if tokens[opening - 1].value in {"sizeof", "_Alignof"}:
+                return False
+    return True
+
+
+def _w1c_is_read(tokens, start: int, end: int, pairs: dict[int, int]) -> bool:
+    if not _w1c_is_evaluated(tokens, start, pairs):
+        return False
+    if start and tokens[start - 1].value == "&":
+        before = start - 2
+        unary = before < 0 or tokens[before].value not in {")", "]"} and tokens[before].kind not in {"ident", "number"}
+        if before in pairs and tokens[before].value == ")":
+            cast = tokens[pairs[before] + 1:before]
+            # A parenthesized value such as (FLAG_A) is the left operand of
+            # binary &, whereas (unsigned int)&REG takes the register address.
+            type_text = " ".join(t.value for t in cast if t.value not in {"const", "volatile"})
+            known_type = resolve_type(type_text) is not None or any(
+                t.value in {"void", "float", "double", "_Bool", "struct", "union", "enum"}
+                for t in cast)
+            unary = known_type and all(t.kind in {"ident", "keyword"} or t.value == "*" for t in cast)
+        if unary:
+            return False
+    return not (end < len(tokens) and tokens[end].value == "=")
+
+
+def _w1c_rhs_end(tokens, start: int) -> int:
+    depth = 0
+    for i in range(start, len(tokens)):
+        value = tokens[i].value
+        if value in {";", "}"} or (depth == 0 and value in {",", ")", "]"}):
+            return i
+        if value in {"(", "["}:
+            depth += 1
+        elif value in {")", "]"}:
+            depth -= 1
+    return len(tokens)
+
+
+def check_mmio_w1c(ctx: ProjectContext, hw: HwContext,
+                   active: set[str]) -> list[Alert]:
+    """Warn on explicit read-modify-write of known write-one-to-clear bits."""
+    if hw.regmap is None or "ECDET-MMIO-W1C" not in active:
+        return []
+    out: list[Alert] = []
+    for facts in ctx.facts:
+        tokens = facts.lex.tokens
+        pairs = _paren_pairs(tokens)
+        references = list(_w1c_references(tokens, hw, pairs))
+        for start, end, reg in references:
+            mask = reg.one_to_clear_mask
+            if not mask or not _w1c_is_evaluated(tokens, start, pairs):
+                continue
+            after = tokens[end].value if end < len(tokens) else ""
+            before = tokens[start - 1].value if start else ""
+            operation = after
+            rmw = after in (_ASSIGN_OPS - {"="}) | _POSTFIX_INC or before in _POSTFIX_INC
+            if before in _POSTFIX_INC:
+                operation = before
+            if after == "=":
+                rhs_end = _w1c_rhs_end(tokens, end + 1)
+                rmw = any(end < other_start < rhs_end and other_reg.abs_addr == reg.abs_addr
+                          and _w1c_is_read(tokens, other_start, other_end, pairs)
+                          for other_start, other_end, other_reg in references)
+                operation = "= with register readback"
+            if not rmw:
+                continue
+            line = tokens[start].line
+            label = f"{reg.peripheral}.{reg.name}"
+            field_names = ",".join(item.name for item in getattr(reg, "fields", ())
+                                   if item.modified_write_values == "oneToClear" and item.writable)
+            out.append(_alert(
+                "ECDET-MMIO-W1C", Severity.WARNING,
+                f"对写1清零寄存器 {label} 进行读改写，可能清除其他已置位状态；请按字段写入语义核对写入掩码",
+                facts.path, line,
+                evidence=[_evidence(
+                    facts.path, line, "api",
+                    f"寄存器 {label} @ 0x{reg.abs_addr:08X}，SVD oneToClear 掩码=0x{mask:08X}，"
+                    f"字段={field_names or 'register-level'}，操作={operation}",
+                )],
+            ))
     return out
 
 
@@ -236,6 +384,7 @@ def check_isr_blocking(ctx: ProjectContext, hw: HwContext,
 
 HW_RULES = {
     "ECDET-MMIO-ACCESS": check_mmio_access,
+    "ECDET-MMIO-W1C": check_mmio_w1c,
     "ECDET-ISR-RACE": check_isr_race,
     "ECDET-VOLATILE": check_isr_race,
     "ECDET-ISR-BLOCK": check_isr_blocking,

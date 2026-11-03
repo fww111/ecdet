@@ -2,8 +2,8 @@
 
 宿主机原生执行（HostCarrier，嵌入式 Linux 目标档）→ Unicorn CPU 级
 仿真（单固件快速 fuzzing 档）→ Renode 外设级仿真（多节点/外设模型档）。
-探测到即接入：Unicorn 以 python 包存在为准，Renode 以 renode 二进制
-为准；未安装的载体 available=False，引擎自动降级到下一档并留痕。
+本模块提供工具可用性信息，不代表所有载体都支持源码harness。
+Host使用DynamicEngine，Renode使用RenodeRunner加载ELF；Unicorn仅提供探测。
 """
 
 from __future__ import annotations
@@ -78,8 +78,8 @@ class UnicornCarrier:
 class RenodeCarrier:
     """Renode 外设级仿真：多节点与外设模型，保真度最高档。
 
-    接入要求：renode 二进制（PATH）+ .resc 平台描述脚本。
-    MVP 仅做可用性探测与降级留痕。
+    接入要求：renode二进制、ELF固件、REPL平台描述和明确的UART判据。
+    实际固件执行由renode.RenodeRunner完成；需要明确的ELF、平台和UART判据。
     """
 
     name = "renode"
@@ -87,12 +87,13 @@ class RenodeCarrier:
 
     @staticmethod
     def available() -> bool:
-        return shutil.which("renode") is not None
+        from ecdet.l3_analysis.dynamic.renode import find_renode
+        return find_renode() is not None
 
     @staticmethod
     def info() -> CarrierInfo:
         note = "" if RenodeCarrier.available() else \
-            "未安装 renode 二进制（https://renode.io）"
+            "Renode不可用；安装后设置ECDET_RENODE或加入PATH（https://renode.io）"
         return CarrierInfo(RenodeCarrier.name, RenodeCarrier.tier,
                            RenodeCarrier.available(), note)
 

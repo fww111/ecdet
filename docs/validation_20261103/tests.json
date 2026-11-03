@@ -1,0 +1,18 @@
+{
+  "description": "Published counts derived from local JUnit evidence; raw workspaces remain local.",
+  "full": {
+    "tests": "578",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "112.598"
+  },
+  "basic_steps345": {
+    "tests": "96",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "31",
+    "time": "4.264"
+  },
+  "frontend_checks": 13
+}

@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+import logging
+import os
 import shutil
 import subprocess
 from abc import ABC, abstractmethod
@@ -23,6 +25,8 @@ from ecdet.l3_analysis.builtin_rules.checks import (
     finalize_facts,
 )
 from ecdet.l3_analysis.builtin_rules.rules_meta import BUILTIN_RULES
+
+_LOG = logging.getLogger(__name__)
 
 # 行业配置文件：方案 3.3.3 的裁剪策略（按 Mandatory/Required/Advisory 与行业分层启停）
 INDUSTRY_PROFILES: dict[str, set[str]] = {
@@ -163,10 +167,14 @@ class ClangTidyAdapter(ExternalEngineAdapter):
     name = "clang-tidy"
     binary = "clang-tidy"
 
+    def available(self) -> bool:
+        return shutil.which(os.environ.get('ECDET_CLANG_TIDY') or self.binary) is not None
+
     def run(self, target: AnalysisTarget, enabled_rules: set[str]) -> list[Alert]:
         from ecdet.l3_analysis.adapters.clang_tidy import run_clang_tidy
 
         if not self.available():
+            _LOG.warning("clang-tidy unavailable: executable not found; analysis skipped")
             return []
         return run_clang_tidy(target, timeout=180)
 
@@ -227,11 +235,22 @@ def run_all_engines(target: AnalysisTarget, profile: str | None = None,
                     engines: list[Engine] | None = None) -> tuple[list[Alert], list[RuleMeta]]:
     """调度全部可用引擎并合并告警。"""
     engs = engines if engines is not None else _make_default_engines()
-    usable = [e for e in engs if e.available()]
+    usable = []
+    for engine in engs:
+        if engine.available():
+            usable.append(engine)
+        else:
+            _LOG.warning("%s unavailable; analysis skipped", engine.name)
     metas = all_rule_metas(usable)
     enabled = resolve_enabled(metas, profile, disable, enable)
 
     alerts: list[Alert] = []
     for e in usable:
         alerts.extend(e.run(target, enabled))
+    known_rules = {meta.rule_id for meta in metas}
+    for alert in alerts:
+        if alert.rule_id not in known_rules:
+            metas.append(RuleMeta(alert.rule_id, alert.engine, 'Required', 'tool',
+                                  alert.rule_id, [alert.cwe] if alert.cwe else []))
+            known_rules.add(alert.rule_id)
     return alerts, metas

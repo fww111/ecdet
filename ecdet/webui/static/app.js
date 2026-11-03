@@ -8,7 +8,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const SEV_COLOR = { error:"#dc2626", warning:"#d97706", note:"#2563eb" };
 const PROV_LABEL = { proven:"已证明", detected:"已检出", suspected:"待研判" };
-const TRI_LABEL = { TRUE_POSITIVE:"真缺陷", FALSE_POSITIVE:"误报",
+const TRI_LABEL = { TRUE_POSITIVE:"建议真缺陷", FALSE_POSITIVE:"建议误报",
                     NEEDS_REVIEW:"待复核" };
 const STATUS_LABEL = { pending:"待处理", confirmed:"已确认",
                        dismissed:"已豁免" };
@@ -1175,6 +1175,344 @@ async function pollFixJob(runId) {
   }
 }
 
+/* ================= Advanced analysis ================= */
+
+const ANALYSIS_MODES = {
+  constraints: { title: "路径约束（Z3）", description: "检查C函数的整数路径与数组边界，生成可触发问题的候选输入。" },
+  fuzz: { title: "覆盖率测试（libFuzzer）", description: "持续变异字节输入，保存覆盖记录和可重放的错误输入。" },
+  firmware: { title: "固件仿真（Renode）", description: "加载ELF固件，发送串口输入，并检查预期输出与错误标记。" },
+};
+const analysisState = { epoch: 0, active: false, timer: null, runId: null,
+  kind: "constraints", projects: [], runs: [], tools: {}, submitting: false, refreshId: 0,
+  drafts: { constraints: {}, fuzz: {}, firmware: {} } };
+
+function analysisStop() {
+  analysisState.active = false;
+  analysisState.epoch++;
+  clearTimeout(analysisState.timer);
+  analysisState.timer = null;
+}
+
+function analysisIsActive(epoch) {
+  return analysisState.active && analysisState.epoch === epoch;
+}
+
+function analysisKind(run) {
+  const kind = run.params?.analysis?.kind || run.params?.kind;
+  return Object.hasOwn(ANALYSIS_MODES, kind) ? kind : null;
+}
+
+function analysisLines(value) {
+  return String(value || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+}
+
+function analysisNumber(value, name, integer = true) {
+  if (String(value ?? "").trim() === "") throw new Error(`${name}不能为空`);
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0 || (integer && !Number.isInteger(number)))
+    throw new Error(`${name}必须为正${integer ? "整数" : "数"}`);
+  return number;
+}
+
+function analysisRequest(kind, values) {
+  const trim = key => String(values[key] || "").trim();
+  if (kind === "constraints") return { kind, source: trim("source"), function: trim("function"),
+    timeout_ms: analysisNumber(values.timeout_ms, "单次求解时限") };
+  if (kind === "fuzz") {
+    if (!trim("harness")) throw new Error("请填写测试驱动文件");
+    return { kind, harness: trim("harness"), sources: analysisLines(values.sources),
+      corpus: analysisLines(values.corpus), runs: analysisNumber(values.runs, "执行次数"),
+      timeout: analysisNumber(values.timeout, "运行时限"), max_len: analysisNumber(values.max_len, "最大输入长度") };
+  }
+  if (kind === "firmware") {
+    if (!trim("firmware") || !trim("platform")) throw new Error("请填写固件和平台描述文件");
+    const expected = analysisLines(values.expected), failure_markers = analysisLines(values.failure_markers);
+    if (!expected.length && !failure_markers.length) throw new Error("至少填写一项预期输出或错误标记");
+    const input_hex = trim("input_hex").replace(/\s/g, "");
+    if (!/^(?:[0-9a-fA-F]{2})*$/.test(input_hex)) throw new Error("串口输入必须是完整的十六进制字节");
+    if (input_hex.length > 8192) throw new Error("串口输入最多4096字节");
+    return { kind, firmware: trim("firmware"), platform: trim("platform"), uart: trim("uart"),
+      input_hex, expected, failure_markers, sources: analysisLines(values.sources),
+      seconds: analysisNumber(values.seconds, "仿真时间", false), timeout: analysisNumber(values.timeout, "运行时限") };
+  }
+  throw new Error("请选择支持的分析类型");
+}
+
+function analysisStatus(status, kind) {
+  if (status === "FINDING" && kind === "constraints") return ["存在待验证候选", "warning"];
+  const states = {
+    pending: ["排队中", "pending"], running: ["运行中", "running"],
+    PASS: ["判据通过", "done"], COMPLETED: ["检查完成", "done"],
+    NO_FINDINGS: ["本次未触发错误", "done"], FINDING: ["已复现错误", "error"],
+    FAIL: ["判据未通过", "error"], SAT: ["存在候选输入", "warning"],
+    UNSAT: ["局部模型无越界输入", "note"], PARTIAL: ["部分检查未完成", "warning"],
+    UNKNOWN: ["求解未确定", "warning"], UNSUPPORTED: ["超出支持范围", "warning"],
+    UNAVAILABLE: ["工具不可用，未执行", "failed"], NOT_AVAILABLE: ["工具不可用，未执行", "failed"],
+    TIMEOUT: ["运行超时", "failed"], COMPILE_ERROR: ["编译失败", "failed"],
+    INVALID_INPUT: ["参数无效，未执行", "failed"], UNVERIFIED: ["结果尚未验证", "warning"],
+    ERROR: ["执行错误", "failed"], failed: ["任务失败", "failed"], done: ["任务完成", "note"],
+  };
+  return Object.hasOwn(states, status) ? states[status] : [String(status || "等待结果"), "pending"];
+}
+
+function analysisBadge(status, kind) {
+  const [label, cls] = analysisStatus(status, kind);
+  return `<span class="badge ${cls}">${esc(label)}</span>`;
+}
+
+function analysisField(id, label, value, placeholder = "", type = "text", attributes = "") {
+  return `<label for="an-${id}">${label}</label><input id="an-${id}" data-analysis-field="${id}" type="${type}" value="${esc(value ?? "")}" placeholder="${esc(placeholder)}" ${attributes}>`;
+}
+
+function analysisTextarea(id, label, value, placeholder = "") {
+  return `<label for="an-${id}">${label}</label><textarea id="an-${id}" data-analysis-field="${id}" rows="3" placeholder="${esc(placeholder)}">${esc(value || "")}</textarea>`;
+}
+
+function analysisModeFields(kind, draft = {}) {
+  if (kind === "constraints") return `
+    ${analysisField("source", "源文件（可选）", draft.source, "例如：src/parser.c；留空检查全部C文件")}
+    ${analysisField("function", "函数名（可选）", draft.function, "留空检查所选源码中的全部受支持函数")}
+    <details class="an-advanced"><summary>运行参数</summary>
+      ${analysisField("timeout_ms", "单次求解时限（毫秒）", draft.timeout_ms ?? 1000, "", "number", 'min="1" step="1" required')}
+    </details><p class="an-help">候选输入保留待验证状态；局部约束无解只对应本次支持的代码与整数模型。</p>`;
+  if (kind === "fuzz") return `
+    ${analysisField("harness", "测试驱动文件", draft.harness, "例如：harness.c", "text", "required")}
+    ${analysisTextarea("sources", "额外源码（每行一个，可选）", draft.sources, "src/parser.c")}
+    <details class="an-advanced"><summary>语料与运行参数</summary>
+      ${analysisTextarea("corpus", "初始语料文件或目录（每行一个，可选）", draft.corpus, "seeds")}
+      <div class="an-three">
+      <div>${analysisField("runs", "执行次数上限", draft.runs ?? 5000, "", "number", 'min="1" step="1" required')}</div>
+      <div>${analysisField("timeout", "运行时限（秒）", draft.timeout ?? 30, "", "number", 'min="1" step="1" required')}</div>
+      <div>${analysisField("max_len", "最大输入长度（字节）", draft.max_len ?? 4096, "", "number", 'min="1" step="1" required')}</div>
+      </div></details><p class="an-help">驱动需提供LLVMFuzzerTestOneInput入口。只有错误输入独立重放成功后，才记为已复现错误。</p>`;
+  return `
+    ${analysisField("firmware", "ELF固件文件", draft.firmware, "例如：build/firmware.elf", "text", "required")}
+    ${analysisField("platform", "平台描述文件（.repl）", draft.platform, "例如：board.repl", "text", "required")}
+    <div class="an-two">
+      <div>${analysisTextarea("expected", "预期串口输出（每行一项）", draft.expected, "ECDET_BOOT_OK\nECDET_STATUS_OK")}</div>
+      <div>${analysisTextarea("failure_markers", "错误标记（每行一项）", draft.failure_markers, "ECDET_SELFTEST_FAIL")}</div>
+    </div><details class="an-advanced"><summary>串口与运行参数</summary>
+      ${analysisField("uart", "UART外设标识", draft.uart ?? "sysbus.usart2", "", "text", "required")}
+      ${analysisField("input_hex", "串口输入（十六进制，可选）", draft.input_hex, "例如：73，对应字符s")}
+      <div class="an-two">
+      <div>${analysisField("seconds", "仿真时间（秒）", draft.seconds ?? 0.1, "", "number", 'min="0.000001" step="any" required')}</div>
+      <div>${analysisField("timeout", "进程时限（秒）", draft.timeout ?? 30, "", "number", 'min="1" step="1" required')}</div>
+      </div>${analysisTextarea("sources", "关联源码（每行一个，可选）", draft.sources, "src/main.c")}
+    </details><p class="an-help">至少设置一项输出判据。判定读取独立串口日志，缺少输出、加载失败与超时会分别显示。</p>`;
+}
+
+function analysisCollectValues() {
+  const values = {};
+  document.querySelectorAll("#analysis-fields [data-analysis-field]").forEach(input => {
+    values[input.dataset.analysisField] = input.value;
+  });
+  return values;
+}
+
+function analysisPaintTools() {
+  const tools = analysisState.tools;
+  $("analysis-tools-status").innerHTML = Object.entries(ANALYSIS_MODES).map(([kind, mode]) => {
+    const tool = tools.tools?.[kind] || {};
+    return `<div class="an-tool"><b>${esc(mode.title)}</b>
+      <span class="badge ${tool.available ? "done" : "warning"}">${tool.available ? "工具已就绪" : "工具未就绪"}</span>
+      <span class="an-help">${esc(tool.note || (tool.available ? "" : "请配置工具路径或安装依赖"))}</span></div>`;
+  }).join("");
+  const selected = tools.tools?.[analysisState.kind] || {};
+  const note = $("analysis-selected-tool");
+  if (note) note.textContent = selected.available ? "所选工具已就绪。" :
+    "所选工具未就绪，请展开上方“工具配置与可用性”查看设置。";
+}
+
+async function renderAnalysis(el, query = {}) {
+  analysisState.active = true;
+  const epoch = analysisState.epoch;
+  const [projects, runs, tools] = await Promise.all([
+    api("GET", "/api/projects"), api("GET", "/api/runs"), api("GET", "/api/analysis-tools")]);
+  if (!analysisIsActive(epoch)) return;
+  analysisState.projects = projects.projects;
+  analysisState.runs = runs.runs.filter(analysisKind);
+  analysisState.tools = tools;
+  const requested = Number(query.run);
+  if (Number.isSafeInteger(requested) && requested > 0) analysisState.runId = requested;
+  const names = Object.fromEntries(projects.projects.map(p => [p.id, p.name]));
+  el.innerHTML = `${pageHead("专项分析", "选择工程，运行覆盖率测试、路径约束或固件仿真，查看各项状态和原始证据。")}
+    <details class="card an-tool-settings"><summary>工具配置与可用性</summary>
+      <div id="analysis-tools-status"></div>
+      <div class="an-two"><div>${analysisField("clang-path", "Clang可执行文件路径", tools.clang_path, "留空使用环境变量或系统工具")}</div>
+      <div>${analysisField("renode-path", "Renode可执行文件路径", tools.renode_path, "留空使用环境变量或系统工具")}</div></div>
+      <div class="an-actions"><button class="btn ghost" id="analysis-save-tools">保存并检查</button><span id="analysis-tools-message" role="status" class="muted"></span></div>
+    </details>
+    <div class="an-layout"><section>
+    <form class="card" id="analysis-form"><h2>新建专项分析</h2>
+      <div class="an-two"><div><label for="an-project">工程</label><select id="an-project" required>
+        ${projects.projects.map(p => `<option value="${Number(p.id)}">${esc(p.name)}</option>`).join("")}</select></div>
+      <div><label for="an-kind">分析类型</label><select id="an-kind">${Object.entries(ANALYSIS_MODES).map(([kind, mode]) => `<option value="${kind}" ${analysisState.kind === kind ? "selected" : ""}>${esc(mode.title)}</option>`).join("")}</select></div></div>
+      <p class="an-help" id="analysis-description">${esc(ANALYSIS_MODES[analysisState.kind].description)}</p>
+      <p class="an-help" id="analysis-selected-tool"></p>
+      <p class="an-help">文件路径以所选工程目录为基准，固件、驱动和平台描述均需位于该目录内。</p>
+      <div id="analysis-fields">${analysisModeFields(analysisState.kind, analysisState.drafts[analysisState.kind])}</div>
+      <div class="an-actions"><button class="btn" id="analysis-submit" type="submit" ${!projects.projects.length || analysisState.submitting ? "disabled" : ""}>开始分析</button>
+      <span id="analysis-submit-message" role="status" class="muted">${projects.projects.length ? "" : '请先在工程管理中注册工程。'}</span></div>
+      ${projects.projects.length ? "" : '<a class="link" href="#/projects">前往工程管理 →</a>'}
+    </form><div class="card" id="analysis-result"><div class="muted">选择历史任务，或启动一次新的分析。</div></div>
+    </section><aside class="card an-history"><h2>专项任务历史<button class="btn sm ghost" id="analysis-refresh">刷新</button></h2>
+      <div id="analysis-run-list"></div></aside></div>`;
+  analysisPaintTools();
+  analysisPaintHistory(names);
+  $("an-kind").addEventListener("change", event => {
+    analysisState.drafts[analysisState.kind] = analysisCollectValues();
+    analysisState.kind = event.target.value;
+    $("analysis-fields").innerHTML = analysisModeFields(analysisState.kind, analysisState.drafts[analysisState.kind]);
+    $("analysis-description").textContent = ANALYSIS_MODES[analysisState.kind].description;
+    analysisPaintTools();
+  });
+  $("analysis-form").addEventListener("submit", analysisSubmit);
+  $("analysis-save-tools").addEventListener("click", analysisSaveTools);
+  $("analysis-refresh").addEventListener("click", () => analysisRefresh(epoch));
+  $("analysis-run-list").addEventListener("click", event => {
+    const button = event.target.closest("[data-analysis-run]");
+    if (!button) return;
+    const id = Number(button.dataset.analysisRun);
+    if (!Number.isSafeInteger(id) || id <= 0) return;
+    analysisState.runId = id;
+    history.replaceState(null, "", "#/analysis?run=" + id);
+    analysisRefresh(epoch);
+  });
+  if (!analysisState.runId && analysisState.runs.length) analysisState.runId = analysisState.runs[0].id;
+  await analysisRefresh(epoch);
+}
+
+function analysisPaintHistory(names) {
+  const rows = analysisState.runs;
+  const node = $("analysis-run-list");
+  if (!node) return;
+  node.innerHTML = rows.map(run => {
+    const kind = analysisKind(run), status = run.stats?.analysis?.status || run.status;
+    return `<button class="an-history-row ${Number(run.id) === Number(analysisState.runId) ? "selected" : ""}" data-analysis-run="${Number(run.id)}">
+      <span><b>#${Number(run.id)} · ${esc(ANALYSIS_MODES[kind].title)}</b>${analysisBadge(status, kind)}</span>
+      <span class="muted">${esc(names[run.project_id] || "工程")} · ${esc(run.started_at ? new Date(run.started_at * 1000).toLocaleString() : "等待调度")}</span></button>`;
+  }).join("") || '<div class="empty">尚无专项分析任务。</div>';
+}
+
+function analysisArtifactLink(runId, artifact) {
+  return `/api/runs/${Number(runId)}/artifact?path=${encodeURIComponent(artifact.path || "")}`;
+}
+
+function analysisResultHtml(run, analysis) {
+  const id = Number(run.id), status = analysis?.status || run.status;
+  const kind = analysis?.kind || analysisKind(run);
+  const summary = analysis?.summary || {};
+  const counts = summary.status_counts || {};
+  const summaryRows = Object.entries(counts).map(([name, count]) =>
+    `<span>${analysisBadge(name)} <b>${esc(count)}</b></span>`).join("");
+  const coverage = summary.coverage || {};
+  const missing = summary.missing_expected || [], failures = summary.observed_failures || [];
+  const count = summary.alert_count ?? summary.alerts;
+  const alertCount = typeof count === "number" ? count : Array.isArray(count) ? count.length : null;
+  const artifacts = Array.isArray(analysis?.artifacts) ? analysis.artifacts : [];
+  const label = typeof summary.label === "string" ? summary.label : "";
+  return `<h2>任务#${id} · ${esc(ANALYSIS_MODES[kind]?.title || "专项分析")}</h2>
+    <div class="an-actions">${analysisBadge(status, kind)}${label ? `<span>${esc(label)}</span>` : ""}</div>
+    ${run.error ? `<div class="an-error">${esc(run.error)}</div>` : ""}
+    ${analysis?.reason ? `<div class="an-error">${esc(analysis.reason)}</div>` : ""}
+    ${["pending", "running"].includes(run.status) ? '<p class="an-help"><span class="spin"></span> 后台执行中，本页会自动刷新。</p>' : ""}
+    ${alertCount !== null ? `<p class="an-help">结果告警：${alertCount}条。${kind === "constraints" ? "候选输入需要执行验证。" : ""}</p>` : ""}
+    ${summaryRows ? `<div class="an-status-counts">${summaryRows}</div>` : ""}
+    ${kind === "constraints" ? '<p class="an-help">SAT表示当前模型存在候选输入；UNSAT仅对应已检查的局部访问。未支持和求解未确定的项目单独计数。</p>' : ""}
+    ${kind === "fuzz" && (summary.executions != null || coverage.executed_units != null) ? `<p>实际执行：<b>${esc(summary.executions ?? coverage.executed_units)}</b>次；覆盖计数：${esc(coverage.initial_edges ?? "—")} → ${esc(coverage.final_edges ?? "—")}</p>` : ""}
+    ${kind === "firmware" && missing.length ? `<div class="an-error">未观察到预期输出：${missing.map(esc).join("；")}</div>` : ""}
+    ${kind === "firmware" && failures.length ? `<div class="an-error">观察到错误标记：${failures.map(esc).join("；")}</div>` : ""}
+    ${analysis ? `<div class="an-actions an-downloads"><a class="btn sm ghost" target="_blank" rel="noopener" href="/api/runs/${id}/report">查看HTML报告</a>
+      <a class="btn sm ghost" href="${esc(analysisArtifactLink(id, {path: 'results.sarif'}))}" download>下载SARIF</a>
+      <a class="btn sm ghost" href="${esc(analysisArtifactLink(id, {path: 'analysis.json'}))}" download>下载完整结果</a>
+      ${alertCount ? `<a class="link" href="#/alerts?run=${id}">查看告警 →</a>` : ""}</div>` : ""}
+    ${artifacts.length ? `<details class="an-advanced"><summary>原始证据与运行日志（${artifacts.length}项）</summary><ul class="an-artifacts">${artifacts.map(item => `<li><a class="link" href="${esc(analysisArtifactLink(id, item))}" download>${esc(item.name || item.path)}</a></li>`).join("")}</ul></details>` : ""}
+    ${analysis ? `<details class="an-advanced"><summary>分项结果</summary><pre class="an-details">${esc(JSON.stringify(analysis.details || {}, null, 2))}</pre></details>` : ""}`;
+}
+
+async function analysisRefresh(epoch) {
+  if (!analysisIsActive(epoch)) return;
+  const refreshId = ++analysisState.refreshId;
+  clearTimeout(analysisState.timer);
+  try {
+    const data = await api("GET", "/api/runs");
+    if (!analysisIsActive(epoch) || refreshId !== analysisState.refreshId) return;
+    analysisState.runs = data.runs.filter(analysisKind);
+    const names = Object.fromEntries(analysisState.projects.map(p => [p.id, p.name]));
+    analysisPaintHistory(names);
+    const selectedId = analysisState.runId;
+    if (selectedId) {
+      const run = await api("GET", `/api/runs/${Number(selectedId)}`);
+      if (!analysisIsActive(epoch) || selectedId !== analysisState.runId || refreshId !== analysisState.refreshId) return;
+      let analysis = null;
+      if (!["pending", "running"].includes(run.status)) {
+        try { analysis = await api("GET", `/api/runs/${Number(selectedId)}/analysis`); }
+        catch (error) {
+          if (run.status !== "failed") throw error;
+          run.error = [run.error, "结果读取失败：" + error.message].filter(Boolean).join("\n");
+        }
+      }
+      if (!analysisIsActive(epoch) || selectedId !== analysisState.runId || refreshId !== analysisState.refreshId) return;
+      $("analysis-result").innerHTML = analysisResultHtml(run, analysis);
+    }
+    if (analysisState.runs.some(run => ["pending", "running"].includes(run.status)))
+      analysisState.timer = setTimeout(() => analysisRefresh(epoch), 1500);
+  } catch (error) {
+    if (!analysisIsActive(epoch) || refreshId !== analysisState.refreshId) return;
+    $("analysis-result").innerHTML = `<div class="an-error" role="alert">刷新失败：${esc(error.message)}</div>`;
+  }
+}
+
+async function analysisSubmit(event) {
+  event.preventDefault();
+  if (analysisState.submitting) return;
+  const epoch = analysisState.epoch;
+  const button = $("analysis-submit"), message = $("analysis-submit-message");
+  try {
+    const projectId = Number($("an-project").value);
+    if (!Number.isSafeInteger(projectId) || projectId <= 0) throw new Error("请先选择工程");
+    const values = analysisCollectValues();
+    const request = analysisRequest(analysisState.kind, values);
+    analysisState.drafts[analysisState.kind] = values;
+    analysisState.submitting = true;
+    button.disabled = true;
+    message.className = "muted";
+    message.textContent = "正在提交…";
+    const result = await api("POST", `/api/projects/${projectId}/analyze`, request);
+    if (!Number.isSafeInteger(result.run_id) || result.run_id <= 0) throw new Error("服务器未返回有效任务编号");
+    analysisState.runId = result.run_id;
+    if (!analysisIsActive(epoch)) return;
+    history.replaceState(null, "", "#/analysis?run=" + result.run_id);
+    message.textContent = `已提交任务#${result.run_id}`;
+    await analysisRefresh(epoch);
+  } catch (error) {
+    if (analysisIsActive(epoch)) { message.textContent = error.message; message.className = "an-error"; }
+  } finally {
+    analysisState.submitting = false;
+    if (analysisState.active && $("analysis-submit")) $("analysis-submit").disabled = !analysisState.projects.length;
+  }
+}
+
+async function analysisSaveTools() {
+  const epoch = analysisState.epoch;
+  const button = $("analysis-save-tools"), message = $("analysis-tools-message");
+  button.disabled = true;
+  message.textContent = "保存并检查中…";
+  try {
+    await api("POST", "/api/analysis-tools/settings", {
+      clang_path: $("an-clang-path").value.trim(), renode_path: $("an-renode-path").value.trim() });
+    const tools = await api("GET", "/api/analysis-tools");
+    if (!analysisIsActive(epoch)) return;
+    analysisState.tools = tools;
+    analysisPaintTools();
+    message.textContent = "工具配置已保存，可用性已更新。";
+  } catch (error) {
+    if (analysisIsActive(epoch)) message.textContent = "保存失败：" + error.message;
+  } finally {
+    if (analysisIsActive(epoch)) button.disabled = false;
+  }
+}
+
 /* ================= 大模型设置 ================= */
 
 async function renderSettings(el) {
@@ -1235,6 +1573,7 @@ async function testSettings() {
 /* ================= 路由 ================= */
 
 async function route() {
+  analysisStop();
   const hash = location.hash || "#/overview";
   const [path, qs] = hash.slice(1).split("?");
   const name = path.replace(/^\//, "") || "overview";
@@ -1245,6 +1584,7 @@ async function route() {
   try {
     if (name === "projects") await renderProjects(el);
     else if (name === "runs") await renderRuns(el);
+    else if (name === "analysis") await renderAnalysis(el, query);
     else if (name === "code") await renderCode(el, query);
     else if (name === "compare") await renderCompare(el, query);
     else if (name === "alerts") await renderAlerts(el, query);

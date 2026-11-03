@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "solver_version": "5.3.3",
+  "source_sha256": "d8e0ebc893205894869620fd6ac56ede2382ac0777d6801d3a377d1e1fbef585",
+  "expected": {
+    "missing_lower_guard": "SAT",
+    "guarded_index": "UNSAT",
+    "promoted_byte": "SAT",
+    "unsigned_wrap": "UNSAT",
+    "signed_overflow": "UNSUPPORTED"
+  },
+  "actual": {
+    "missing_lower_guard": "SAT",
+    "guarded_index": "UNSAT",
+    "promoted_byte": "SAT",
+    "unsigned_wrap": "UNSAT",
+    "signed_overflow": "UNSUPPORTED"
+  },
+  "unknown_status": [
+    "UNKNOWN"
+  ],
+  "witness_replay_kind": "Independent compiled C guard/index arithmetic; no invalid memory access executed."
+}

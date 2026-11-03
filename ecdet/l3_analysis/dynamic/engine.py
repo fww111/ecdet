@@ -1,7 +1,7 @@
 """动态引擎主流程（方案 3.3.5 的 DynamicEngine 过程）。
 
-执行载体：宿主机原生执行（HostCarrier，gcc 可用即启用）；Unicorn /
-Renode 载体探测到安装即接入（三级吞吐-保真梯度）。oracle 三类：
+本引擎执行宿主机源码harness（gcc可用即启用）。Renode固件执行使用
+独立RenodeRunner和firmware命令；Unicorn尚为探测接口。oracle三类：
 崩溃退出码（Windows NTSTATUS 可分类）、UB stderr、看门狗超时。
 输出真触发 PoC → SARIF Detected 级告警（engine="dynamic"）。
 """
@@ -26,6 +26,7 @@ from ecdet.l3_analysis.dynamic.harness import (
     Harness,
     compile_harness,
     generate_harness,
+    TARGET_ENTER_MARKER,
 )
 from ecdet.l3_analysis.dynamic.inputs import build_input_model, param_value
 
@@ -56,6 +57,10 @@ class DynamicFinding:
     args_preview: str              # 实参预览（PoC 输入）
     def_line: int = 1              # 目标函数定义行（告警定位）
     stubs: list[str] = field(default_factory=list)
+    source_line: int | None = None
+    defect_class: str = ""
+    confirmed_rule_ids: list[str] = field(default_factory=list)
+    execution_mode: str = "host"
 
     def to_alert(self) -> Alert:
         label = {_ORACLE_CRASH: "崩溃", _ORACLE_UB: "未定义行为",
@@ -73,6 +78,7 @@ class DynamicFinding:
                 Evidence(kind="note", message=f"PoC 重放：harness 可执行文件 "
                          f"argv[1]={self.replay_seed}；实参 {self.args_preview}"),
                 Evidence(kind="note", message=f"oracle：{label}（{self.detail}）"),
+                Evidence(kind="note", message=f"实际载体：{self.execution_mode}；精确缺陷位置：{self.source_line or 'unavailable'}"),
             ] + ([Evidence(kind="note",
                            message=f"harness 自动打桩符号：{', '.join(self.stubs)}")]
                  if self.stubs else []),
@@ -105,6 +111,7 @@ class DynamicEngine:
         self.gcc = gcc
         self.fixer = fixer                    # LLM harness 修正器（3.3.5）
         self.carrier = carrier                # 显式指定载体（三级梯度）
+        self.last_run: list[dict] = []
 
     @property
     def available(self) -> bool:
@@ -112,7 +119,13 @@ class DynamicEngine:
 
     def run(self, root: Path, facts: list[FileFacts],
             probe_names: set[str] | None = None) -> list[DynamicFinding]:
+        self.last_run = []
+        if self.carrier not in {None, 'host'}:
+            self.last_run.append({'status':'UNSUPPORTED', 'requested_carrier':self.carrier,
+                                  'reason':'Source harness engine supports host; use firmware for Renode ELF execution.'})
+            return []
         if not self.available:
+            self.last_run.append({'status':'UNAVAILABLE', 'reason':'Host compiler unavailable'})
             return []
         root = Path(root)
 
@@ -150,6 +163,10 @@ class DynamicEngine:
         ok, _err = compile_harness(harness, workdir, include_dirs,
                                    gcc=self.gcc, fixer=self.fixer)
         if not ok:
+            self.last_run.append({"path": target_rel, "function": model.func.name,
+                                  "status": "SKIPPED", "reason": _err,
+                                  "validation": dict(harness.validation),
+                                  "fix_attempts": list(harness.fix_attempts)})
             return None          # 目标不可链接（修正闭环仍失败）→ 放弃该目标
 
         seen_oracles: set[str] = set()
@@ -157,6 +174,10 @@ class DynamicEngine:
             oracle, detail = self._run_oracle(harness, seed_idx)
             if oracle and oracle not in seen_oracles:
                 seen_oracles.add(oracle)
+                self.last_run.append({"path": target_rel, "function": model.func.name,
+                                      "status": "PASS", "mode": "host", "oracle": oracle,
+                                      "validation": dict(harness.validation),
+                                      "fix_attempts": list(harness.fix_attempts)})
                 return DynamicFinding(
                     func_name=model.func.name, target_rel=target_rel,
                     oracle=oracle.rsplit("-", 1)[-1],
@@ -169,6 +190,10 @@ class DynamicEngine:
                     def_line=model.func.def_line,
                     stubs=list(harness.stubs),
                 )
+        self.last_run.append({"path": target_rel, "function": model.func.name,
+                              "status": "PASS" if harness.reached_target else "SKIPPED",
+                              "validation": dict(harness.validation),
+                              "mode": "host", "fix_attempts": list(harness.fix_attempts)})
         return None
 
     def _run_oracle(self, harness: Harness, seed_idx: int) -> tuple[str, str]:
@@ -178,8 +203,20 @@ class DynamicEngine:
                 [str(harness.exe_path), harness.replay_seed(seed_idx)],
                 capture_output=True, text=True, timeout=self.run_timeout,
                 encoding="utf-8", errors="replace")
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as exc:
+            stderr = exc.stderr.decode("utf-8", errors="replace") if isinstance(exc.stderr, bytes) else exc.stderr or ""
+            harness.reached_target = TARGET_ENTER_MARKER in stderr
+            harness.validation["target_execution"] = "PASS" if harness.reached_target else "FAIL"
+            if not harness.reached_target:
+                return "", "Target execution marker missing before timeout"
             return _ORACLE_WATCHDOG, f"超过 {self.run_timeout}s 看门狗阈值"
+        except OSError:
+            harness.validation["target_execution"] = "ERROR"
+            return "", "Harness executable could not start"
+        harness.reached_target = TARGET_ENTER_MARKER in (proc.stderr or "")
+        harness.validation["target_execution"] = "PASS" if harness.reached_target else "FAIL"
+        if not harness.reached_target:
+            return "", "Target execution marker missing"
         rc = proc.returncode
         if rc != 0:
             ntstatus = rc & 0xFFFFFFFF
@@ -187,7 +224,7 @@ class DynamicEngine:
             detail = f"退出码 0x{ntstatus:08X}" + (f"（{kind}）" if kind else "")
             return _ORACLE_CRASH, detail
         if "runtime error" in (proc.stderr or ""):
-            excerpt = proc.stderr.strip().splitlines()[0][:120]
+            excerpt = next(line for line in proc.stderr.splitlines() if "runtime error" in line)[:120]
             return _ORACLE_UB, f"UBSan runtime error：{excerpt}"
         return "", ""
 

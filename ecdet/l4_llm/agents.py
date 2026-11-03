@@ -1,9 +1,8 @@
 """多智能体协同框架（方案 3.3.7，对应 P5、P7）。
 
-六类智能体编成（表 3-2）：规划 / 静态研判 / 动态测试 / 运行时监控 /
-修复 / 报告。每个智能体是"LLM 推理 + 专用工具集 + 确定性输出校验器"
-的组合体；采纳边界：LLM 负责语义决策，工具负责事实与验证，
-**LLM 不作最终裁决**——入报告的结论必须携带工具可复核的证据链。
+六类任务模块：规划 / 静态研判 / 动态测试 / 运行时监控 / 修复 / 报告。
+规划、调度、监控和汇聚使用确定性实现；LLM参与研判和修复建议。
+模型建议、引用核对和工具验证分别记录。
 
 协同协议要点（LangGraph 状态机的确定性 MVP 实现）：
   - 结构化交接：智能体间传递 AgentState（SARIF 引用 + 结构化字段），
@@ -30,7 +29,8 @@ from ecdet.l3_analysis.dynamic.carriers import pick_carrier, probe_carriers
 from ecdet.l3_analysis.engine import AnalysisTarget, collect_sources, run_all_engines
 from ecdet.l3_analysis.monitor import MonitorResult, RuntimeMonitor
 from ecdet.l4_llm.client import MockLlmClient, OpenAICompatClient
-from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient
+from ecdet.l4_llm.budget import BudgetedClient, LlmCallBudget
+from ecdet.l4_llm.fixer import FixProposer, FixVerifier, MockFixClient, fix_candidate_allowed
 from ecdet.l4_llm.triage import TriageRunner, TriageVerdict
 
 # 告警分层路由：note 级不过 LLM（成本控制，方案 3.3.7）
@@ -54,6 +54,7 @@ class AgentState:
     report_path: Path | None = None
     logs: list[str] = field(default_factory=list)
     llm_calls: int = 0
+    llm_budget: dict = field(default_factory=dict)
     seconds: float = 0.0
 
     def log(self, agent: str, msg: str) -> None:
@@ -70,9 +71,10 @@ class OrchestratorConfig:
     use_llm: bool = True                 # A1 关
     use_dynamic: bool = True             # A5 关
     single_agent: bool = False           # A6 开（单智能体串行）
-    auto_accept: bool = True             # 人工复核闸门：高危误报判定自动接受与否
+    auto_accept: bool = False            # 高危误报建议默认需人工复核
     max_fix_targets: int = 5
     triage_workers: int = 4
+    max_llm_calls: int = 64
 
 
 class _Planner:
@@ -91,6 +93,7 @@ class _Planner:
                 "monitor": cfg.use_dynamic,       # 监控依赖动态会话
             },
             "budget": {"max_fix_targets": cfg.max_fix_targets,
+                       "max_llm_calls": cfg.max_llm_calls,
                        "triage_workers": 1 if cfg.single_agent
                        else cfg.triage_workers},
         }
@@ -106,6 +109,11 @@ class Orchestrator:
                     svd_path: Path | None = None) -> AgentState:
         cfg = self.cfg
         state = AgentState(repo=Path(repo).resolve(), svd_path=svd_path)
+        if state.svd_path is None:
+            state.svd_path = next(iter(sorted(state.repo.rglob('*.svd'))), None)
+        elif not state.svd_path.is_absolute():
+            state.svd_path = state.repo / state.svd_path
+        budget = LlmCallBudget(cfg.max_llm_calls)
         t0 = time.perf_counter()
 
         # 1) 规划智能体
@@ -124,7 +132,8 @@ class Orchestrator:
         if cfg.use_llm and state.static_alerts:
             client = MockLlmClient() if cfg.mock else OpenAICompatClient(
                 base_url=cfg.llm_url, model=cfg.llm_model)
-            triage = TriageRunner(client=client)
+            triage = TriageRunner(client=BudgetedClient(client, budget, 'triage'),
+                                  auto_accept=cfg.auto_accept)
             ctx = self._build_ctx(state.repo, state.plan["files"])
             eligible = [a for a in state.static_alerts
                         if a.severity.value != _LLM_MIN_SEVERITY_SKIP]
@@ -138,7 +147,7 @@ class Orchestrator:
             for a, v in zip(eligible, verdicts):
                 a.triage = v.to_alert_props()      # 结论回写告警（与 triage_alerts 一致）
             state.triage_verdicts = verdicts
-            state.llm_calls += sum(v.llm_calls for v in verdicts)
+            state.llm_calls = budget.calls
             state.log("static-triage",
                       f"分诊扇出：研判 {len(eligible)} 条（note 级 "
                       f"{len(state.static_alerts) - len(eligible)} 条分层路由跳过），"
@@ -154,8 +163,8 @@ class Orchestrator:
             if cfg.use_llm:
                 from ecdet.l3_analysis.dynamic.llm_fix import LlmHarnessFixer
                 fixer = LlmHarnessFixer(
-                    MockLlmClient() if cfg.mock else OpenAICompatClient(
-                        base_url=cfg.llm_url, model=cfg.llm_model))
+                    BudgetedClient(MockLlmClient() if cfg.mock else OpenAICompatClient(
+                        base_url=cfg.llm_url, model=cfg.llm_model), budget, 'harness'))
             engine = DynamicEngine(fixer=fixer)
             carriers = probe_carriers()
             picked, picked_info = pick_carrier()
@@ -166,7 +175,8 @@ class Orchestrator:
                           f"选载 {picked.name}（保真档）；宿主档执行回路待固件语料")
             if engine.available:
                 state.dynamic_findings = engine.run(state.repo, facts)
-                state.llm_calls += getattr(fixer, "calls", 0)
+                state.llm_calls = budget.calls
+                state.log('dynamic-validation', json.dumps(engine.last_run, ensure_ascii=False))
                 for f_ in state.dynamic_findings:
                     state.static_alerts.append(f_.to_alert())
                 state.log("dynamic", f"动态通道：{len(state.dynamic_findings)} 个真触发"
@@ -195,12 +205,12 @@ class Orchestrator:
 
         # 6) 修复智能体（3.3.8）：真缺陷 → 补丁 → 工具验证闭环
         confirmed = [a for a in state.static_alerts
-                     if (a.triage or {}).get("verdict") == "TRUE_POSITIVE"]
+                     if (a.triage or {}).get("verdict") == "TRUE_POSITIVE" and fix_candidate_allowed(a)]
         if cfg.use_llm and confirmed:
             fix_client = MockFixClient() if cfg.mock else OpenAICompatClient(
                 base_url=cfg.llm_url, model=cfg.llm_model)
-            proposer = FixProposer(fix_client)
-            verifier = FixVerifier(state.repo)
+            proposer = FixProposer(BudgetedClient(fix_client, budget, 'patch'))
+            verifier = FixVerifier(state.repo, svd_path=state.svd_path)
             facts = [build_file_facts(p, (state.repo / p).read_text(
                 encoding="utf-8", errors="replace"))
                 for p in state.plan["files"]]
@@ -215,7 +225,7 @@ class Orchestrator:
                     proposal = verifier.verify(proposal, ctx, src)
                 state.fixes.append(proposal)
             accepted = sum(1 for p_ in state.fixes if p_.verified)
-            state.llm_calls += len(state.fixes)
+            state.llm_calls = budget.calls
             state.log("repair", f"修复建议 {len(state.fixes)} 条："
                                 f"验证闭环采纳 {accepted} / 拒绝 {len(state.fixes) - accepted}")
 
@@ -223,18 +233,30 @@ class Orchestrator:
         for a in state.static_alerts:
             if a.severity.value != "error":
                 continue
-            verdict = (a.triage or {}).get("verdict")
+            triage_props = a.triage or {}
+            verdict = triage_props.get("suggested_verdict") or triage_props.get("verdict")
             if verdict == "FALSE_POSITIVE":
+                accepted_fp = bool(cfg.auto_accept and triage_props.get('verdict') == 'FALSE_POSITIVE'
+                                   and triage_props.get('verified') is True
+                                   and triage_props.get('evidence_status') == 'PASS'
+                                   and not triage_props.get('review_pending'))
+                triage_props['review_pending'] = not accepted_fp
+                for result in state.triage_verdicts:
+                    if (result.rule_id,result.path,result.line) == (a.rule_id,a.location.path,a.location.line):
+                        result.review_pending = not accepted_fp
                 item = {"rule_id": a.rule_id, "path": a.location.path,
                         "line": a.location.line,
                         "llm_reason": (a.triage or {}).get("reason", ""),
-                        "auto_accepted": cfg.auto_accept}
+                        "auto_accepted": accepted_fp,
+                        "status": 'AUTO_ACCEPTED' if accepted_fp else 'PENDING'}
                 state.review_queue.append(item)
         if state.review_queue:
             state.log("gate", f"人工复核闸门：{len(state.review_queue)} 条高危误报判定"
                               f"{'（自动接受，记录留痕）' if cfg.auto_accept else '（挂起待人工）'}")
 
         state.seconds = time.perf_counter() - t0
+        state.llm_budget = budget.snapshot()
+        state.llm_calls = budget.calls
         state.log("reporter", f"汇聚完成：告警 {len(state.static_alerts)}，"
                               f"动态 {len(state.dynamic_findings)}，"
                               f"复核 {len(state.review_queue)}，"
@@ -243,7 +265,5 @@ class Orchestrator:
 
     @staticmethod
     def _build_ctx(repo: Path, files: list[str]):
-        facts = [build_file_facts(p, (repo / p).read_text(encoding="utf-8",
-                                                          errors="replace"))
-                 for p in files]
-        return finalize_facts(facts)
+        from ecdet.l4_llm.triage import load_project_context
+        return load_project_context(repo)

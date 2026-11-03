@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "runs": [
+    {
+      "id": 10,
+      "task_status": "done",
+      "kind": "constraints",
+      "backend_status": "FINDING"
+    },
+    {
+      "id": 11,
+      "task_status": "done",
+      "kind": "fuzz",
+      "backend_status": "FINDING"
+    },
+    {
+      "id": 12,
+      "task_status": "done",
+      "kind": "firmware",
+      "backend_status": "PASS"
+    }
+  ],
+  "sarif_and_full_result_downloads": {
+    "results.sarif": {
+      "sha256": "fa23c66dacda4104e7f5c1e4515ac52de7c582c4f7d95db43e248fc766bcdc39"
+    },
+    "analysis.json": {
+      "sha256": "6e5bd03185be0c2fef14346bc35aed5f96b2aae680b3c6d1435ea16617d08efc"
+    }
+  },
+  "compile_log_download": "PASS",
+  "candidate_vs_reproduced_labels": "PASS"
+}

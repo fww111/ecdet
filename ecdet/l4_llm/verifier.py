@@ -5,7 +5,7 @@ LLM 引用的行号必须：
   2. 对应行为真实代码 —— 以词法净化行判空（注释/字符串内容已被遮蔽为空白），
      避免以 `*` 开头的解引用语句被误判为注释延续行；
   3. 包含告警行本身（研判必须指向告警位置）。
-未通过核对的 TRUE_POSITIVE 一律降级 NEEDS_REVIEW。
+任一引用不合法时整体失败。调用方对TP和FP使用相同门槛。
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ def verify_cited_lines(cited: list[int], lex: LexResult,
     has_function=False 时（告警位于全局声明等非函数位置），
     区间约束退化为整个文件。
     """
-    if not cited:
+    if not isinstance(cited, list) or not cited:
         return False, []
     if has_function:
         lo, hi = func_start, func_end
@@ -30,10 +30,10 @@ def verify_cited_lines(cited: list[int], lex: LexResult,
         lo, hi = 1, lex.n_lines
     ok: list[int] = []
     for ln in cited:
-        if not isinstance(ln, int) or not (lo <= ln <= hi):
-            continue
+        if type(ln) is not int or not (lo <= ln <= hi):
+            return False, []
         if not lex.line_text(ln).strip():       # 净化行空 = 纯注释/字符串
-            continue
+            return False, []
         ok.append(ln)
     contains_alert = alert_line in ok
     return (len(ok) > 0 and contains_alert), ok

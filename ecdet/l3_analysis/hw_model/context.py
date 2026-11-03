@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
@@ -24,6 +25,7 @@ _CAST_PTR_RE = re.compile(r"\(\s*[\w\s]+\s*\*\s*\)\s*(.+?)\s*$")
 _EXPR_TOKEN_RE = re.compile(
     r"0[xX][0-9a-fA-F]+[uUlL]*|\d+[uUlL]*|[A-Za-z_]\w*|[+\-*/%<>&|()~]+")
 _SVD_ERRORS = (ET.ParseError, OSError, ValueError)
+_LOG = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,11 +42,15 @@ class HwContext:
 def build_hw_context(ctx: ProjectContext,
                      svd_path: Path | None = None) -> HwContext:
     regmap = None
-    if svd_path and Path(svd_path).exists():
+    if svd_path:
         try:
             regmap = parse_svd(svd_path)
-        except _SVD_ERRORS:
+        except _SVD_ERRORS as exc:
+            _LOG.error("SVD load failed for %s; MMIO checks skipped: %s", svd_path, exc)
             regmap = None
+        else:
+            _LOG.info("SVD loaded using %s: %d registers", regmap.parser_backend,
+                      sum(len(regs) for regs in regmap.by_peripheral.values()))
     hw = HwContext(regmap=regmap, isr_names=collect_isr_names(ctx))
 
     # 全工程数值宏表（含跨文件 BASE 宏），顺序：文件序 → 行序

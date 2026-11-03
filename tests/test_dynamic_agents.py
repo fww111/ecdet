@@ -139,7 +139,7 @@ def test_dynamic_alerts_in_function_range(dyn_root):
 # ---------------- 运行时监控（3.3.6） ----------------
 
 def test_monitor_probes_and_regrade(dyn_root):
-    """Suspected 级嫌疑 → 定向探针 → 崩溃命中 → 升级 Detected。"""
+    """A divide-by-zero event does not prove a suspected array-bound defect."""
     facts = _facts(dyn_root)
     ctx = finalize_facts(facts)
     func = next(f for f in ctx.facts[0].functions if f.name == "scale_value")
@@ -156,9 +156,8 @@ def test_monitor_probes_and_regrade(dyn_root):
         engine=DynamicEngine(max_functions=8, max_seeds=17)).run(
         dyn_root, facts, [suspected])
     assert result.events, "定向探针应命中崩溃"
-    assert suspected in result.upgraded
-    assert suspected.provenance == Provenance.DETECTED
-    assert any("运行时监控升级" in e.message for e in suspected.evidence)
+    assert suspected not in result.upgraded
+    assert suspected.provenance == Provenance.SUSPECTED
 
 
 def test_monitor_no_probe_skipped(dyn_root):
