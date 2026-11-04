@@ -48,7 +48,7 @@ class FunctionInfo:
             if t.kind == "ident" and i + 1 < len(toks) and toks[i + 1].value == "(":
                 # 排除声明形态：标识符前是类型关键字（如 `unsigned char name(`）
                 prev = toks[i - 1].value if i > 0 else ""
-                if prev not in _TYPE_KEYWORDS:
+                if prev not in _TYPE_KEYWORDS and prev not in {".", "->"}:
                     out.append((t.value, t.line))
         return out
 
@@ -149,7 +149,9 @@ def _try_function_at(toks: list[CToken], brace_idx: int) -> FunctionInfo | None:
             # `void (*fp)(void) {` 不存在；`int f(void); int g(void) {` —— prev 为 ; 合法
             pass
         params, param_types = _param_decls(toks[open_paren + 1 : close_paren])
-        sig_start = max(0, k - 6)
+        sig_start = k - 1
+        while sig_start > 0 and toks[sig_start - 1].value not in {";", "}", "{"}:
+            sig_start -= 1
         signature = " ".join(t.value for t in toks[sig_start : close_paren + 1])
         return FunctionInfo(
             name=name_tok.value,

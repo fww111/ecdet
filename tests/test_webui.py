@@ -448,7 +448,8 @@ def test_targeted_fix_by_alert_ids(ui):
             break
         time.sleep(0.5)
     assert data["job"]["status"] == "done", data["job"].get("error")
-    assert len(data["proposals"]) == 2, "只应生成勾选的 2 条建议"
+    # A selected rule/location can carry evidence from multiple engines.
+    assert {p['alert_id'] for p in data['proposals']} == {str31['id'], arr30['id']}
     assert {p["rule_id"] for p in data["proposals"]} ==         {"CERT C STR31-C", "CERT C ARR30-C"}
 
     # v1.2：补丁记录回填 alert_id，告警抽屉按 id 匹配展示

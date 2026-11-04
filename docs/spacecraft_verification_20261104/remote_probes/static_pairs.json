@@ -1,0 +1,78 @@
+[
+  {
+    "id": "R-OBDH-01",
+    "variant": "original",
+    "alerts": [
+      {
+        "rule": "CERT C ARR30-C",
+        "file": "src/ccsds.c",
+        "line": 71,
+        "message": "数组frame_body容量256，下标256的当前范围(256, 256)未被限制在合法区间"
+      },
+      {
+        "rule": "CERT C STR31-C",
+        "file": "src/ccsds.c",
+        "line": 105,
+        "message": "复制目标out->data容量256，长度及偏移的当前上界65529超出容量；需校验目标边界"
+      }
+    ]
+  },
+  {
+    "id": "R-OBDH-01",
+    "variant": "guarded",
+    "alerts": [
+      {
+        "rule": "CERT C ARR30-C",
+        "file": "src/ccsds.c",
+        "line": 71,
+        "message": "数组frame_body容量256，下标256的当前范围(256, 256)未被限制在合法区间"
+      }
+    ]
+  },
+  {
+    "id": "R-TTC-01",
+    "variant": "original",
+    "alerts": [
+      {
+        "rule": "CERT C ARR30-C",
+        "file": "src/tc_decode.c",
+        "line": 38,
+        "message": "数组s_opcode_table容量16，下标16的当前范围(16, 16)未被限制在合法区间"
+      },
+      {
+        "rule": "CERT C STR31-C",
+        "file": "src/tc_decode.c",
+        "line": 63,
+        "message": "复制目标payload容量192，长度及偏移的当前上界65535超出容量；需校验目标边界"
+      },
+      {
+        "rule": "CERT C ARR30-C",
+        "file": "src/tc_decode.c",
+        "line": 81,
+        "message": "数组frame->raw容量192，下标TC_HDR_LEN + i的当前范围(4, 65532)未被限制在合法区间"
+      }
+    ]
+  },
+  {
+    "id": "R-TTC-01",
+    "variant": "guarded",
+    "alerts": [
+      {
+        "rule": "CERT C ARR30-C",
+        "file": "src/tc_decode.c",
+        "line": 38,
+        "message": "数组s_opcode_table容量16，下标16的当前范围(16, 16)未被限制在合法区间"
+      }
+    ]
+  },
+  {
+    "id": "R-EPS-01",
+    "variant": "original",
+    "alerts": []
+  },
+  {
+    "id": "R-EPS-01",
+    "variant": "guarded",
+    "alerts": []
+  }
+]

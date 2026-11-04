@@ -1,0 +1,3019 @@
+{
+  "runs": [
+    {
+      "run": "full_suite",
+      "cases": 735,
+      "counts": {
+        "PASS": 713,
+        "FAIL": 22
+      }
+    },
+    {
+      "run": "affected_final",
+      "cases": 131,
+      "counts": {
+        "PASS": 123,
+        "FAIL": 8
+      }
+    },
+    {
+      "run": "targeted_final",
+      "cases": 168,
+      "counts": {
+        "PASS": 168
+      }
+    },
+    {
+      "run": "recovery",
+      "cases": 62,
+      "counts": {
+        "PASS": 62
+      }
+    },
+    {
+      "run": "final_unit",
+      "cases": 172,
+      "counts": {
+        "PASS": 172
+      }
+    },
+    {
+      "run": "final_unit_v2",
+      "cases": 173,
+      "counts": {
+        "PASS": 173
+      }
+    }
+  ],
+  "collected_count": 742,
+  "latest_by_case": {
+    "tests/test_abstract_interp.py::test_propagate_basic": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_proven_index_out_of_bounds": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_proven_negative_index": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_in_bounds_proven_no_alert": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_unknown_index_no_alert": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_literal_index_still_detected_not_proven": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_esbmc_failed_to_proven": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_esbmc_successful_no_alert": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_abstract_interp.py::test_gjb_map_consistent": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_advanced_command_help[fuzz]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_advanced_command_help[constraints]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_advanced_command_help[firmware]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_scan_exposes_constraint_backend": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_invalid_run_parameters_are_rejected_before_execution[fuzz-arguments0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_invalid_run_parameters_are_rejected_before_execution[constraints-arguments1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_invalid_run_parameters_are_rejected_before_execution[firmware-arguments2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_invalid_run_parameters_are_rejected_before_execution[firmware-arguments3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_unavailable_renode_has_no_false_alert": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_constraint_command_preserves_model_and_sarif_metadata": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_advanced_cli.py::test_file_level_solver_error_is_not_hidden_by_an_earlier_unsat": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_carrier_selection.py::test_explicit_renode_is_not_silently_executed_as_host": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_binary_override_is_used_for_availability_and_execution": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_running_adapter_normalizes_project_paths_without_rebinding_external_files": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_parse_both_streams[stdout]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_parse_both_streams[stderr]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_parse_absolute_paths[C:\\\\work dir\\\\src\\\\a.c-C:/work dir/src/a.c]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_parse_absolute_paths[D:/\\u9879\\u76ee/src/a.c-D:/\\u9879\\u76ee/src/a.c]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_parse_absolute_paths[/home/user/src/a.c-/home/user/src/a.c]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_duplicate_diagnostics_across_streams_are_merged": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_different_checks_messages_and_columns_are_retained": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_noise_and_empty_output_are_ignored": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_run_retains_stderr_diagnostics": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_missing_binary_is_reported": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_timeout_is_reported_and_partial_diagnostics_retained": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_compile_failure_is_reported_and_diagnostics_retained": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_nonzero_exit_without_compiler_error_is_reported": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_startup_error_is_reported": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_warning_text_containing_error_is_not_a_compiler_failure": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_successful_zero_diagnostics_is_distinct_from_failure": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_invalid_compilation_database_is_reported[not json]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_invalid_compilation_database_is_reported[{}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_invalid_compilation_database_is_reported[[{\"file\": 7}]]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy.py::test_missing_compilation_database_is_reported": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy_live.py::test_explicit_missing_tool_is_not_reported_as_pass": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy_live.py::test_real_clang_tidy_positive_negative_and_adapter": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_clang_tidy_live.py::test_explicit_binary_overrides_existing_environment_and_restores_it": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_scan_demo_rtos": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_scan_vulnerable_single_file": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_exit_code_reflects_errors": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_rules_listing": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_report_from_sarif": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_scan_svd_demo": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_cli_triage_mock": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_cli_e2e.py::test_init_ccdb_keil": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_native_metadata_full_path_and_sarif_roundtrip": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_invalid_report_is_not_a_clean_scan": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_checker_defaults_are_honored": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_inactive_native_checker_is_not_marked_compliant": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_import_native_sarif_preserves_path_and_hash": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_existing_database_preserves_quoted_commands": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_makefile_fallback_retains_flag_prefixes_and_macro_values": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_partial_baseline_preserves_unscanned_findings": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_persistent_runner_ctu_context_and_failures[a.c-0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_persistent_runner_ctu_context_and_failures[a.c-3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_persistent_runner_ctu_context_and_failures[api.h-0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_persistent_runner_ctu_context_and_failures[api.h-3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_make_dependencies_keep_spaces_and_windows_separators": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_source_only_incremental_database_keeps_ctu_providers": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_native_gcc_sarif_windows_paths_are_not_prefixed_twice": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_web_store_preserves_analyzer_metadata": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker.py::test_timeout_retains_partial_diagnostics": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_configuration_matches_original_analysis": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_codechecker_acceptance_requires_native_success": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_codechecker_unreproduced_native_baseline_is_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_explicit_compile_skip_never_counts_as_verified": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_exception_is_isolated_to_the_proposal": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_baseline_must_match_engine_rule_and_exact_location[wrong0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_baseline_must_match_engine_rule_and_exact_location[wrong1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_baseline_must_match_engine_rule_and_exact_location[wrong2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_baseline_must_match_engine_rule_and_exact_location[wrong3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_success_preserves_original_project_and_workspace": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_error_instance_count_is_not_hidden_by_same_fingerprint": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_existing_instance_with_changed_report_hash_is_not_new": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_native_stale_workspace_cannot_be_accepted": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_automatic_svd_is_shared_by_builtin_and_native_replay": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_fix_merge.py::test_deep_project_snapshot_keeps_generated_build_inputs": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_subprocess_import.py::test_child_environment_preserves_explicit_pythonpath": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_subprocess_import.py::test_package_import_from_unrelated_workdir": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_web_merge.py::test_scan_keeps_cpp_native_metadata_and_analysis_configuration": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_web_merge.py::test_repair_runs_native_scans_but_never_bypasses_shared_verifier": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_windows_tools.py::test_llvm_mingw_wrapper_uses_same_version_cc1_driver": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_windows_tools.py::test_normal_clang_driver_is_preserved": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_windows_tools.py::test_windows_drive_separator_preserves_analyzer_name": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_codechecker_windows_tools.py::test_explicit_clangsa_choice_is_preserved": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_guarded_array_rejected_negative_is_sat": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsigned_guard_has_no_model_oob": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_early_returns_and_else_paths": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_merge_preserves_different_local_values": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_fixed_width_parameters_and_integer_promotion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsigned_32_add_wrap_is_preserved": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_signed_overflow_does_not_become_a_safety_proof": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_signed_add_valid_input_found_with_overflow_excluded": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[for(int j=0;j<n;j++) a[j]=0; return a[n];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[unknown(); return a[n];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[return a[n/2];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[return a[n<<1];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[int *p=a; return a[n];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[return a[(unsigned)n];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unsupported_never_silently_ignored[volatile int x=0; return a[n];]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_compound_assignment_rejects_whole_function_not_earlier_partial": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_unknown_solver_resource_limit_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_utf8_location_and_source_identity": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_function_filter_and_missing_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_preprocessing_and_parse_errors_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_wrong_signedness_comparison_uses_usual_conversion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_negative_uint8_conversion_uses_modulo_before_promotion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_short_circuit_avoids_unused_overflow_condition": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_global_type_override_and_uninitialized_scalar_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_constant_oob_without_parameters": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_multiple_accesses_exactly_located": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_prior_undefined_access_blocks_later_unsat_claim": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_block_local_does_not_escape_scope": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_outer_local_assignment_survives_inner_block": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_implementation_defined_narrowing_is_not_modelled": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_missing_dependency_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_invalid_budget[kwargs0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_invalid_budget[kwargs1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_constraints.py::test_invalid_budget[kwargs2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_function_detection_basic": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_struct_and_initializer_not_functions": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_multiline_function_body": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_switch_with_nested": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_array_decls": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_cstruct.py::test_calls_in_body": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_line_comment_masked": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_block_comment_keeps_line_numbers": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_string_content_masked_but_kind_kept": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_pp_lines_collected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_pp_directive_only_at_line_start": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_number_suffixes": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ctokens.py::test_escaped_quote_in_string": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_extract_functions_slices": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_fingerprint_ignores_comments_and_ws": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_fingerprint_distinguishes_code": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_find_fix_commits": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_fetch_ghsa_parses_and_maps": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_ghsa_to_advisories_aligns_git": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_build_samples_end_to_end": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dataset.py::test_write_dataset_outputs": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(void){char b[20]; sprintf(b,\"%d\",1); snprintf(b,sizeof(b),\"%s\",\"x\");}-CERT C FIO30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[static const char *prompt=\"ready\"; void f(void){printf(prompt);}-CERT C FIO30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[static int helper(void){return 0;} static void f(void){helper();}-MISRA C:2012 8.7]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[typedef struct {int count;} A; static void f(A *p){p->count=0;}-MISRA C:2012 8.7]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[typedef struct {int count;} A; void f(A *p){p->count=0;}-MISRA C:2012 8.9]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(int x){switch(x){case 1: if(x){x++;} break; default: return;}}-MISRA C:2012 16.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(int x){switch(x){case 1: {if(x){x++;} break;} default: return;}}-MISRA C:2012 16.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(int x){switch(x){case 1: again: x++; break; default: return;}}-MISRA C:2012 16.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(int axis){static const float scale[3]={1,2,3};float x; x=2 * scale[axis];}-MISRA C:2012 18.8]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(unsigned char *data){unsigned short x=(unsigned short)data[0];}-MISRA C:2012 11.4]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[typedef struct {unsigned int value;} A; void f(A *p){unsigned long x=(unsigned long)p->value;}-MISRA C:2012 11.4]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void a(char *value){} void b(unsigned value){unsigned short x=(unsigned short)value;}-MISRA C:2012 11.4]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(void){char buf[12]; const unsigned char *p=(const unsigned char *)buf;}-MISRA C:2012 11.4]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(void){int a[3];int i;for(i=0;i<3;i++){a[i]=0;} i=3;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(void){int a[3];int i=1;a[i]=0;i=5;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[#include <math.h>\\nvoid f(float x){if(x && isfinite(x) && fabsf(x)>1){}}-MISRA C:2012 13.5]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[#include <stdio.h>\\n#include <math.h>\\nvoid f(void *s){if(!feof(s)){float x=fabsf(1);}}-MISRA C:2012 17.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[typedef struct {void (*run)(void);} T; void f(T *p){p->run();}-MISRA C:2012 17.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_header_macro_references": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_conditional_out_of_bounds_is_not_a_proof": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(char *input){printf(input);}-CERT C FIO30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(char *p){unsigned long x=(unsigned long)p;}-MISRA C:2012 11.4]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(int x){switch(x){case 1: if(x){break;} default: x++;}}-MISRA C:2012 16.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(int n){int a[n];}-MISRA C:2012 18.8]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(void){int a[3];int i=5;a[i]=0;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[void f(void){missing_api();}-MISRA C:2012 17.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_true_findings_remain[int mutate(void); void f(int x){if(x && mutate()){}}-MISRA C:2012 13.5]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_open_critical_region_is_not_outside": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_input_model_types_from_parser": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_param_specials_cover_zero": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_harness_generate_and_compile": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_harness_stub_loop_for_undefined_symbols": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_poc_replay_seed_consistent": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_dynamic_engine_triggers": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_dynamic_alerts_in_function_range": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_monitor_probes_and_regrade": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_monitor_no_probe_skipped": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_orchestrate_multi_agent_full_pipeline": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_orchestrate_single_agent_parity": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_agents.py::test_orchestrate_a1_no_llm": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_extract_patched_harness_plain": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_extract_patched_harness_fence": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_extract_patched_harness_invalid": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_llm_fixer_recovers_uncompilable_harness": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_no_fixer_fails_gracefully": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_engine_with_fixer_still_finds_crashes": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_carrier_probe_reports_all_tiers": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_pick_carrier_prefers_highest_throughput": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_fixers.py::test_pick_carrier_explicit_unavailable": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_compiling_repair_cannot_remove_harness_contract[empty_main]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_compiling_repair_cannot_remove_harness_contract[delete_call]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_compiling_repair_cannot_remove_harness_contract[change_inputs]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_compiling_repair_cannot_remove_harness_contract[remove_observer]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_retry_uses_latest_compile_log": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_endpoint_failure_is_local": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_response_contract_is_strict[response0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_response_contract_is_strict[response1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_response_contract_is_strict[{\"patched_harness\": \"int x;\", \"changes\": 42}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_harness_response_contract_is_strict[{\"patched_harness\": \"int x;\"}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_generic_crash_does_not_prove_static_defect": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_other_file_same_function_does_not_upgrade": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_different_defect_or_line_does_not_upgrade": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_exact_event_association_can_upgrade": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_dynamic_safety.py::test_missing_target_execution_marker_is_not_a_finding": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_resolve_type_aliases": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_integer_promotion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_usual_arith_conversions": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_literal_type_smallest_fitting": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_type_table_globals_and_locals": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_signedness_change": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_rank_narrowing": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_negative_literal_to_unsigned": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_out_of_range_literal": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_promoted_binary_to_unsigned": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_104_mixed_signedness_operands": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_10x_clean_code_no_alerts": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_ectypes.py::test_103_cast_is_compliant_path": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_engine_status.py::test_scheduler_records_unavailable_engine": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_engine_status.py::test_direct_adapter_records_unavailable_engine": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_engine_status.py::test_external_diagnostics_receive_report_rule_metadata": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_gt_generation": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_load_ground_truth_jsonl": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_metrics_perfect": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_ablation_a5_no_dynamic_misses_dyn_defects": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_ablation_a6_single_agent_runs": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_metrics_synthetic": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_ablation_a1_no_llm_keeps_fp": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_ablation_a2_no_hw_misses_hw_defects": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_ablation_a3_no_rag_still_runs": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_baseline_unavailable_marked": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_render_markdown_table": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_eval.py::test_builtin_engine_present_in_defaults": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_missing_compiler_never_counts_as_pass": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_external_engine_is_unsupported_not_silently_clean": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_function_identity_or_obvious_logic_removal_is_rejected[int unrelated(void) { return 0; }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_function_identity_or_obvious_logic_removal_is_rejected[void f(int changed) { char b[4]; strncpy(b,\"too long\",3); }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_function_identity_or_obvious_logic_removal_is_rejected[void f(void) { }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_function_identity_or_obvious_logic_removal_is_rejected[void f(void) { return; }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_same_line_outside_function_edit_is_rejected[int outside;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_same_line_outside_function_edit_is_rejected[void other(void) {}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_removing_only_executable_write_is_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_line_shifts_do_not_turn_existing_error_into_new_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_compile_check_uses_matching_compilation_database": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_unreproduced_alert_is_not_verified": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_new_second_error_of_existing_rule_is_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_hardware_rule_is_replayed_with_svd": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_valid_hardware_fix_replays_original_and_compiles": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[None-True-UNCONFIRMED_CANDIDATE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[triage1-True-EVIDENCE_CHECKED_CANDIDATE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[triage2-False-REVIEW_REQUIRED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[triage3-False-REVIEW_REQUIRED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[triage4-False-REVIEW_REQUIRED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_candidate_gate_does_not_promote_untriaged_alerts[triage5-False-REVIEW_PENDING]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_truncated_function_does_not_become_replacement": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_compiler_adapter_exception_is_scoped_to_proposal": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_fix_transport_failure_becomes_failed_proposal": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_bad_fix_responses_are_rejected[None]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_bad_fix_responses_are_rejected[content1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_bad_fix_responses_are_rejected[123]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_bad_fix_responses_are_rejected[{\"patched_function\":\"void f(void){}\",\"explanation\":1}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_full_project_context_is_preserved": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_replay_uses_current_helper_not_stale_context": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_target_snapshot_must_match_current_disk": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fix_contract.py::test_memory_only_context_source_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_apply_patch_replaces_region": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_extract_patched_function_plain": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_extract_patched_function_with_fence": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_extract_patched_function_invalid": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_fix_str31_verified": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_fix_no_change_rejected": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_fix_not_in_function_rejected": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_fix_proposer_unparsable_output": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_fix_alert_gone_check": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_fixer.py::test_native_fix_validation_preserves_project_and_rejects_regressions": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_parse_svd": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_fold_expr": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_ro_write": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_wo_read": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_rw_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_macro_arith_base": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_direct_address": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_mmio_no_svd_skipped": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_race_and_volatile": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_race_volatile_var_no_volatile_alert": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_blocking": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_fromisr_variant_hint": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_vector_table_isr_identified": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_non_fromisr_variant": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_fromisr_variant_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_critical_pair_unmatched_enter": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_critical_pair_unmatched_exit": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_critical_pair_balanced_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_async_unsafe": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_isr_async_safe_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_volatile_rmw_in_task": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_volatile_rmw_in_critical_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_bitfield_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_bitfield_in_range_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_bitfield_same_name_local_var_not_flagged": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_bitfield_same_name_different_structs": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_hw_model.py::test_bitfield_pointer_member": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_incremental.py::test_impact_set_call_closure": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_incremental.py::test_impact_set_include_closure": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_incremental.py::test_impact_set_transitive_include": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_incremental.py::test_baseline_diff_classification": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_incremental.py::test_baseline_roundtrip": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_parse_keil_uvprojx": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_parse_iar_ewp": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_reconstruct_directory_scan": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_reconstruct_keil_project": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_sarif_roundtrip": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_aggregate_dedup_same_location": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_aggregate_equivalence_merge": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_aggregate_same_cwe_not_merged_without_equivalence": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_aggregate_declared_equivalence_merge": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_compliance_records": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l1_l2_l5.py::test_stats_fields": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_parse_verdict_json_valid": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_parse_verdict_json_invalid": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_cited_lines_pass": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_cited_lines_out_of_range": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_cited_line_deref_star_not_comment": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_cited_comment_line_rejected": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_cited_must_contain_alert_line": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_verify_file_range_fallback": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_slicer_function_closure": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_slicer_budget_truncates": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_slicer_missing_file": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_kb_lookup": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_mock_alert_collection_ignores_generated_verification_workspaces": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_triage_mock_full_pipeline": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_triage_downgrade_on_bad_citation": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_triage_false_positive_path": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_triage_missing_context_file": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_l4_llm.py::test_sarif_roundtrip_with_triage": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_invalid_budgets[arguments0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_invalid_budgets[arguments1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_invalid_budgets[arguments2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_missing_compiler_has_no_findings": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_outside_project_source_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[complete-COMPLETED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[compile_fail-COMPILE_ERROR]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[timeout-TIMEOUT]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[os_error-ERROR]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[no_artifact-UNVERIFIED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[replay_fail-UNVERIFIED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_failure_and_incomplete_runs_never_emit_confirmed_findings[no_coverage-UNVERIFIED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_replayed_artifact_is_required_for_detected_evidence": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_corpus_directories_and_relative_files": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_oversize_corpus_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_coverage_receipt_uses_instrumented_counts": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_unknown_source_location_does_not_invent_a_precise_line": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_harness_template_rejects_invalid_function_names[x;return 0;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_harness_template_rejects_invalid_function_names[f()]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_libfuzzer.py::test_harness_template_rejects_invalid_function_names[]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_budget.py::test_budget_shared_across_triage_retry_patch_and_harness": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_budget.py::test_concurrent_budget_does_not_overspend": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_budget.py::test_failure_consumes_attempt_and_does_not_record_prompt_or_secrets": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_budget.py::test_zero_budget_is_valid_and_negative_budget_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_budget.py::test_evaluation_uses_the_same_total_call_limit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_missing_configuration_does_not_send_requests": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_fake_results_are_labelled_and_expectations_not_sent": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_all_transport_failures_are_error_not_model_acceptance": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_all_malformed_responses_are_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_settings_are_read_only_and_secrets_not_saved": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_total_calls_still_bounded": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_cli_rejects_key_argument_without_echoing_it": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_llm_endpoint_validation.py::test_secret_echo_in_model_reason_is_redacted": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_package_entrypoint.py::test_module_help_entrypoint": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_package_entrypoint.py::test_module_rules_entrypoint": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_valid_uart_and_completion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_uart_failure_emits_independent_alert": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_stdout_or_script_echo_cannot_satisfy_uart": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_incomplete_script_never_passes[]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_incomplete_script_never_passes[BOOT\\nOK\\n]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_missing_uart_is_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_nonzero_exit_not_a_firmware_bug": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_timeout_is_recorded_not_a_firmware_bug": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_missing_runtime": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes4]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes5]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes6]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes7]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes8]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes9]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes10]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_run_arguments[changes11]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_elf_and_platform": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_timeout[0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_timeout[-1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_timeout[inf]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_invalid_timeout[True]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_independent_runs_cannot_reuse_uart": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_configured_runtime_used_consistently": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_paths_with_spaces": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_renode.py::test_changed_firmware_cannot_be_a_verified_result": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_review_gates.py::test_high_risk_fp_default_changes_state_to_review": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_review_gates.py::test_explicit_acceptance_is_recorded": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_review_gates.py::test_budget_exhaustion_returns_review_and_real_call_count": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_review_gates.py::test_invalid_fp_never_becomes_auto_accepted_queue_item": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_goto": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_goto_backward": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_multi_return": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_switch_default_and_two_cases": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_recursion": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_strcpy_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_array_index": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_truncation": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_gets": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_scanf_unbounded": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_format_string": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_rand": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_macro_parens": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_macro_side_effect": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_logic_side_effect_inc": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_logic_side_effect_call": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_for_counter_modified": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_reserved_ident": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_banned_atoi": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_stdio_printf": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_unused_macro": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_unsigned_suffix": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_unused_param": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_implicit_decl": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_single_tu_var": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_clean_code_no_alerts": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_macro_parens_ok_not_flagged": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_scanf_with_width_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_array_decl_line_not_flagged_as_access": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_strcpy_fitting_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_isr_not_flagged_as_single_tu": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_implicit_decl_header_prototype_resolved": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_bitfield_type": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_bitfield_type_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_ptr_to_int": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_int_to_ptr": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_qualifier_removed": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_ptr_type_mismatch": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_ptr_cast_same_type_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_overflow_signed": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_wrap_unsigned": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_arithmetic_in_range_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_shift_count_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_shift_count_literal": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_shift_count_boundary_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_sizeof_side_effect": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_sizeof_plain_operand_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_invariant_condition": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_unreachable_after_return": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_switch_case_fallthrough": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_return_local_address": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_vla": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_fixed_array_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_pp_condition_not_boolean": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_pp_stringize_operator": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_copy_source_oob": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_copy_source_in_bounds_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_assignment_in_if": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_free_address_of_object": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_free_array": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_hardcoded_secret": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_secret_in_comment_not_flagged": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_large_stack_array": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_small_stack_array_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_external_object_defined_twice": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_external_object_static_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_goto_forward_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_memcpy_int_array_in_bounds_ok": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_memcpy_uint16_array_oob": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_local_pointer_qual_cast": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_global_pointer_qual_cast": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_local_ptr_to_int": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_expr_precedence_no_false_positive": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_expr_precedence_real_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_expr_paren_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_static_local_addr_not_flagged": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_division_precedence_no_false_positive": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_remainder_precedence_no_false_positive": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_rules.py::test_rule_const_division_real_overflow": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_svd_integration.py::test_w1c_participates_in_hardware_ablation": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_integration.py::test_enhanced_demo_expands_all_registers": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_integration.py::test_enhanced_scan_reports_hardware_evidence": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_field_metadata_and_write_mask[builtin]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_field_metadata_and_write_mask[cmsis-svd]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_optional_dependency_fallback_is_visible": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_missing_explicit_backend_is_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_builtin_refuses_partial_complex_result[cluster]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_builtin_refuses_partial_complex_result[dim]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_builtin_refuses_partial_complex_result[derivedFrom]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_enhanced_expansion": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_invalid_svd_is_error[<device>]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_invalid_svd_is_error[<wrong/>]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_invalid_svd_is_error[content2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_context_records_failed_svd[True]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_context_records_failed_svd[False]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_parser.py::test_original_sample_addresses": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_namespace_has_same_register_map[builtin]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_namespace_has_same_register_map[cmsis-svd]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-duplicate_peripheral]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-unknown_access]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-zero_size]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-negative_offset]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-negative_stride]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-zero_dim]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-negative_dim]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-short_dim_index]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-undefined_derived]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[builtin-cyclic_derived]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-duplicate_peripheral]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-unknown_access]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-zero_size]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-negative_offset]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-negative_stride]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-zero_dim]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-negative_dim]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-short_dim_index]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-undefined_derived]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_svd_validation.py::test_invalid_metadata_is_rejected[cmsis-svd-cyclic_derived]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_functions_have_precise_multiline_and_same_line_ranges": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_utf8_columns_are_character_columns_bytes_remain_exact": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_calls_exclude_comments_strings_and_mark_parameter_or_local_shadow": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_function_like_macros_are_not_confirmed_direct_calls": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_conditional_definitions_and_calls_are_explicit_not_active_branches": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_conditions_and_assignments_have_source_spans": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_function_prototype_does_not_shadow_direct_call": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_global_function_pointer_not_resolved_as_a_direct_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_function_returning_pointer_uses_its_own_parameter_list": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_nested_function_scope_is_not_published_as_global_index": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_backend_runtime_failure_is_not_silently_basic": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_recovered_tree_not_published_as_reliable_index[void f( { x(); }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_recovered_tree_not_published_as_reliable_index[void f(void) { if (1) return;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_recovered_tree_not_published_as_reliable_index[void f(void) { int x = ; }]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_optional_dependency_unavailable_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_basic_selection_does_not_claim_ast": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_unknown_backend_is_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_backend.py::test_empty_translation_unit_is_valid": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_file_facts_preserve_legacy_index_and_original_bytes": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_same_line_function_selection_uses_column_and_exact_bytes": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_same_line_callee_is_not_dropped_by_same_line_identity": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_unicode_prefix_does_not_shift_column_selection": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_ast_range_includes_multiline_return_type": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_pointer_parameter_call_does_not_resolve_same_named_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_member_call_is_unresolved_instead_of_expanding_global_name": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_macro_call_does_not_expand_same_named_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_unavailable_backend_fallback_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_parse_error_fallback_is_explicit": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_triage_records_backend_and_exact_source_ranges": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_crlf_window_spans_still_reference_original_bytes": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_zero_budget_never_publishes_nonexistent_spans": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_ambiguous_same_line_position_does_not_guess_a_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_static_word_in_comment_does_not_hide_global_callee": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_conditional_definition_is_not_resolved_as_active_callee": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_conditional_call_is_recorded_without_assuming_active_branch": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_conditional_alert_function_requires_preprocessor_review": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_global_prefix_on_function_line_is_not_inside_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_syntax_context.py::test_global_suffix_on_function_line_is_not_inside_function": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_missing_required_field_rejected[verdict]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_missing_required_field_rejected[confidence]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_missing_required_field_rejected[reason]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_missing_required_field_rejected[evidence_lines]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[nan]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[inf]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[-inf]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[True]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[None]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[0.9]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[-0.1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_confidence_rejected[1.1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines2]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines4]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines5]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[lines6]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_citation_type_rejected[3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[raw0]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[None]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[[]]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[raw4]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_non_object_or_surrounded_response_rejected[raw5]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_tp_fp_have_same_evidence_gate[lines0-TRUE_POSITIVE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_tp_fp_have_same_evidence_gate[lines0-FALSE_POSITIVE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_tp_fp_have_same_evidence_gate[lines1-TRUE_POSITIVE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_tp_fp_have_same_evidence_gate[lines1-FALSE_POSITIVE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_low_final_confidence_stays_review_and_attempts_are_retained": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_parse_or_transport_failure_can_recover_with_history": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_final_failure_isolated_and_missing_context_clears_old_verdict": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_unalerted_callee_file_is_loaded": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_same_named_static_functions_resolve_in_calling_file": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_other_file_static_function_is_not_resolved_as_global": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_truncated_context_is_visible_and_keeps_alert_line": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_client_rejects_non_string_message_content": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_duplicate_json_fields_and_non_string_reason_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_error_fp_requires_review_but_explicit_policy_is_recorded": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_invalid_fp_cannot_be_auto_accepted": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_citation_must_be_in_actual_truncated_excerpt": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_triage_contract.py::test_rag_trigger_and_acceptance_threshold_are_independent": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,const char *p,unsigned n){if(n>40)return;memcpy(s->bytes,p,n);}-void f(State *s,const char *p,unsigned n){if(n>sizeof(s->bytes))return;memcpy(s->bytes,p,n);}-CERT C STR31-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,unsigned n){if(n>3)return;s->axes[n]=1;}-void f(State *s,unsigned n){if(n>=3)return;s->axes[n]=1;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,int n){if(n>=3)return;s->axes[n]=1;}-void f(State *s,int n){if(n<0||n>=3)return;s->axes[n]=1;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,unsigned n){if(n>3)return;for(unsigned i=0;i<=n;i++)s->axes[i]=0;}-void f(State *s,unsigned n){if(n>3)return;for(unsigned i=0;i<n;i++)s->axes[i]=0;}-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,const int *p,unsigned n){if(n>5)return;memcpy(s->axes,p,n*sizeof(*p));}-void f(State *s,const int *p,unsigned n){if(n>3)return;memcpy(s->axes,p,n*sizeof(*p));}-CERT C STR31-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(char *in){char out[24];int n=snprintf(out,sizeof(out),\"%s\",in);if(n<0)return;send(out,n);}-good5-CERT C ARR30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void f(State *s,unsigned amount){s->fuel-=amount;}-void f(State *s,unsigned amount){if(amount>s->fuel)return;s->fuel-=amount;}-CERT C INT30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[int f(unsigned now,unsigned last,unsigned wait){return now>last+wait;}-int f(unsigned now,unsigned last,unsigned wait){return (unsigned)(now-last)>wait;}-CERT C INT30-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[unsigned f(short raw){return (unsigned short)raw;}-unsigned f(short raw){if(raw<0)return 0;return (unsigned short)raw;}-ECDET-CWE-195]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[void done(State *s){free(s->retry);} void retry(State *s){if(s->retry)send(s->retry,10);}-void done(State *s){free(s->retry);s->retry=0;} void retry(State *s){if(s->retry)send(s->retry,10);}-ECDET-CWE-416]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_guarded_pairs[bad10-good10-CERT C STR31-C]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_unrelated_or_conditional_guard_does_not_protect": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_short_circuit_cast_guard": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_capacity_minus_offset_guard": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_switch_branch_guard": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_conditional_reset_does_not_hide_dangling_field": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_partition_length_guard": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS &= ~FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS ^= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS += 1u;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS -= 1u;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS <<= 1u;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS >>= 1u;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS++;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[--GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[(GPIOA->STATUS) |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = GPIOA->STATUS | FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = (GPIOA->STATUS & ~FLAG_A);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = (FLAG_A) & GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = ((FLAG_A)) & GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = read_flag(GPIOA->STATUS);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS =\\n GPIOA->STATUS | FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[*(volatile unsigned int *)0x40000000 |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[(*(volatile unsigned int *)0x40000000)++;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[++(*(volatile unsigned int *)(0x40000000));]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[*(volatile unsigned int *)0x40000000 = *(volatile unsigned int *)0x40000000 | FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_read_modify_write_warns[GPIOA->STATUS = *(volatile unsigned int *)0x40000000 | FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = 0u;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[unsigned int flags = GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->CTRL |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[UNKNOWN->STATUS |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = GPIOA->CTRL | FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = FLAG_A; unsigned int flags = GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = sizeof(GPIOA->STATUS);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = (unsigned int)&GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[GPIOA->STATUS = (uint32_t)&GPIOA->STATUS;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[int equal = (GPIOA->STATUS == GPIOA->STATUS);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[// GPIOA->STATUS |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[const char *message = \"GPIOA->STATUS |= FLAG_A;\";]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[*(volatile unsigned int *)0x40000001 |= FLAG_A;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[if (GPIOA->STATUS) ++flag;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[while (GPIOA->STATUS) --flag;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[read_flag(GPIOA->STATUS); ++flag;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[unsigned int length = sizeof(GPIOA->STATUS++);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[unsigned int length = sizeof GPIOA->STATUS++;]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_safe_or_unresolved_operations_do_not_warn[unsigned int length = sizeof(*(volatile unsigned int *)0x40000000 |= FLAG_A);]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_requires_metadata_and_enabled_rule": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_w1c.py::test_w1c_rule_metadata_is_registered": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[None]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload1]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[constraints]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload3]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload4]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload5]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload6]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload7]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload8]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload9]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload10]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload11]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload12]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_invalid_requests_rejected[payload13]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_normalization_keeps_project_relative_paths": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_selected_constraint_file": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts0-FINDING]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts1-PASS]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts2-PARTIAL]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts3-ERROR]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts4-UNAVAILABLE]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts5-UNSUPPORTED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts6-UNKNOWN]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_constraint_states_do_not_hide_incomplete_checks[counts7-UNSUPPORTED]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_artifact_download_cannot_leave_run": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[{]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[null]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[[]]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[false]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[\"text\"]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_http_invalid_json_objects_return_400_without_queueing[{\"kind\":[]}]": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_tool_settings_are_separate_from_llm_credentials": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_missing_compiler_persists_failed_analysis_and_downloadable_report": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_unexpected_backend_exception_becomes_recorded_error": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_analysis.py::test_artifact_canonical_path_outside_run_is_rejected": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_fix_contract.py::test_missing_compiler_cannot_verify_web_patch": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_fix_contract.py::test_stale_high_risk_false_positive_is_not_repaired": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_web_fix_contract.py::test_invalid_selected_ids_do_not_expand_to_all_candidates": {
+      "run": "full_suite",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_codechecker_artifact_access": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_store_roundtrip": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_store_local_overrides_global": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_path_source": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_cpp_only_source": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_scan_applies_native_checker_configuration": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_path_missing": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_upload_zip": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_upload_ignores_previous_analysis_artifacts": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_register_upload_no_sources": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_full_scan_flow": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_full_scan_with_mock_triage": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_carriers_endpoint": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_index_page": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_summary_and_alert_detail": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_static_assets_served": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_settings_roundtrip_mask": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_settings_test_endpoint": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_one_click_fix_flow": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_targeted_fix_by_alert_ids": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_apply_mode_writes_and_converges": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_store_concurrent_polling_preserves_rows": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_snapshot_skip_guard": {
+      "run": "affected_final",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_snapshot_files_and_file_api": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_webui.py::test_diff_api_between_runs": {
+      "run": "recovery",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_known_clean_operations[void f(void){char buf[12]; const unsigned char *p=(const unsigned char *)buf;}-MISRA C:2012 11.3]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_optional_critical_enter_does_not_protect_later_access": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_value_flow.py::test_explicit_narrowing_is_not_a_sign_reinterpretation_alert": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_observable_helper_effects_are_not_suppressed[volatile unsigned int ready; int helper(void){return ready;}]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_observable_helper_effects_are_not_suppressed[int helper(void){static int calls;return ++calls;}]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_observable_helper_effects_are_not_suppressed[int value; int helper(void){int *p=&value;*p=1;return 1;}]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    },
+    "tests/test_detector_regressions.py::test_observable_helper_effects_are_not_suppressed[struct Ops {int (*run)(void);}; struct Ops ops; int helper(void){return ops.run();}]": {
+      "run": "final_unit_v2",
+      "status": "PASS"
+    }
+  }
+}

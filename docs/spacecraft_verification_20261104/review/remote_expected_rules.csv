@@ -1,0 +1,109 @@
+﻿project,rule,appeared,raw_alerts,confirmed_false_alerts,assessment,example,after_appeared,after_raw_alerts
+aocs,CERT C ARR30-C,True,5,3,HAS_NON_FP_MATCH,src/attitude.c:121,True,4
+aocs,CERT C FIO30-C,True,3,3,ONLY_FALSE_POSITIVES,src/fdir.c:104,False,0
+aocs,CERT C STR31-C,True,1,0,HAS_NON_FP_MATCH,src/main.c:162,True,1
+aocs,ECDET-CWE-197,True,1,0,HAS_NON_FP_MATCH,src/imu.c:45,True,1
+aocs,ECDET-CWE-563,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:73,True,1
+aocs,ECDET-CWE-785,True,1,0,HAS_NON_FP_MATCH,src/attitude.c:73,True,1
+aocs,ECDET-HW-BITFIELD,True,1,0,HAS_NON_FP_MATCH,src/imu.c:98,True,1
+aocs,ECDET-HW-CRITICAL-PAIR,True,1,0,HAS_NON_FP_MATCH,src/fdir.c:71,True,1
+aocs,ECDET-HW-ISR-HEAP,True,3,0,HAS_NON_FP_MATCH,src/fdir.c:104,True,3
+aocs,ECDET-HW-VOLATILE-RMW,True,2,1,HAS_NON_FP_MATCH,src/imu.c:79,True,1
+aocs,ECDET-ISR-BLOCK,True,1,0,HAS_NON_FP_MATCH,src/fdir.c:106,True,1
+aocs,ECDET-ISR-RACE,True,9,3,HAS_NON_FP_MATCH,src/main.c:168,True,3
+aocs,ECDET-MMIO-ACCESS,True,3,0,HAS_NON_FP_MATCH,src/fdir.c:100,True,3
+aocs,ECDET-VOLATILE,True,4,1,HAS_NON_FP_MATCH,include/aocs.h:127,True,1
+aocs,MISRA C:2012 10.3,True,1,0,HAS_NON_FP_MATCH,src/imu.c:45,True,1
+aocs,MISRA C:2012 12.2,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:107,True,1
+aocs,MISRA C:2012 13.5,True,1,0,HAS_NON_FP_MATCH,src/attitude.c:130,True,1
+aocs,MISRA C:2012 13.6,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:90,True,1
+aocs,MISRA C:2012 14.2,True,1,0,HAS_NON_FP_MATCH,src/attitude.c:142,True,1
+aocs,MISRA C:2012 14.3,True,1,0,HAS_NON_FP_MATCH,src/orbit.c:63,True,1
+aocs,MISRA C:2012 15.1,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:124,True,1
+aocs,MISRA C:2012 15.2,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:124,True,1
+aocs,MISRA C:2012 16.4,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:40,True,1
+aocs,MISRA C:2012 16.6,True,1,0,HAS_NON_FP_MATCH,src/wheel.c:40,True,1
+aocs,MISRA C:2012 17.2,True,1,0,HAS_NON_FP_MATCH,src/attitude.c:63,True,1
+aocs,MISRA C:2012 18.8,True,2,1,HAS_NON_FP_MATCH,src/orbit.c:48,True,1
+aocs,MISRA C:2012 21.3,True,4,0,HAS_NON_FP_MATCH,src/fdir.c:27,True,4
+aocs,MISRA C:2012 21.7,True,1,0,HAS_NON_FP_MATCH,src/main.c:185,True,1
+aocs,MISRA C:2012 6.1,True,2,0,HAS_NON_FP_MATCH,include/aocs.h:148,True,2
+eps,CERT C ARR30-C,True,3,0,HAS_NON_FP_MATCH,src/battery.c:33,True,6
+eps,CERT C EXP45-C,True,1,0,HAS_NON_FP_MATCH,src/heater.c:75,True,1
+eps,CERT C FIO30-C,True,4,4,ONLY_FALSE_POSITIVES,src/adc_isr.c:40,False,0
+eps,ECDET-CWE-197,True,2,0,HAS_NON_FP_MATCH,src/mppt.c:40,True,2
+eps,ECDET-HW-BITFIELD,True,1,0,HAS_NON_FP_MATCH,src/heater.c:44,True,1
+eps,ECDET-HW-CRITICAL-PAIR,True,1,0,HAS_NON_FP_MATCH,src/adc_isr.c:93,True,1
+eps,ECDET-HW-ISR-HEAP,True,4,0,HAS_NON_FP_MATCH,src/adc_isr.c:40,True,4
+eps,ECDET-HW-VOLATILE-RMW,True,1,0,HAS_NON_FP_MATCH,src/adc_isr.c:86,True,1
+eps,ECDET-ISR-BLOCK,True,1,0,HAS_NON_FP_MATCH,src/adc_isr.c:45,True,1
+eps,ECDET-ISR-RACE,True,5,0,HAS_NON_FP_MATCH,src/main.c:138,True,3
+eps,ECDET-MMIO-ACCESS,True,3,0,HAS_NON_FP_MATCH,src/adc_isr.c:48,True,3
+eps,ECDET-VOLATILE,True,1,0,HAS_NON_FP_MATCH,src/adc_isr.c:14,True,1
+eps,MISRA C:2012 10.3,True,3,0,HAS_NON_FP_MATCH,src/battery.c:86,True,3
+eps,MISRA C:2012 11.8,True,2,0,HAS_NON_FP_MATCH,src/heater.c:71,True,2
+eps,MISRA C:2012 12.2,True,1,0,HAS_NON_FP_MATCH,src/protection.c:88,True,1
+eps,MISRA C:2012 13.6,True,1,0,HAS_NON_FP_MATCH,src/heater.c:73,True,1
+eps,MISRA C:2012 14.2,True,3,0,HAS_NON_FP_MATCH,src/heater.c:78,True,3
+eps,MISRA C:2012 15.5,True,2,0,HAS_NON_FP_MATCH,src/battery.c:49,True,2
+eps,MISRA C:2012 16.3,True,1,0,HAS_NON_FP_MATCH,src/heater.c:87,True,1
+eps,MISRA C:2012 16.4,True,1,0,HAS_NON_FP_MATCH,src/heater.c:86,True,1
+eps,MISRA C:2012 21.3,True,2,0,HAS_NON_FP_MATCH,src/adc_isr.c:66,True,2
+eps,MISRA C:2012 6.1,True,3,0,HAS_NON_FP_MATCH,include/eps.h:141,True,3
+obdh,CERT C ARR30-C,True,3,0,HAS_NON_FP_MATCH,src/ccsds.c:71,True,6
+obdh,CERT C EXP45-C,True,1,0,HAS_NON_FP_MATCH,src/tc.c:81,True,1
+obdh,CERT C FIO30-C,True,1,0,HAS_NON_FP_MATCH,src/tc.c:138,True,1
+obdh,CERT C INT30-C,True,1,0,HAS_NON_FP_MATCH,src/ringbuf.c:77,True,1
+obdh,CERT C MEM34-C,True,1,0,HAS_NON_FP_MATCH,src/payload.c:114,True,1
+obdh,CERT C MSC30-C,True,1,0,HAS_NON_FP_MATCH,src/payload.c:50,True,1
+obdh,CERT C PRE31-C,True,1,0,HAS_NON_FP_MATCH,src/crc.c:66,True,1
+obdh,CERT C STR31-C,True,2,0,HAS_NON_FP_MATCH,src/telemetry.c:102,True,4
+obdh,ECDET-CWE-1284,True,2,0,HAS_NON_FP_MATCH,src/tc.c:73,True,2
+obdh,ECDET-CWE-197,True,3,0,HAS_NON_FP_MATCH,src/ccsds.c:45,True,3
+obdh,ECDET-HW-VOLATILE-RMW,True,1,0,HAS_NON_FP_MATCH,src/telemetry.c:55,True,1
+obdh,ECDET-ISR-BLOCK,True,1,0,HAS_NON_FP_MATCH,src/telemetry.c:117,True,1
+obdh,ECDET-ISR-RACE,True,5,0,HAS_NON_FP_MATCH,src/telemetry.c:34,True,5
+obdh,ECDET-MMIO-ACCESS,True,2,0,HAS_NON_FP_MATCH,src/telemetry.c:64,True,2
+obdh,ECDET-VOLATILE,True,1,0,HAS_NON_FP_MATCH,src/telemetry.c:17,True,1
+obdh,MISRA C:2012 10.3,True,6,0,HAS_NON_FP_MATCH,src/ccsds.c:45,True,6
+obdh,MISRA C:2012 12.2,True,2,0,HAS_NON_FP_MATCH,src/crc.c:25,True,2
+obdh,MISRA C:2012 13.6,True,1,0,HAS_NON_FP_MATCH,src/ringbuf.c:84,True,1
+obdh,MISRA C:2012 14.2,True,1,0,HAS_NON_FP_MATCH,src/crc.c:66,True,1
+obdh,MISRA C:2012 15.1,True,1,0,HAS_NON_FP_MATCH,src/tc.c:117,True,1
+obdh,MISRA C:2012 15.2,True,1,0,HAS_NON_FP_MATCH,src/tc.c:117,True,1
+obdh,MISRA C:2012 16.3,True,3,1,HAS_NON_FP_MATCH,src/ccsds.c:120,True,2
+obdh,MISRA C:2012 16.4,True,2,0,HAS_NON_FP_MATCH,src/ccsds.c:119,True,2
+obdh,MISRA C:2012 18.8,True,1,0,HAS_NON_FP_MATCH,src/ringbuf.c:71,True,1
+obdh,MISRA C:2012 21.1,True,1,0,HAS_NON_FP_MATCH,src/crc.c:15,True,1
+obdh,MISRA C:2012 21.3,True,3,0,HAS_NON_FP_MATCH,src/payload.c:32,True,3
+obdh,MISRA C:2012 21.7,True,1,0,HAS_NON_FP_MATCH,src/tc.c:78,True,1
+obdh,MISRA C:2012 7.2,True,1,0,HAS_NON_FP_MATCH,src/crc.c:60,True,1
+ttc,CERT C ARR30-C,True,2,0,HAS_NON_FP_MATCH,src/fec.c:43,True,5
+ttc,CERT C EXP45-C,True,2,0,HAS_NON_FP_MATCH,src/ranging.c:75,True,2
+ttc,CERT C FIO30-C,True,4,3,HAS_NON_FP_MATCH,src/tc_decode.c:169,True,1
+ttc,CERT C MSC30-C,True,1,0,HAS_NON_FP_MATCH,src/auth.c:43,True,1
+ttc,CERT C MSC41-C,True,1,0,HAS_NON_FP_MATCH,src/auth.c:17,True,1
+ttc,CERT C STR31-C,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:72,True,2
+ttc,ECDET-CWE-1284,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:161,True,1
+ttc,ECDET-CWE-197,True,4,0,HAS_NON_FP_MATCH,src/dma.c:55,True,4
+ttc,ECDET-CWE-785,True,1,0,HAS_NON_FP_MATCH,src/fec.c:64,True,1
+ttc,ECDET-HW-CRITICAL-PAIR,True,1,0,HAS_NON_FP_MATCH,src/dma.c:94,True,1
+ttc,ECDET-HW-ISR-HEAP,True,1,0,HAS_NON_FP_MATCH,src/dma.c:80,True,1
+ttc,ECDET-HW-VOLATILE-RMW,True,1,1,ONLY_FALSE_POSITIVES,src/dma.c:96,False,0
+ttc,ECDET-ISR-BLOCK,True,1,0,HAS_NON_FP_MATCH,src/dma.c:81,True,1
+ttc,ECDET-ISR-RACE,True,5,0,HAS_NON_FP_MATCH,src/dma.c:28,True,4
+ttc,ECDET-MMIO-ACCESS,True,1,0,HAS_NON_FP_MATCH,src/dma.c:104,True,1
+ttc,ECDET-VOLATILE,True,3,0,HAS_NON_FP_MATCH,include/ttc.h:128,True,2
+ttc,MISRA C:2012 10.3,True,5,0,HAS_NON_FP_MATCH,src/dma.c:55,True,5
+ttc,MISRA C:2012 11.4,True,3,2,HAS_NON_FP_MATCH,src/dma.c:105,True,1
+ttc,MISRA C:2012 12.2,True,1,0,HAS_NON_FP_MATCH,src/fec.c:104,True,1
+ttc,MISRA C:2012 13.6,True,1,0,HAS_NON_FP_MATCH,src/auth.c:46,True,1
+ttc,MISRA C:2012 14.2,True,1,0,HAS_NON_FP_MATCH,src/ranging.c:72,True,1
+ttc,MISRA C:2012 15.1,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:115,True,1
+ttc,MISRA C:2012 15.2,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:115,True,1
+ttc,MISRA C:2012 15.5,True,6,0,HAS_NON_FP_MATCH,src/auth.c:83,True,6
+ttc,MISRA C:2012 16.4,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:101,True,1
+ttc,MISRA C:2012 18.6,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:145,True,1
+ttc,MISRA C:2012 18.8,True,1,0,HAS_NON_FP_MATCH,src/fec.c:79,True,1
+ttc,MISRA C:2012 21.3,True,3,0,HAS_NON_FP_MATCH,src/auth.c:25,True,3
+ttc,MISRA C:2012 21.7,True,1,0,HAS_NON_FP_MATCH,src/tc_decode.c:165,True,1

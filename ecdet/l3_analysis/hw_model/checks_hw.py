@@ -320,28 +320,37 @@ def check_isr_race(ctx: ProjectContext, hw: HwContext,
 def _critical_intervals(func, hw: HwContext) -> list[tuple[int, int]]:
     """从函数 token 流提取临界区行区间 [enter_line, exit_line]。"""
     toks = func.tokens
-    events: list[tuple[int, int]] = []
+    events: list[tuple[int, int, bool]] = []
+    braces = 0
     for i, t in enumerate(toks):
+        if t.value == '{':
+            braces += 1
+        elif t.value == '}':
+            braces = max(0, braces - 1)
         if t.kind != "ident" or i + 1 >= len(toks) or toks[i + 1].value != "(":
             continue
         if t.value in hw.critical_enter:
-            events.append((t.line, 1))
+            unconditional = braces == 0 and (i == 0 or toks[i-1].value in {';', '}'})
+            events.append((t.line, 1, unconditional))
         elif t.value in hw.critical_exit:
-            events.append((t.line, -1))
-    events.sort()
+            events.append((t.line, -1, True))
     intervals: list[tuple[int, int]] = []
     depth = 0
     start = 0
-    for line, delta in events:
+    start_unconditional = False
+    for line, delta, unconditional in events:
         if delta == 1:
             if depth == 0:
                 start = line
+                start_unconditional = unconditional
             depth += 1
         else:
             if depth > 0:
                 depth -= 1
                 if depth == 0:
                     intervals.append((start, line))
+    if depth > 0 and start_unconditional:
+        intervals.append((start, func.body_close_line))
     return intervals
 
 

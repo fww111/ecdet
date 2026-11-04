@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from ecdet.l2_ir.model import Alert, Evidence, Location, Provenance, Severity
 from ecdet.l3_analysis.builtin_rules.checks import FileFacts
@@ -124,8 +125,10 @@ def proven_index_check(facts: list[FileFacts]) -> list[Alert]:
         if not sizes:
             continue
         for func in f.functions:
-            consts = propagate_constants(func)
             toks = func.tokens
+            # This domain has no CFG merge. Control flow cannot yield a proof.
+            if any(t.value in {'if','else','for','while','do','switch','goto','?'} for t in toks):
+                continue
             for i, t in enumerate(toks):
                 if t.kind != "ident" or t.value not in sizes:
                     continue
@@ -142,6 +145,8 @@ def proven_index_check(facts: list[FileFacts]) -> list[Alert]:
                     continue        # 字面量下标由 DETECTED 规则负责
                 if inner.kind != "ident":
                     continue
+                # Use state BEFORE this access, never the final function state.
+                consts = propagate_constants(replace(func, tokens=toks[:i]))
                 val = consts.get(inner.value)
                 if val is None:
                     continue        # 无法证明，不猜

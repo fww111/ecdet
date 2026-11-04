@@ -25,6 +25,12 @@ CERT = "CERT C"
 ECDET = "ECDET"
 
 BUILTIN_RULES: list[RuleMeta] = [
+    RuleMeta("ECDET-CWE-119", ECDET, "Required", "dataflow",
+             "分区内偏移检查未覆盖传输长度，可能跨越逻辑分区边界", ["CWE-119"]),
+    RuleMeta("ECDET-CWE-416", ECDET, "Required", "dataflow",
+             "释放共享字段后保留悬空指针，后续调用可能释放后使用", ["CWE-416"]),
+    RuleMeta("ECDET-CWE-195", ECDET, "Required", "dataflow",
+             "可能为负的输入转为无符号整数前缺少范围检查", ["CWE-195"]),
     # ---------------- MISRA C:2012 ----------------
     RuleMeta("MISRA C:2012 2.5", MISRA, "Advisory", "syntactic",
              "宏已定义但在翻译单元中未被使用", []),

@@ -1,0 +1,16 @@
+{
+  "before_raw": 926,
+  "after_raw": 604,
+  "before_dedup": 882,
+  "after_dedup": 586,
+  "seeded_detected": 27,
+  "seeded_total": 32,
+  "resolved_old_fp": 355,
+  "after_status_counts": {
+    "DEFECT_EVIDENCE": 122,
+    "ANALYZER_LIMITATION": 14,
+    "VALID_RULE_NOTICE": 439,
+    "NEEDS_CONTEXT_REVIEW": 29
+  },
+  "new_location_count": 32
+}

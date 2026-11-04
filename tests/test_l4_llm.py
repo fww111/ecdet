@@ -180,12 +180,13 @@ def test_triage_mock_full_pipeline():
     assert calls >= len(verdicts)
 
 
-def test_triage_downgrade_on_bad_citation():
+def test_triage_downgrade_on_bad_citation(tmp_path):
     """FIO30（Mock 引用错行）→ 证据核对不通过 → TP 降级 NEEDS_REVIEW。"""
-    alerts = [a for a in _alerts_from(EXAMPLES / "demo_rtos")
+    (tmp_path/'input.c').write_text('void log_input(char *input) { printf(input); }\n',encoding='utf-8')
+    alerts = [a for a in _alerts_from(tmp_path)
               if a.rule_id == "CERT C FIO30-C"]
-    assert alerts, "demo_rtos 应含 FIO30-C 告警"
-    verdicts, _ = triage_alerts(alerts, EXAMPLES / "demo_rtos",
+    assert alerts, "可控格式串应触发FIO30-C"
+    verdicts, _ = triage_alerts(alerts, tmp_path,
                                 client=MockLlmClient())
     assert all(v.verdict == "NEEDS_REVIEW" for v in verdicts)
     assert all("核对未通过" in v.reason for v in verdicts)

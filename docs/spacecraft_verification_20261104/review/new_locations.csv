@@ -1,0 +1,33 @@
+﻿group,project,raw_id,rule,file,line,engine,message,status,reason
+original,01_earth_observer,41,CERT C ARR30-C,src/attitude.c,9,builtin-flow,"数组m->wheel容量3，下标index的当前范围(0, 3)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,42,CERT C STR31-C,src/camera.c,18,builtin-flow,复制目标m->tile容量128，长度及偏移的当前上界256超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,43,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,44,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,45,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,46,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,40,CERT C STR31-C,src/bundle.c,11,builtin-flow,复制目标m->assembly容量256，长度及偏移的当前上界131070超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,41,ECDET-CWE-416,src/bundle.c,39,builtin-flow,释放共享对象字段后未清除或更新该指针，后续调用可能沿悬空字段再次访问,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,42,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,43,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,44,CERT C STR31-C,src/sequencer.c,9,builtin-flow,复制目标m->steps容量8，长度及偏移的当前上界12超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,45,CERT C ARR30-C,src/sequencer.c,12,builtin-flow,"数组m->steps容量8，下标i的当前范围(0, 11)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,46,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,47,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,35,ECDET-CWE-195,src/navigation.c,7,builtin-flow,有符号输入可能为负，转为无符号数前未排除负值,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,36,CERT C ARR30-C,src/navigation.c,16,builtin-flow,"数组m->descent_profile容量8，下标i的当前范围(0, 8)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,37,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,38,CERT C INT30-C,src/propulsion.c,6,builtin-flow,无符号字段扣减前未检查余额，可能下溢回绕,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,39,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,40,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,41,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,37,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,38,CERT C ARR30-C,src/robot_arm.c,10,builtin-flow,"数组m->joint_target容量4，下标index的当前范围(-2147483648, 3)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,39,CERT C STR31-C,src/robot_arm.c,30,builtin-flow,复制目标m->trajectory容量6，长度及偏移的当前上界10超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,40,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,41,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,42,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,121,CERT C STR31-C,src/ccsds.c,105,builtin-flow,复制目标out->data容量256，长度及偏移的当前上界65529超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,122,CERT C STR31-C,src/payload.c,96,builtin-flow,复制目标cache容量32，长度及偏移的当前上界64超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,80,MISRA C:2012 11.3,src/fec.c,113,builtin,指针 s_exp 从 unsigned char* 转换为 unsigned short*，指向类型不同,VALID_RULE_NOTICE,uint8_t对象指针转为uint16_t对象指针，不属于转为字符指针的例外。
+remote_final,ttc,109,CERT C STR31-C,src/tc_decode.c,63,builtin-flow,复制目标payload容量192，长度及偏移的当前上界65535超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,110,CERT C ARR30-C,src/tc_decode.c,81,builtin-flow,"数组frame->raw容量192，下标TC_HDR_LEN + i的当前范围(4, 65532)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。

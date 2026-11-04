@@ -125,6 +125,8 @@ class BuiltinEngine(Engine):
         if "CERT C ARR30-C" in enabled_rules:
             from ecdet.l3_analysis.abstract_interp import proven_index_check
             alerts.extend(proven_index_check(facts))
+        from ecdet.l3_analysis.value_flow import check_value_flow
+        alerts.extend(check_value_flow(facts, enabled_rules))
         return alerts
 
 

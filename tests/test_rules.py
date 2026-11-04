@@ -125,7 +125,7 @@ def test_rule_logic_side_effect_inc():
 
 
 def test_rule_logic_side_effect_call():
-    src = "int g(void) { return 1; } int f(int a) { return (a > 0) || g(); }"
+    src = "int state; int g(void) { return ++state; } int f(int a) { return (a > 0) || g(); }"
     alerts = _run_file(src)
     assert "MISRA C:2012 13.5" in _rule_ids(alerts)
 

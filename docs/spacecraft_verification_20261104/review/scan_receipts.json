@@ -1,0 +1,86 @@
+[
+  {
+    "group": "original",
+    "project": "01_earth_observer",
+    "returncode": 1,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "original",
+    "project": "02_deep_space_probe",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "original",
+    "project": "03_lunar_lander",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "original",
+    "project": "04_orbital_servicer",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "reference",
+    "project": "01_earth_observer",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "reference",
+    "project": "02_deep_space_probe",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "reference",
+    "project": "03_lunar_lander",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "reference",
+    "project": "04_orbital_servicer",
+    "returncode": 2,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "remote_final",
+    "project": "aocs",
+    "returncode": 1,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "remote_final",
+    "project": "eps",
+    "returncode": 1,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "remote_final",
+    "project": "obdh",
+    "returncode": 1,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  },
+  {
+    "group": "remote_final",
+    "project": "ttc",
+    "returncode": 1,
+    "native_status": "complete",
+    "source_hashes_unchanged": true
+  }
+]

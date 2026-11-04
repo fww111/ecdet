@@ -90,17 +90,35 @@ _GVAR_RE = re.compile(
 )
 
 
+def _top_declarations(lex):
+    """Yield file-scope declaration tokens, excluding record fields and bodies."""
+    depth = 0
+    statement = []
+    for token in lex.tokens:
+        if token.value == "{":
+            if depth == 0:
+                statement = []
+            depth += 1
+        elif token.value == "}":
+            depth = max(0, depth - 1)
+            if depth == 0:
+                statement = []
+        elif depth == 0:
+            statement.append(token)
+            if token.value == ';':
+                yield statement
+                statement = []
+
+
 def _parse_global_vars(lex: LexResult, func_lines: set[int]) -> list[tuple[str, int, bool]]:
     out: list[tuple[str, int, bool]] = []
-    for idx, text in enumerate(lex.clean_lines, start=1):
-        s = text.strip()
-        if not s or s.startswith("#") or idx in func_lines:
+    for declaration in _top_declarations(lex):
+        text = ' '.join(t.value for t in declaration)
+        if '(' in text or text.startswith(('extern ', 'typedef ')):
             continue
-        if "(" in s:      # 排除函数原型
-            continue
-        m = _GVAR_RE.match(s)
+        m = _GVAR_RE.match(text)
         if m:
-            out.append((m.group(2), idx, bool(m.group(1))))
+            out.append((m.group(2), declaration[0].line, bool(m.group(1))))
     return out
 
 
@@ -141,7 +159,8 @@ malloc calloc realloc free
 exit abort qsort bsearch rand srand time clock difftime
 pow sqrt sin cos tan asin acos atan atan2 exp log log10 floor ceil fabs fmod
 isdigit isalpha isalnum isspace isupper islower toupper tolower
-fopen fclose fread fwrite fflush fseek ftell remove rename
+fopen fclose fread fwrite fflush fseek ftell remove rename feof ferror fgets rewind
+isfinite isnan isinf fabsf sqrtf sinf cosf atan2f fminf fmaxf ceilf floorf perror
 assert setjmp longjmp
 __aeabi_memcpy __aeabi_memcpy4 __aeabi_memset
 xTaskCreate vTaskDelete vTaskDelay vTaskDelayUntil xTaskGetTickCount taskENTER_CRITICAL
@@ -176,6 +195,12 @@ def check_unused_macro(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
         if p.directive != "define" or not p.macro_name:
             continue
         name = p.macro_name
+        if f.path.endswith('.h') and any(
+                other is not f and f in _included_facts(other, ctx) and
+                (any(t.kind == 'ident' and t.value == name for t in other.lex.tokens)
+                 or any(re.search(rf'\b{re.escape(name)}\b', pp.text)
+                        for pp in other.lex.pp_lines)) for other in ctx.facts):
+            continue
         if name in used:
             continue
         if re.search(rf"\b{re.escape(name)}\b", pp_text.replace(p.text, "", 1)):
@@ -218,6 +243,50 @@ _SIDE_EFFECT_OPS = {"++", "--", "=", "+=", "-=", "*=", "/=", "%=", "&=", "^=", "
                     "<<=", ">>="}
 
 
+def _read_only_calls(f: FileFacts, ctx: ProjectContext) -> set[str]:
+    """Recognize read-only APIs and direct expression-only helpers, not arbitrary calls."""
+    pure = {'feof', 'ferror', 'isfinite', 'isnan', 'isinf', 'fabs', 'fabsf',
+            'strlen', 'memcmp', 'strcmp', 'strncmp'}
+    volatile_names={name for fact in ctx.facts for name,line,_ in fact.global_vars
+                    if 'volatile' in fact.lex.source_lines[line-1]}
+    visible = [f, *_included_facts(f, ctx)]
+    for owner in visible:
+        for pp in owner.lex.pp_lines:
+            if pp.directive == 'define' and pp.macro_name:
+                tokens = lex_c(pp.text.split(')', 1)[-1]).tokens if '(' in pp.text else []
+                if tokens and not any(t.value in _SIDE_EFFECT_OPS for t in tokens):
+                    if not any(t.kind == 'ident' and i+1 < len(tokens) and tokens[i+1].value == '('
+                               and t.value not in pure for i,t in enumerate(tokens)):
+                        pure.add(pp.macro_name)
+    # Calls that only mutate local scalars (e.g. checksums) have no persistent
+    # side effects. Pointer/member stores and unknown calls remain conservative.
+    for _ in range(len(ctx.facts)+1):
+        previous=set(pure)
+        for owner in ctx.facts:
+            if not owner.syntax or not owner.syntax.reliable:
+                continue
+            for fn in owner.syntax.functions:
+                if ('volatile' in fn.text or re.search(r'\bstatic\b',fn.text[fn.text.find('{'):])
+                        or any(re.search(r'\b'+re.escape(v)+r'\b',fn.text) for v in volatile_names)):
+                    continue
+                assignments=[a for a in owner.syntax.assignments if fn.body_start_byte<=a.start_byte<fn.body_end_byte]
+                if any(a.target not in fn.local_names for a in assignments):continue
+                if any(c.kind!='direct' or c.name not in pure for c in fn.calls):continue
+                tokens=lex_c(fn.text).tokens
+                updates_safe=True
+                for i,t in enumerate(tokens):
+                    if t.value not in {'++','--'}:continue
+                    left=tokens[i-1] if i else None
+                    right=tokens[i+1] if i+1<len(tokens) else None
+                    postfix=left and left.kind=='ident' and left.value in fn.local_names and (i<2 or tokens[i-2].value not in {'.','->','*'})
+                    prefix=right and right.kind=='ident' and right.value in fn.local_names and (i+2>=len(tokens) or tokens[i+2].value not in {'.','->','['})
+                    if not postfix and not prefix:updates_safe=False
+                if not updates_safe:continue
+                pure.add(fn.name)
+        if pure==previous:break
+    return pure
+
+
 def check_logic_side_effect(f: FileFacts, ctx: ProjectContext, active: set[str]) -> list[Alert]:
     """MISRA 13.5：&& / || 右操作数含持续副作用。
 
@@ -225,6 +294,7 @@ def check_logic_side_effect(f: FileFacts, ctx: ProjectContext, active: set[str])
     途中进入括号也持续检查：副作用必须可在右操作数任意嵌套处被发现。
     """
     out = []
+    read_only = _read_only_calls(f, ctx)
     for func in f.functions:
         toks = func.tokens
         for i, t in enumerate(toks):
@@ -249,7 +319,7 @@ def check_logic_side_effect(f: FileFacts, ctx: ProjectContext, active: set[str])
                         found = ("副作用运算符 " + tk.value, tk)
                         break
                 elif tk.kind == "ident" and j + 1 < len(toks) \
-                        and toks[j + 1].value == "(":
+                        and toks[j + 1].value == "(" and tk.value not in read_only:
                     found = (f"函数调用 {tk.value}()", tk)
                     break
                 j += 1
@@ -436,7 +506,8 @@ _BANNED_APIS: dict[str, tuple[str, Severity, str, str | None]] = {
 }
 
 # 格式串必须为字面量的函数（第一个参数即格式串）
-_FORMAT_FUNCS = {"printf", "sprintf", "snprintf", "vprintf", "vsprintf", "vsnprintf"}
+_FORMAT_FUNCS = {"printf": 0, "fprintf": 1, "sprintf": 1, "snprintf": 2,
+                 "vprintf": 0, "vfprintf": 1, "vsprintf": 1, "vsnprintf": 2}
 
 
 def check_banned_apis(f: FileFacts, ctx: ProjectContext, active: set[str]) -> list[Alert]:
@@ -476,8 +547,37 @@ def check_format_string(f: FileFacts, ctx: ProjectContext, active: set[str]) -> 
                 continue
             if i + 1 >= len(toks) or toks[i + 1].value != "(":
                 continue
-            first = toks[i + 2] if i + 2 < len(toks) else None
-            if first is not None and first.kind != "string":
+            from ecdet.l3_analysis.builtin_rules.checks_verified import _split_args
+            end = _match_forward(toks, i+1, '(', ')')
+            args = _split_args(toks, i+2, end) if end >= 0 else []
+            index = _FORMAT_FUNCS[t.value]
+            if len(args) <= index or not args[index]:
+                continue
+            fmt = args[index]
+            fixed = all(tk.kind == 'string' for tk in fmt)
+            if len(fmt) == 1 and fmt[0].kind == 'ident':
+                name = fmt[0].value
+                # A literal initializer is safe only when every other reference
+                # is a format argument; reassignment, aliasing and passing escape it.
+                refs = []
+                for owner in ctx.facts:
+                    for n,tk in enumerate(owner.lex.tokens):
+                        if tk.kind == 'ident' and tk.value == name:
+                            refs.append((owner,n))
+                initializers = 0
+                safe = True
+                for owner,n in refs:
+                    stream = owner.lex.tokens
+                    if n+2 < len(stream) and stream[n+1].value == '=' and stream[n+2].kind == 'string':
+                        # Only a declaration, not a later literal reassignment.
+                        prev = stream[n-1].value if n else ''
+                        if prev not in {'*','const','char'}:
+                            safe=False
+                        initializers += 1
+                    elif not (n>=2 and stream[n-1].value=='(' and stream[n-2].value in {'printf','vprintf'}):
+                        safe=False
+                fixed = safe and initializers == 1
+            if not fixed:
                 out.append(_alert(
                     "CERT C FIO30-C", Severity.ERROR,
                     f"{t.value}() 的格式串为变量而非字面量，存在格式串注入风险",
@@ -735,7 +835,7 @@ def check_single_tu_funcs(ctx: ProjectContext, active: set[str]) -> list[Alert]:
             continue
         for func in f.functions:
             name = func.name
-            if name == "main" or _ISR_PAT.search(name):
+            if name == "main" or _ISR_PAT.search(name) or re.search(r'\bstatic\b', func.signature):
                 continue
             context_src = "\n".join(
                 f.lex.source_lines[max(0, func.def_line - 2):func.def_line + 1])
@@ -803,9 +903,16 @@ def check_implicit_decl(ctx: ProjectContext, active: set[str]) -> list[Alert]:
         visible = set(ctx.project_decls) | LIBC_WHITELIST
         visible |= {fn.name for fn in f.functions}
         visible |= _includes_transitive(f, ctx)
+        visible |= {p.macro_name for owner in [f, *_included_facts(f, ctx)]
+                    for p in owner.lex.pp_lines if p.directive == 'define' and p.macro_name}
+        if f.syntax and f.syntax.reliable:
+            indirect = {(call.expression, call.start_line) for fn in f.syntax.functions
+                        for call in fn.calls if call.kind == 'indirect'}
+        else:
+            indirect = set()
         for func in f.functions:
             for callee, line in func.calls_in_body():
-                if callee in visible:
+                if callee in visible or (callee,line) in indirect:
                     continue
                 out.append(_alert(
                     "MISRA C:2012 17.3", Severity.WARNING,
@@ -817,26 +924,29 @@ def check_implicit_decl(ctx: ProjectContext, active: set[str]) -> list[Alert]:
     return out
 
 
+def _included_facts(f: FileFacts, ctx: ProjectContext) -> list[FileFacts]:
+    """Resolve project headers transitively without crossing unrelated files."""
+    found = {}; pending = [f]
+    while pending:
+        current = pending.pop()
+        for raw in current.lex.source_lines:
+            match = re.match(r'\s*#\s*include\s*[<"]([^>"]+)[>"]', raw)
+            if not match:
+                continue
+            name = match.group(1).replace('\\', '/')
+            for other in ctx.facts:
+                if other.path not in found and (other.path == name or other.path.endswith('/'+name)):
+                    found[other.path] = other
+                    pending.append(other)
+    return list(found.values())
+
+
 def _includes_transitive(f: FileFacts, ctx: ProjectContext) -> set[str]:
     """本文件 include 的工程头文件中声明的函数名（一层展开，简化不递归）。
 
     PPLine.text 的引号内容已被遮蔽，包含目标须从原始行提取。
     """
-    declared: set[str] = set()
-    for p in f.lex.pp_lines:
-        if p.directive != "include":
-            continue
-        raw_line = (f.lex.source_lines[p.line - 1]
-                    if p.line - 1 < len(f.lex.source_lines) else "")
-        m = re.search(r'#\s*include\s*"([^"]+)"', raw_line)
-        if not m:
-            continue
-        inc = m.group(1).replace("\\", "/")
-        for other in ctx.facts:
-            other_norm = other.path.replace("\\", "/")
-            if other_norm.endswith(".h") and other_norm.endswith(inc):
-                declared |= other.declared_funcs
-    return declared
+    return {name for owner in _included_facts(f, ctx) for name in owner.declared_funcs}
 
 
 def _collect_decls(f: FileFacts) -> set[str]:

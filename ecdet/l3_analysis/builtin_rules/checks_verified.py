@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 
 from ecdet.l2_ir.model import Alert, Severity, Provenance
 from ecdet.l3_analysis.builtin_rules.checks import (
@@ -22,6 +23,7 @@ from ecdet.l3_analysis.builtin_rules.checks import (
     _evidence,
     _match_forward,
     _SIDE_EFFECT_OPS,
+    _top_declarations,
 )
 from ecdet.l3_analysis.builtin_rules.ctokens import lex_c
 from ecdet.l3_analysis.builtin_rules.ectypes import (
@@ -280,14 +282,28 @@ def check_pointer_cast(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
     宏表达式不参与，避免把正常类型擦除误判。
     """
     out: list[Alert] = []
-    ptrs = _pointer_vars(f)
-    ints = build_type_table(f.lex, f.func_lines, functions=f.functions)
     for func in f.functions:
+        globals_text = '\n'.join(' '.join(t.value for t in declaration)
+                                 for declaration in _top_declarations(f.lex))
+        scoped = replace(f, functions=[func], lex=lex_c(globals_text+'\n'+
+                         func.signature+' { '+ ' '.join(t.value for t in func.tokens)+' }'))
+        ptrs = _pointer_vars(scoped)
+        ints = build_type_table(scoped.lex, set(), functions=[func])
+        array_names = set(re.findall(r'\b(?:char|int|float|double|u?int\d+_t)\s+(\w+)\s*\[',
+                                    '\n'.join(scoped.lex.clean_lines)))
+        for name in array_names:
+            ints.pop(name, None)
+        for array in f.arrays:
+            if array.is_global or func.body_open_line <= array.line <= func.body_close_line:
+                ptrs[array.name] = (_norm_base(array.type_text), set())
+                ints.pop(array.name, None)
         toks = func.tokens
         for operand, inner, target_ptr, target_base, target_quals in _cast_sites(func):
             if not target_ptr and target_base == "void":
                 continue      # (void)expr 仅为丢弃结果，非指针/整数转换
             tok = toks[operand]
+            if operand+1 < len(toks) and toks[operand+1].value in {'[', '.', '->', '('}:
+                continue  # The operand is an element/member/result, not its base pointer.
             src_base = src_quals = None
             if tok.kind == "ident" and tok.value in ptrs:
                 src_base, src_quals = ptrs[tok.value]
@@ -325,6 +341,10 @@ def check_pointer_cast(f: FileFacts, ctx: ProjectContext, active: set[str]) -> l
 
             if target_ptr and src_base and src_base != "void" and target_base != "void" \
                     and src_base != target_base:
+                # Rule 11.3's character-access exception (MISRA C:2012 AMD4.9).
+                # Qualifier removal is still checked independently above.
+                if target_base in {'char', 'signed char', 'unsigned char'}:
+                    continue
                 rid = _pick_rule(active, ["MISRA C:2012 11.3"])
                 if rid:
                     out.append(_alert(
@@ -649,6 +669,54 @@ def check_unreachable(f: FileFacts, ctx: ProjectContext, active: set[str]) -> li
     return out
 
 
+def _statement(tokens, start):
+    """Return (exclusive end, unconditional exit) for one C statement."""
+    if start >= len(tokens):
+        return start, False
+    value = tokens[start].value
+    if value == '{':
+        end = _match_forward(tokens, start, '{', '}')
+        if end < 0:
+            return len(tokens), False
+        return end+1, _sequence_terminates(tokens[start+1:end])
+    if value in {'if','for','while','switch'}:
+        opening = start+1
+        if opening >= len(tokens) or tokens[opening].value != '(':
+            return start+1, False
+        close = _match_forward(tokens, opening, '(', ')')
+        if close < 0:
+            return len(tokens), False
+        end, exits = _statement(tokens, close+1)
+        if value == 'if' and end < len(tokens) and tokens[end].value == 'else':
+            end, other_exits = _statement(tokens, end+1)
+            return end, exits and other_exits
+        return end, False
+    if start+1 < len(tokens) and tokens[start+1].value == ':':
+        return _statement(tokens, start+2)
+    i = start
+    while i < len(tokens):
+        if tokens[i].value in {'(', '[', '{'}:
+            pair = {'(':')', '[':']', '{':'}'}[tokens[i].value]
+            close = _match_forward(tokens,i,tokens[i].value,pair)
+            if close >= 0:
+                i=close+1
+                continue
+        if tokens[i].value == ';':
+            return i+1, value in {'break','return','continue','goto'}
+        i+=1
+    return i, False
+
+
+def _sequence_terminates(tokens):
+    cursor = 0
+    while cursor < len(tokens):
+        end, exits = _statement(tokens, cursor)
+        if exits:
+            return True
+        cursor=max(cursor+1,end)
+    return False
+
+
 def check_switch_termination(f: FileFacts, ctx: ProjectContext,
                              active: set[str]) -> list[Alert]:
     """MISRA 16.3：switch 子句缺少无条件 break/return。"""
@@ -682,34 +750,11 @@ def check_switch_termination(f: FileFacts, ctx: ProjectContext,
                     labels.append(k)
             for idx, start in enumerate(labels):
                 stop = labels[idx + 1] if idx + 1 < len(labels) else end
-                has_stmt = False
-                depth = 0
-                stmt_start = start + 1
-                last_kw = None
-                k = start + 1
-                while k < stop:
-                    tk = toks[k]
-                    if tk.kind == "punct":
-                        if tk.value in "([{":
-                            depth += 1
-                        elif tk.value in ")]}":
-                            depth = max(0, depth - 1)
-                        elif tk.value == ";" and depth == 0:
-                            first = toks[stmt_start] if stmt_start < k else None
-                            if first is not None and first.kind == "keyword" \
-                                    and first.value in ("break", "return",
-                                                        "continue", "goto"):
-                                last_kw = first
-                            stmt_start = k + 1
-                        elif tk.value == ":" and depth == 0:
-                            stmt_start = k + 1
-                    elif tk.kind != "punct" and not (
-                            tk.kind == "keyword" and tk.value in ("case", "default")):
-                        has_stmt = True
-                    k += 1
-                if not has_stmt:
-                    continue      # 空子句（标签分组）不单独判定
-                if last_kw is None:
+                colon = next((k for k in range(start+1, stop) if toks[k].value == ':'), stop)
+                body = toks[colon+1:stop]
+                if not body or all(tk.value == ';' for tk in body):
+                    continue
+                if not _sequence_terminates(body):
                     prev = toks[start - 1].value if start > 0 else ""
                     out.append(_alert(
                         "MISRA C:2012 16.3", Severity.WARNING,
@@ -760,7 +805,14 @@ def check_vla(f: FileFacts, ctx: ProjectContext, active: set[str]) -> list[Alert
                 (prev.kind == "keyword" and prev.value in _TYPE_KEYWORDS)
                 or (prev.kind == "ident" and (
                     prev.value.endswith("_t") or prev.value in ("BOOL", "UINT32", "INT32")))
-                or prev.value == "*")
+                )
+            if prev and prev.value == '*':
+                begin = i-1
+                while begin > 0 and toks[begin-1].value not in {';', '{', '}'}:
+                    begin -= 1
+                declaration = [tk.value for tk in toks[begin:i]]
+                typeish = bool(declaration and declaration[0] in _TYPE_KEYWORDS
+                               and '=' not in declaration)
             if not typeish:
                 continue
             close = _match_forward(toks, i + 1, "[", "]")

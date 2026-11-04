@@ -1,0 +1,758 @@
+﻿group,project,raw_id,rule,file,line,engine,message,status,reason
+original,01_earth_observer,1,core.DivideZero,src/camera.c,10,codechecker,Division by zero,DEFECT_EVIDENCE,命中E03空图像整数除零，独立触发失败且参考修改后通过。
+original,01_earth_observer,2,gcc-analyzer-too-complex,src/camera.c,31,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 6 stmt: 0):  _8 = m_35->pixel_count;EN: 20, EN: 26, EN: 33, EN: 40, EN: 47, EN: 54, EN: 61, EN: 68",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,01_earth_observer,3,gcc-analyzer-too-complex,src/camera.c,7,codechecker,"terminating analysis for this program point: callstring: [(SN: 36 -> SN: 8 in eo_camera_step)] before (SN: 33 stmt: 0):  if (i_8 < count_11(D))EN: 95, EN: 102, EN: 109, EN: 116, EN: 138, EN: 145, EN: 167, EN: 174",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,01_earth_observer,4,gcc-analyzer-too-complex,src/camera.c,41,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 16 stmt: 0):  if (i_28 <= 15)EN: 298-303, EN: 314, EN: 330",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,01_earth_observer,5,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,6,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,7,gcc-analyzer-too-complex,src/mission.c,93,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 37 stmt: 0):  _23 = m_34->pixel_count;EN: 133, EN: 140, EN: 147, EN: 154, EN: 161, EN: 168, EN: 175, EN: 182",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,01_earth_observer,8,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,9,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,10,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,11,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,12,MISRA C:2012 13.5,src/mission.c,62,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 platform_tx()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,13,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,14,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,15,MISRA C:2012 15.5,src/attitude.c,10,builtin,函数 eo_set_wheel 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,16,MISRA C:2012 15.5,src/camera.c,21,builtin,函数 eo_load_tile 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,17,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,18,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,19,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,20,MISRA C:2012 15.5,src/mission.c,84,builtin,函数 mission_command 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,21,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,22,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,23,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,24,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,25,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,26,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,27,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,28,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,29,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,30,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,31,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,32,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,33,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,34,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,35,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,36,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,37,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,38,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,39,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,40,MISRA C:2012 16.4,src/mission.c,42,builtin,函数 mission_slow 第 42 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,01_earth_observer,41,CERT C ARR30-C,src/attitude.c,9,builtin-flow,"数组m->wheel容量3，下标index的当前范围(0, 3)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,42,CERT C STR31-C,src/camera.c,18,builtin-flow,复制目标m->tile容量128，长度及偏移的当前上界256超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,43,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,44,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,45,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,01_earth_observer,46,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,3,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,4,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,5,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,6,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,7,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,8,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,9,MISRA C:2012 15.5,src/bundle.c,18,builtin,函数 ds_fragment 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,10,MISRA C:2012 15.5,src/bundle.c,28,builtin,函数 ds_cache 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,11,MISRA C:2012 15.5,src/bundle.c,49,builtin,函数 ds_retry 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,12,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,13,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,14,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,15,MISRA C:2012 15.5,src/mission.c,48,builtin,函数 mission_slow 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,16,MISRA C:2012 15.5,src/mission.c,69,builtin,函数 mission_command 存在 8 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,17,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,18,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,19,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,20,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,21,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,22,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,23,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,24,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,25,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,26,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,27,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,28,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,29,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,30,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,31,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,32,MISRA C:2012 15.5,src/sequencer.c,14,builtin,函数 ds_load_sequence 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,33,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,34,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,35,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,36,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,37,MISRA C:2012 21.3,src/bundle.c,26,builtin,stdca 禁用的内存分配/释放函数：malloc(),VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,38,MISRA C:2012 21.3,src/bundle.c,39,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,39,MISRA C:2012 21.3,src/mission.c,127,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,02_deep_space_probe,40,CERT C STR31-C,src/bundle.c,11,builtin-flow,复制目标m->assembly容量256，长度及偏移的当前上界131070超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,41,ECDET-CWE-416,src/bundle.c,39,builtin-flow,释放共享对象字段后未清除或更新该指针，后续调用可能沿悬空字段再次访问,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,42,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,43,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,44,CERT C STR31-C,src/sequencer.c,9,builtin-flow,复制目标m->steps容量8，长度及偏移的当前上界12超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,45,CERT C ARR30-C,src/sequencer.c,12,builtin-flow,"数组m->steps容量8，下标i的当前范围(0, 11)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,46,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,02_deep_space_probe,47,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,3,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,4,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,5,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,6,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,7,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,8,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,9,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,10,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,11,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,12,MISRA C:2012 15.5,src/mission.c,49,builtin,函数 mission_slow 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,13,MISRA C:2012 15.5,src/mission.c,73,builtin,函数 mission_command 存在 9 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,14,MISRA C:2012 15.5,src/navigation.c,19,builtin,函数 ld_profile 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,15,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,16,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,17,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,18,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,19,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,20,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,21,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,22,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,23,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,24,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,25,MISRA C:2012 15.5,src/propulsion.c,19,builtin,函数 ld_touchdown 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,26,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,27,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,28,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,29,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,30,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,31,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,32,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,33,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,34,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,03_lunar_lander,35,ECDET-CWE-195,src/navigation.c,7,builtin-flow,有符号输入可能为负，转为无符号数前未排除负值,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,36,CERT C ARR30-C,src/navigation.c,16,builtin-flow,"数组m->descent_profile容量8，下标i的当前范围(0, 8)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,37,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,38,CERT C INT30-C,src/propulsion.c,6,builtin-flow,无符号字段扣减前未检查余额，可能下溢回绕,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,39,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,40,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,03_lunar_lander,41,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,3,gcc-analyzer-too-complex,src/mission.c,84,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 39 stmt: 0):  if (j_32 <= 3)EN: 142, EN: 148, EN: 155, EN: 170, EN: 176, EN: 182, EN: 188, EN: 194",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,04_orbital_servicer,4,gcc-analyzer-too-complex,src/mission.c,58,codechecker,terminating analysis for this program point: callstring: [] before (SN: 59 stmt: 0):  _9 = m_18->mode;EN: 314-321,ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+original,04_orbital_servicer,5,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,6,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,7,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,8,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,9,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,10,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,11,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,12,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,13,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,14,MISRA C:2012 15.5,src/mission.c,69,builtin,函数 mission_command 存在 7 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,15,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,16,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,17,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,18,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,19,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,20,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,21,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,22,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,23,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,24,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,25,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,26,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,27,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,28,MISRA C:2012 15.5,src/rendezvous.c,18,builtin,函数 os_capture 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,29,MISRA C:2012 15.5,src/robot_arm.c,11,builtin,函数 os_set_joint 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,30,MISRA C:2012 15.5,src/robot_arm.c,21,builtin,函数 os_load_path 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,31,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,32,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,33,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,34,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,35,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,36,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,该提示有对应语法或API使用事实，属于规范约束，不等于命中预置功能缺陷。
+original,04_orbital_servicer,37,CERT C STR31-C,src/packet.c,20,builtin-flow,复制目标command->payload容量64，长度及偏移的当前上界192超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,38,CERT C ARR30-C,src/robot_arm.c,10,builtin-flow,"数组m->joint_target容量4，下标index的当前范围(-2147483648, 3)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,39,CERT C STR31-C,src/robot_arm.c,30,builtin-flow,复制目标m->trajectory容量6，长度及偏移的当前上界10超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,40,CERT C INT30-C,src/scheduler.c,19,builtin-flow,比较表达式中的无符号加法可能回绕，改变超时或边界判断结果,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,41,ECDET-CWE-119,src/storage.c,10,builtin-flow,分区步长为128，仅检查分区内偏移；偏移加传输长度可能越过分区边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+original,04_orbital_servicer,42,CERT C ARR30-C,src/telemetry.c,15,builtin-flow,snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+reference,01_earth_observer,1,gcc-analyzer-too-complex,src/camera.c,32,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 6 stmt: 0):  _8 = m_35->pixel_count;EN: 20, EN: 26, EN: 33, EN: 40, EN: 47, EN: 54, EN: 61, EN: 68",REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,2,gcc-analyzer-too-complex,src/camera.c,8,codechecker,"terminating analysis for this program point: callstring: [(SN: 39 -> SN: 8 in eo_camera_step)] before (SN: 36 stmt: 0):  if (i_8 < count_11(D))EN: 105, EN: 112, EN: 119, EN: 126, EN: 157, EN: 164, EN: 195, EN: 202",REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,3,gcc-analyzer-too-complex,src/camera.c,42,codechecker,terminating analysis for this program point: callstring: [] before (SN: 14 stmt: 0):  i_43 = 0;EN: 419-426,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,4,gcc-analyzer-too-complex,src/camera.c,42,codechecker,terminating analysis for this program point: callstring: [] before (SN: 16 stmt: 0):  if (i_28 <= 15)EN: 443-450,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,5,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,6,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,7,gcc-analyzer-too-complex,src/mission.c,93,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 37 stmt: 0):  _23 = m_34->pixel_count;EN: 133, EN: 140, EN: 147, EN: 154, EN: 161, EN: 168, EN: 175, EN: 182",REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,8,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,9,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,10,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,11,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,12,MISRA C:2012 13.5,src/mission.c,62,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 platform_tx()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,13,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,14,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,15,MISRA C:2012 15.5,src/attitude.c,10,builtin,函数 eo_set_wheel 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,16,MISRA C:2012 15.5,src/camera.c,11,builtin,函数 eo_mean 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,17,MISRA C:2012 15.5,src/camera.c,22,builtin,函数 eo_load_tile 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,18,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,19,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,20,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,21,MISRA C:2012 15.5,src/mission.c,84,builtin,函数 mission_command 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,22,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,23,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,24,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,25,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,26,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,27,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,28,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,29,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,30,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,31,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,32,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,33,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,34,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,35,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,36,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,37,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,38,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,39,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,40,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,01_earth_observer,41,MISRA C:2012 16.4,src/mission.c,42,builtin,函数 mission_slow 第 42 行的 switch 缺少 default 标签,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,3,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,4,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,5,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,6,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,7,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,8,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,9,MISRA C:2012 15.5,src/bundle.c,18,builtin,函数 ds_fragment 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,10,MISRA C:2012 15.5,src/bundle.c,28,builtin,函数 ds_cache 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,11,MISRA C:2012 15.5,src/bundle.c,51,builtin,函数 ds_retry 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,12,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,13,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,14,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,15,MISRA C:2012 15.5,src/mission.c,48,builtin,函数 mission_slow 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,16,MISRA C:2012 15.5,src/mission.c,69,builtin,函数 mission_command 存在 8 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,17,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,18,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,19,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,20,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,21,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,22,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,23,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,24,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,25,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,26,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,27,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,28,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,29,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,30,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,31,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,32,MISRA C:2012 15.5,src/sequencer.c,14,builtin,函数 ds_load_sequence 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,33,MISRA C:2012 15.5,src/sequencer.c,21,builtin,函数 ds_instrument_enable 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,34,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,35,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,36,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,37,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,38,MISRA C:2012 21.3,src/bundle.c,26,builtin,stdca 禁用的内存分配/释放函数：malloc(),REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,39,MISRA C:2012 21.3,src/bundle.c,39,builtin,stdca 禁用的内存分配/释放函数：free(),REFERENCE_NOTICE,参考版规范提示
+reference,02_deep_space_probe,40,MISRA C:2012 21.3,src/mission.c,127,builtin,stdca 禁用的内存分配/释放函数：free(),REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,3,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,4,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,5,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,6,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,7,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,8,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,9,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,10,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,11,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,12,MISRA C:2012 15.5,src/mission.c,49,builtin,函数 mission_slow 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,13,MISRA C:2012 15.5,src/mission.c,73,builtin,函数 mission_command 存在 9 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,14,MISRA C:2012 15.5,src/navigation.c,8,builtin,函数 ld_decode_radar 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,15,MISRA C:2012 15.5,src/navigation.c,20,builtin,函数 ld_profile 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,16,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,17,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,18,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,19,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,20,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,21,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,22,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,23,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,24,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,25,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,26,MISRA C:2012 15.5,src/propulsion.c,9,builtin,函数 ld_debit_fuel 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,27,MISRA C:2012 15.5,src/propulsion.c,20,builtin,函数 ld_touchdown 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,28,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,29,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,30,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,31,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,32,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,33,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,34,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,35,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,03_lunar_lander,36,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,1,cert-err33-c,src/main.c,58,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,2,cert-err33-c,src/main.c,75,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,3,gcc-analyzer-too-complex,src/mission.c,84,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 39 stmt: 0):  if (j_32 <= 3)EN: 142, EN: 148, EN: 155, EN: 170, EN: 176, EN: 182, EN: 188, EN: 194",REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,4,gcc-analyzer-too-complex,src/mission.c,58,codechecker,terminating analysis for this program point: callstring: [] before (SN: 59 stmt: 0):  _9 = m_18->mode;EN: 314-321,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,5,MISRA C:2012 13.5,src/app.c,54,builtin,逻辑 || 的右操作数包含持续副作用（函数调用 event_get()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,6,MISRA C:2012 13.5,src/app.c,96,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 queue_pop()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,7,MISRA C:2012 13.5,src/main.c,35,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 app_ingest()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,8,MISRA C:2012 13.5,src/main.c,74,builtin,逻辑 && 的右操作数包含持续副作用（函数调用 load_frame()），因短路求值其执行不保证,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,9,MISRA C:2012 14.2,src/main.c,48,builtin,for 循环控制变量 i 在循环体内被修改,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,10,MISRA C:2012 15.5,src/app.c,150,builtin,函数 app_nominal_check 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,11,MISRA C:2012 15.5,src/main.c,16,builtin,函数 parse_number 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,12,MISRA C:2012 15.5,src/main.c,35,builtin,函数 load_frame 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,13,MISRA C:2012 15.5,src/main.c,53,builtin,函数 main 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,14,MISRA C:2012 15.5,src/mission.c,69,builtin,函数 mission_command 存在 7 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,15,MISRA C:2012 15.5,src/packet.c,12,builtin,函数 packet_decode 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,16,MISRA C:2012 15.5,src/packet.c,31,builtin,函数 packet_encode 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,17,MISRA C:2012 15.5,src/packet.c,51,builtin,函数 link_receive 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,18,MISRA C:2012 15.5,src/platform.c,39,builtin,函数 platform_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,19,MISRA C:2012 15.5,src/platform.c,52,builtin,函数 platform_write 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,20,MISRA C:2012 15.5,src/platform.c,61,builtin,函数 platform_tx 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,21,MISRA C:2012 15.5,src/platform.c,74,builtin,函数 platform_erase 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,22,MISRA C:2012 15.5,src/platform.c,85,builtin,函数 platform_program 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,23,MISRA C:2012 15.5,src/platform.c,124,builtin,函数 clampf 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,24,MISRA C:2012 15.5,src/power.c,20,builtin,函数 power_request 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,25,MISRA C:2012 15.5,src/queue.c,18,builtin,函数 queue_push 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,26,MISRA C:2012 15.5,src/queue.c,29,builtin,函数 queue_pop 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,27,MISRA C:2012 15.5,src/queue.c,52,builtin,函数 event_get 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,28,MISRA C:2012 15.5,src/rendezvous.c,18,builtin,函数 os_capture 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,29,MISRA C:2012 15.5,src/robot_arm.c,11,builtin,函数 os_set_joint 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,30,MISRA C:2012 15.5,src/robot_arm.c,21,builtin,函数 os_load_path 存在 4 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,31,MISRA C:2012 15.5,src/scheduler.c,24,builtin,函数 watchdog_poll 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,32,MISRA C:2012 15.5,src/scheduler.c,46,builtin,函数 scheduler_add 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,33,MISRA C:2012 15.5,src/storage.c,10,builtin,函数 journal_patch 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,34,MISRA C:2012 15.5,src/storage.c,35,builtin,函数 journal_append 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,35,MISRA C:2012 15.5,src/storage.c,52,builtin,函数 journal_read 存在 3 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+reference,04_orbital_servicer,36,MISRA C:2012 15.5,src/telemetry.c,21,builtin,函数 link_status 存在 2 个 return，违反单一退出点,REFERENCE_NOTICE,参考版规范提示
+remote_final,aocs,1,security.ArrayBound,src/attitude.c,121,codechecker,Out of bound access to memory after the end of 'quat',DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,2,gcc-analyzer-out-of-bounds,src/attitude.c,121,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,3,bugprone-implicit-widening-of-multiplication-result,src/fdir.c,56,codechecker,performing an implicit widening conversion to type '__size_t' (aka 'unsigned long long') of a multiplication performed in type 'unsigned int',NEEDS_CONTEXT_REVIEW,语法事实存在；是否构成运行缺陷取决于数值范围或调用上下文。
+remote_final,aocs,4,performance-no-int-to-ptr,src/fdir.c,83,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,5,performance-no-int-to-ptr,src/fdir.c,100,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,6,cert-err33-c,src/fdir.c,104,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,7,performance-no-int-to-ptr,src/fdir.c,105,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,8,performance-no-int-to-ptr,src/imu.c,60,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,9,performance-no-int-to-ptr,src/imu.c,61,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,10,performance-no-int-to-ptr,src/imu.c,64,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,11,performance-no-int-to-ptr,src/imu.c,120,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,12,gcc-analyzer-out-of-bounds,src/imu.c,30,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,13,performance-no-int-to-ptr,src/main.c,98,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,14,performance-no-int-to-ptr,src/main.c,100,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,15,performance-no-int-to-ptr,src/main.c,101,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,16,performance-no-int-to-ptr,src/main.c,106,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,17,performance-no-int-to-ptr,src/main.c,107,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,18,performance-no-int-to-ptr,src/main.c,114,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,19,performance-no-int-to-ptr,src/main.c,115,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,20,performance-no-int-to-ptr,src/main.c,122,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,21,performance-no-int-to-ptr,src/main.c,123,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,22,performance-no-int-to-ptr,src/main.c,128,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,23,performance-no-int-to-ptr,src/main.c,129,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,24,cert-err33-c,src/main.c,163,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,25,performance-no-int-to-ptr,src/main.c,168,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,26,performance-no-int-to-ptr,src/main.c,169,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,27,cert-err34-c,src/main.c,185,codechecker,"'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,28,bugprone-branch-clone,src/main.c,198,codechecker,switch has 2 consecutive identical branches,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,29,performance-no-int-to-ptr,src/main.c,239,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,30,security.insecureAPI.strcpy,src/main.c,162,codechecker,Call to function 'strcpy' is insecure as it does not provide bounding of the memory buffer. Replace unbounded copy functions with analogous functions that support length arguments such as 'strlcpy'. CWE-119,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,31,gcc-analyzer-too-complex,src/main.c,197,codechecker,"terminating analysis for this program point: callstring: [(SN: 24 -> SN: 5 in main)] before (SN: 18 stmt: 0):  _3 = g_aocs.mode;EN: 134-135, EN: 253-254, EN: 396-397, EN: 467-468",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,aocs,32,gcc-analyzer-too-complex,src/main.c,236,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 8 stmt: 0):  _5 = now_22 - last_telemetry_11;EN: 188-189, EN: 309-310, EN: 523-525, EN: 666",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,aocs,33,gcc-analyzer-too-complex,src/main.c,231,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 6 stmt: 0):  _4 = now_22 - last_orbit_9;EN: 178-179, EN: 297-298, EN: 440, EN: 511-512, EN: 659",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,aocs,34,gcc-analyzer-out-of-bounds,src/main.c,162,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,35,core.StackAddressEscape,src/orbit.c,82,codechecker,Address of stack memory associated with local variable 'scratch' returned to caller,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,36,unix.cstring.UninitializedRead,src/orbit.c,99,codechecker,The last accessed element (at index 5) in the 2nd argument is undefined,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,37,gcc-analyzer-out-of-bounds,src/orbit.c,99,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,38,bugprone-switch-missing-default-case,src/wheel.c,40,codechecker,switching on non-enum value without default case may not cover all cases,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,39,misc-redundant-expression,src/wheel.c,107,codechecker,ineffective bitwise and operation,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,40,performance-no-int-to-ptr,src/wheel.c,119,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,41,performance-no-int-to-ptr,src/wheel.c,120,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,aocs,42,core.BitwiseShift,src/wheel.c,107,codechecker,Left shift by '40' overflows the capacity of 'unsigned int',DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,43,MISRA C:2012 2.5,include/aocs.h,96,builtin,宏 RTC 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,aocs,44,MISRA C:2012 2.5,src/imu.c,14,builtin,宏 IMU_CS_LOW 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,aocs,45,MISRA C:2012 2.5,src/imu.c,15,builtin,宏 IMU_CS_HIGH 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,aocs,46,MISRA C:2012 2.5,src/orbit.c,13,builtin,宏 R_EARTH 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,aocs,47,MISRA C:2012 2.5,src/orbit.c,14,builtin,宏 J2 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,aocs,48,MISRA C:2012 13.5,src/attitude.c,130,builtin,逻辑 && 的右操作数包含持续副作用（副作用运算符 ++），因短路求值其执行不保证,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,49,MISRA C:2012 14.2,src/attitude.c,142,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,50,MISRA C:2012 15.1,src/wheel.c,124,builtin,函数 wheel_unload 中使用了 goto，破坏单入单出结构,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,51,MISRA C:2012 15.5,src/wheel.c,45,builtin,函数 wheel_mode_state 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,52,MISRA C:2012 16.4,src/wheel.c,40,builtin,函数 wheel_mode_state 第 40 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,53,MISRA C:2012 16.6,src/wheel.c,40,builtin,函数 wheel_mode_state 第 40 行的 switch 仅有 1 个 case 标签（要求至少 2 个）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,54,MISRA C:2012 17.2,src/attitude.c,63,builtin,函数 attitude_normalize 直接递归调用自身，嵌入式栈深不可控,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,55,MISRA C:2012 21.3,src/fdir.c,27,builtin,stdca 禁用的内存分配/释放函数：malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,56,MISRA C:2012 21.3,src/fdir.c,55,builtin,stdca 禁用的内存分配/释放函数：realloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,57,MISRA C:2012 21.6,src/fdir.c,104,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,58,MISRA C:2012 21.3,src/fdir.c,108,builtin,stdca 禁用的内存分配/释放函数：malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,59,MISRA C:2012 21.3,src/fdir.c,112,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,60,MISRA C:2012 21.6,src/main.c,163,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,61,MISRA C:2012 21.6,src/main.c,181,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,62,MISRA C:2012 21.7,src/main.c,185,builtin,禁止使用的字符串转换函数：atoi(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,63,CERT C STR31-C,src/main.c,162,builtin,strcpy() 写入目标数组 frame_header[32] 需要 36 字节，缓冲区溢出,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,64,CERT C ARR30-C,src/attitude.c,121,builtin,数组 quat[4] 以常量下标 4 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,65,CERT C ARR30-C,src/imu.c,30,builtin,数组 s_calib[6] 以常量下标 6 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,66,ECDET-CWE-197,src/imu.c,45,builtin,uint8_t gain = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,67,ECDET-CWE-563,src/wheel.c,73,builtin,函数 wheel_apply_limit 的参数 derating 在函数体内未被使用,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,68,MISRA C:2012 10.3,src/imu.c,45,builtin,"赋值 gain：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,69,MISRA C:2012 6.1,include/aocs.h,148,builtin,位域 axis 使用类型 uint8_t，不属于允许的 _Bool/signed int/unsigned int,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,70,MISRA C:2012 6.1,include/aocs.h,149,builtin,位域 sign 使用类型 uint8_t，不属于允许的 _Bool/signed int/unsigned int,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,71,MISRA C:2012 11.4,src/fdir.c,117,builtin,整数 0x40022008UL 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,72,MISRA C:2012 11.4,src/imu.c,33,builtin,整数 0x40013C00u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,73,MISRA C:2012 11.4,src/imu.c,34,builtin,整数 0x40013C08u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,74,MISRA C:2012 11.4,src/imu.c,127,builtin,整数 0x40013C14u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,75,MISRA C:2012 11.4,src/main.c,91,builtin,整数 0x40023800u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,76,MISRA C:2012 11.4,src/main.c,92,builtin,整数 0x40023804u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,77,MISRA C:2012 11.4,src/main.c,93,builtin,整数 0x40023808u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,aocs,78,MISRA C:2012 12.2,src/wheel.c,107,builtin,移位计数 40 超出左操作数位宽 32 的有效范围 0..31,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,79,MISRA C:2012 13.6,src/wheel.c,90,builtin,sizeof 操作数包含副作用运算符 ++,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,80,MISRA C:2012 14.3,src/orbit.c,63,builtin,if 的条件表达式为常量 1（不变量）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,81,MISRA C:2012 18.8,src/orbit.c,48,builtin,数组 work 使用可变长度维度，栈分配大小不可静态确定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,82,ECDET-CWE-785,src/attitude.c,73,builtin,局部数组 work 占用约 1040 字节栈空间，存在栈溢出风险,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,83,MISRA C:2012 15.2,src/wheel.c,124,builtin,goto 跳转到此前定义的标签 retry（应仅允许前向跳转）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,84,MISRA C:2012 8.7,src/main.c,31,builtin,函数 SysTick_Handler 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,NEEDS_CONTEXT_REVIEW,中断向量或启动文件未给出，单文件文本引用不足以决定链接可见性。
+remote_final,aocs,85,MISRA C:2012 8.7,src/main.c,176,builtin,函数 ground_console 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,aocs,86,MISRA C:2012 8.7,src/main.c,24,builtin,对象 g_sys_tick 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,aocs,87,ECDET-MMIO-ACCESS,src/fdir.c,100,builtin-hw,向只读寄存器 TIM2.SR（read-only） 写入（0x40025010），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,88,ECDET-MMIO-ACCESS,src/imu.c,60,builtin-hw,向只读寄存器 GPIOA.IDR（read-only） 写入（0x40020010），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,89,ECDET-MMIO-ACCESS,src/imu.c,61,builtin-hw,读取只写寄存器 GPIOA.BSRR（write-only）（0x40020018），读到值未定义,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,90,ECDET-ISR-RACE,src/imu.c,79,builtin-hw,全局变量 g_imu_events 被 ISR（EXTI0_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,aocs,91,ECDET-VOLATILE,src/main.c,25,builtin-hw,ISR 共享变量 g_imu_raw 未声明 volatile，编译器优化可能破坏跨上下文可见性,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,aocs,92,ECDET-ISR-RACE,src/imu.c,80,builtin-hw,全局变量 g_imu_raw 被 ISR（EXTI0_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,aocs,93,ECDET-ISR-RACE,src/main.c,47,builtin-hw,全局变量 g_sys_tick 被 ISR（SysTick_Handler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,aocs,94,ECDET-ISR-BLOCK,src/fdir.c,106,builtin-hw,ISR TIM2_IRQHandler 中调用阻塞 API vTaskDelay()，ISR 上下文应轮询或置标志由任务处理,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,95,ECDET-HW-CRITICAL-PAIR,src/fdir.c,71,builtin-hw,函数 fdir_task 进入临界区后未退出，中断可能长期被关闭,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,96,ECDET-HW-ISR-HEAP,src/fdir.c,104,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,97,ECDET-HW-ISR-HEAP,src/fdir.c,108,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,98,ECDET-HW-ISR-HEAP,src/fdir.c,112,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,99,ECDET-HW-VOLATILE-RMW,src/imu.c,79,builtin-hw,volatile 共享变量 g_imu_events 在临界区外执行读改写（自增/复合赋值），操作本身非原子,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,aocs,100,ECDET-HW-BITFIELD,src/imu.c,98,builtin-hw,位域 ctrl.rate_mode（unsigned:3）被赋常量 9，超出可表示范围 0..7，高位被截断,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,aocs,101,CERT C ARR30-C,src/attitude.c,121,builtin-flow,"数组quat容量4，下标4的当前范围(4, 4)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,aocs,102,CERT C ARR30-C,src/imu.c,30,builtin-flow,"数组s_calib容量6，下标6的当前范围(6, 6)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,eps,1,performance-no-int-to-ptr,src/adc_isr.c,24,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,2,performance-no-int-to-ptr,src/adc_isr.c,24,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,3,performance-no-int-to-ptr,src/adc_isr.c,36,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,4,cert-err33-c,src/adc_isr.c,40,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,5,performance-no-int-to-ptr,src/adc_isr.c,43,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,6,performance-no-int-to-ptr,src/adc_isr.c,48,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,7,performance-no-int-to-ptr,src/adc_isr.c,51,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,8,performance-no-int-to-ptr,src/adc_isr.c,62,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,9,cert-err33-c,src/adc_isr.c,65,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,10,bugprone-narrowing-conversions,src/battery.c,71,codechecker,narrowing conversion from 'int' to signed type 'int16_t' (aka 'short') is implementation-defined,NEEDS_CONTEXT_REVIEW,语法事实存在；是否构成运行缺陷取决于数值范围或调用上下文。
+remote_final,eps,11,gcc-analyzer-out-of-bounds,src/battery.c,33,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,12,bugprone-macro-parentheses,src/heater.c,10,codechecker,macro replacement list should be enclosed in parentheses,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,13,bugprone-switch-missing-default-case,src/heater.c,86,codechecker,switching on non-enum value without default case may not cover all cases,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,14,deadcode.DeadStores,src/heater.c,75,codechecker,Value stored to 'i' is never read,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,15,performance-no-int-to-ptr,src/main.c,31,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,16,performance-no-int-to-ptr,src/main.c,70,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,17,performance-no-int-to-ptr,src/main.c,71,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,18,performance-no-int-to-ptr,src/main.c,72,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,19,performance-no-int-to-ptr,src/main.c,77,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,20,performance-no-int-to-ptr,src/main.c,78,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,21,performance-no-int-to-ptr,src/main.c,83,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,22,performance-no-int-to-ptr,src/main.c,84,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,23,performance-no-int-to-ptr,src/main.c,90,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,24,performance-no-int-to-ptr,src/main.c,91,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,25,cert-err33-c,src/main.c,132,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,26,performance-no-int-to-ptr,src/main.c,138,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,27,performance-no-int-to-ptr,src/main.c,164,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,28,performance-no-int-to-ptr,src/mppt.c,55,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,29,performance-no-int-to-ptr,src/mppt.c,103,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,30,performance-no-int-to-ptr,src/mppt.c,103,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,31,security.ArrayBound,src/mppt.c,43,codechecker,Out of bound access to memory after the end of 's_power_samples',DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,32,gcc-analyzer-out-of-bounds,src/mppt.c,43,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,33,performance-no-int-to-ptr,src/protection.c,62,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,34,performance-no-int-to-ptr,src/protection.c,81,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,35,performance-no-int-to-ptr,src/protection.c,101,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,36,performance-no-int-to-ptr,src/protection.c,101,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,37,optin.core.FixedAddressDereference,src/protection.c,83,codechecker,Dereference of a fixed address (loaded from variable 'ro_status'),VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,eps,38,gcc-analyzer-out-of-bounds,src/protection.c,43,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,39,MISRA C:2012 2.5,include/eps.h,93,builtin,宏 RTC 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,eps,40,MISRA C:2012 2.5,include/eps.h,94,builtin,宏 CAN1 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,eps,41,MISRA C:2012 2.5,src/battery.c,12,builtin,宏 BATTERY_OCV_POINTS 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,eps,42,MISRA C:2012 2.5,src/heater.c,12,builtin,宏 HEATER_PERIOD_US 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,eps,43,MISRA C:2012 2.5,src/mppt.c,13,builtin,宏 MPPT_SETTLE_TICKS 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,eps,44,MISRA C:2012 14.2,src/heater.c,78,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,45,MISRA C:2012 14.2,src/mppt.c,100,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,46,MISRA C:2012 14.2,src/protection.c,97,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,47,MISRA C:2012 15.5,src/battery.c,49,builtin,函数 battery_soc_from_voltage 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,48,MISRA C:2012 15.5,src/battery.c,105,builtin,函数 battery_charge_limit 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,49,MISRA C:2012 16.4,src/heater.c,86,builtin,函数 heater_control 第 86 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,50,MISRA C:2012 21.6,src/adc_isr.c,40,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,51,MISRA C:2012 21.6,src/adc_isr.c,65,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,52,MISRA C:2012 21.3,src/adc_isr.c,66,builtin,stdca 禁用的内存分配/释放函数：malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,53,MISRA C:2012 21.3,src/adc_isr.c,69,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,54,MISRA C:2012 21.6,src/main.c,132,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,55,MISRA C:2012 21.6,src/protection.c,112,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,56,CERT C ARR30-C,src/battery.c,33,builtin,数组 s_soc_table[11] 以常量下标 11 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,57,CERT C ARR30-C,src/mppt.c,43,builtin,数组 s_power_samples[4] 以常量下标 4 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,58,CERT C ARR30-C,src/protection.c,43,builtin,数组 s_trip_table[8] 以常量下标 8 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,59,ECDET-CWE-197,src/mppt.c,40,builtin,uint8_t step_gain = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,60,ECDET-CWE-197,src/protection.c,76,builtin,uint8_t spare_channel = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,61,MISRA C:2012 10.3,src/battery.c,86,builtin,"赋值 limit_raw：字面量 131070 超出 无符号16 位类型 表示范围 [0, 65535]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,62,MISRA C:2012 10.3,src/mppt.c,40,builtin,"赋值 step_gain：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,63,MISRA C:2012 10.3,src/protection.c,76,builtin,"赋值 spare_channel：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,64,MISRA C:2012 6.1,include/eps.h,141,builtin,位域 heater_id 使用类型 uint8_t，不属于允许的 _Bool/signed int/unsigned int,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,65,MISRA C:2012 6.1,include/eps.h,142,builtin,位域 channel 使用类型 uint8_t，不属于允许的 _Bool/signed int/unsigned int,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,66,MISRA C:2012 6.1,include/eps.h,143,builtin,位域 auto_mode 使用类型 uint8_t，不属于允许的 _Bool/signed int/unsigned int,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,67,MISRA C:2012 11.8,src/heater.c,71,builtin,强制转换移除了 bus_cfg 指向类型的 const 限定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,68,MISRA C:2012 11.8,src/protection.c,82,builtin,强制转换移除了 ro_status 指向类型的 const 限定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,69,MISRA C:2012 12.2,src/protection.c,88,builtin,移位计数 33 超出左操作数位宽 32 的有效范围 0..31,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,70,MISRA C:2012 13.6,src/heater.c,73,builtin,sizeof 操作数包含副作用运算符 ++,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,71,MISRA C:2012 16.3,src/heater.c,87,builtin,switch 子句（{）未以无条件 break/return 终止，存在贯穿风险,VALID_RULE_NOTICE,对应case确实贯穿到下一case；按项目MISRA规则计为有效规范提示。
+remote_final,eps,72,CERT C EXP45-C,src/heater.c,75,builtin,if 控制表达式包含赋值运算（可能误写 = 为 ==）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,73,MISRA C:2012 8.7,src/heater.c,98,builtin,函数 heater_total_duty 仅在 src/heater.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,eps,74,MISRA C:2012 8.7,src/main.c,63,builtin,函数 SysTick_Handler 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,NEEDS_CONTEXT_REVIEW,中断向量或启动文件未给出，单文件文本引用不足以决定链接可见性。
+remote_final,eps,75,ECDET-MMIO-ACCESS,src/adc_isr.c,48,builtin-hw,向只读寄存器 ADC.SR（read-only） 写入（0x40022000），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,76,ECDET-MMIO-ACCESS,src/adc_isr.c,51,builtin-hw,向只读寄存器 ADC.DR（read-only） 写入（0x40022008），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,77,ECDET-MMIO-ACCESS,src/adc_isr.c,62,builtin-hw,向只读寄存器 TIM2.SR（read-only） 写入（0x40025010），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,78,ECDET-ISR-RACE,src/adc_isr.c,21,builtin-hw,全局变量 g_adc_isr_count 被 ISR（ADC1_2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,eps,79,ECDET-VOLATILE,src/adc_isr.c,14,builtin-hw,ISR 共享变量 g_adc_raw 未声明 volatile，编译器优化可能破坏跨上下文可见性,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,eps,80,ECDET-ISR-RACE,src/adc_isr.c,20,builtin-hw,全局变量 g_adc_raw 被 ISR（ADC1_2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,eps,81,ECDET-ISR-RACE,src/adc_isr.c,22,builtin-hw,全局变量 g_adc_ticks 被 ISR（SysTick_Handler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,eps,82,ECDET-ISR-BLOCK,src/adc_isr.c,45,builtin-hw,ISR ADC1_2_IRQHandler 中调用阻塞 API vTaskDelay()，ISR 上下文应轮询或置标志由任务处理,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,83,ECDET-HW-CRITICAL-PAIR,src/adc_isr.c,93,builtin-hw,函数 adc_task 中退出临界区但此前没有进入操作,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,84,ECDET-HW-ISR-HEAP,src/adc_isr.c,40,builtin-hw,ISR ADC1_2_IRQHandler 中调用非 async-safe 函数 sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,85,ECDET-HW-ISR-HEAP,src/adc_isr.c,65,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,86,ECDET-HW-ISR-HEAP,src/adc_isr.c,66,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,87,ECDET-HW-ISR-HEAP,src/adc_isr.c,69,builtin-hw,ISR TIM2_IRQHandler 中调用非 async-safe 函数 free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,88,ECDET-HW-VOLATILE-RMW,src/adc_isr.c,86,builtin-hw,volatile 共享变量 g_adc_isr_count 在临界区外执行读改写（自增/复合赋值），操作本身非原子,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,eps,89,ECDET-HW-BITFIELD,src/heater.c,44,builtin-hw,位域 ctrl.heater_en（unsigned:4）被赋常量 17，超出可表示范围 0..15，高位被截断,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,eps,90,CERT C ARR30-C,src/battery.c,33,builtin-flow,"数组s_soc_table容量11，下标11的当前范围(11, 11)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,eps,91,CERT C ARR30-C,src/mppt.c,43,builtin-flow,"数组s_power_samples容量4，下标4的当前范围(4, 4)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,eps,92,CERT C ARR30-C,src/protection.c,43,builtin-flow,"数组s_trip_table容量8，下标8的当前范围(8, 8)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,1,bugprone-switch-missing-default-case,src/ccsds.c,119,codechecker,switching on non-enum value without default case may not cover all cases,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,2,gcc-analyzer-out-of-bounds,src/ccsds.c,61,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,3,gcc-analyzer-out-of-bounds,src/ccsds.c,71,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,4,bugprone-reserved-identifier,src/crc.c,15,codechecker,"declaration uses identifier '__crc_seed', which is a reserved identifier",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,5,bugprone-macro-repeated-side-effects,src/crc.c,66,codechecker,side effects in the 1st macro argument 'v' are repeated in macro expansion,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,6,performance-no-int-to-ptr,src/main.c,87,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,7,performance-no-int-to-ptr,src/main.c,88,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,8,performance-no-int-to-ptr,src/main.c,91,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,9,performance-no-int-to-ptr,src/main.c,96,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,10,performance-no-int-to-ptr,src/main.c,101,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,11,performance-no-int-to-ptr,src/main.c,102,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,12,performance-no-int-to-ptr,src/main.c,150,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,13,performance-no-int-to-ptr,src/main.c,186,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,14,performance-no-int-to-ptr,src/main.c,187,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,15,gcc-analyzer-too-complex,src/main.c,184,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 14 stmt: 0):  _8 = now_28 - last_wdg_15;EN: 142-144, EN: 192, EN: 291-294",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,obdh,16,gcc-analyzer-too-complex,src/main.c,163,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 3 stmt: 0):  now_28 ={v} g_obdh_tick;EN: 68, EN: 165, EN: 199, EN: 212, EN: 235, EN: 317, EN: 330, EN: 353",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,obdh,17,concurrency-mt-unsafe,src/payload.c,50,codechecker,function is not thread safe,NEEDS_CONTEXT_REVIEW,语法事实存在；是否构成运行缺陷取决于数值范围或调用上下文。
+remote_final,obdh,18,cert-msc50-cpp,src/payload.c,50,codechecker,rand() has limited randomness,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,19,misc-predictable-rand,src/payload.c,50,codechecker,rand() has limited randomness,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,20,unix.Malloc,src/payload.c,114,codechecker,"Argument to 'free()' is the address of the global variable 's_payload_builtin', which is not memory allocated by 'malloc()'",DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,21,gcc-analyzer-out-of-bounds,src/payload.c,96,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,22,gcc-analyzer-out-of-bounds,src/payload.c,96,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,23,gcc-analyzer-free-of-non-heap,src/payload.c,114,codechecker,'free' of '&s_payload_builtin[0]' which points to memory not on the heap,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,24,core.BitwiseShift,src/ringbuf.c,78,codechecker,Left shift by '36' overflows the capacity of 'unsigned int',DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,25,cert-err34-c,src/tc.c,73,codechecker,"'sscanf' used to convert a string to an unsigned integer value, but function will not report conversion errors; consider using 'strtoul' instead",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,26,cert-err34-c,src/tc.c,78,codechecker,"'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,27,bugprone-switch-missing-default-case,src/tc.c,103,codechecker,switching on non-enum value without default case may not cover all cases,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,28,performance-no-int-to-ptr,src/tc.c,113,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,29,performance-no-int-to-ptr,src/tc.c,122,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,30,optin.taint.GenericTaint,src/tc.c,138,codechecker,Untrusted data is used as a format string (CWE-134: Uncontrolled Format String),DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,31,performance-no-int-to-ptr,src/telemetry.c,48,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,32,performance-no-int-to-ptr,src/telemetry.c,64,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,33,performance-no-int-to-ptr,src/telemetry.c,126,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,34,performance-no-int-to-ptr,src/telemetry.c,127,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,obdh,35,security.ArrayBound,src/telemetry.c,88,codechecker,Out of bound access to memory after the end of 's_hk_table',DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,36,security.insecureAPI.strcpy,src/telemetry.c,102,codechecker,Call to function 'strcpy' is insecure as it does not provide bounding of the memory buffer. Replace unbounded copy functions with analogous functions that support length arguments such as 'strlcpy'. CWE-119,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,37,security.insecureAPI.strcpy,src/telemetry.c,104,codechecker,Call to function 'strcpy' is insecure as it does not provide bounding of the memory buffer. Replace unbounded copy functions with analogous functions that support length arguments such as 'strlcpy'. CWE-119,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,38,security.insecureAPI.strcpy,src/telemetry.c,106,codechecker,Call to function 'strcpy' is insecure as it does not provide bounding of the memory buffer. Replace unbounded copy functions with analogous functions that support length arguments such as 'strlcpy'. CWE-119,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,39,gcc-analyzer-out-of-bounds,src/telemetry.c,30,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,40,gcc-analyzer-out-of-bounds,src/telemetry.c,88,codechecker,buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,41,gcc-analyzer-out-of-bounds,src/telemetry.c,102,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,42,gcc-analyzer-out-of-bounds,src/telemetry.c,104,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,43,MISRA C:2012 2.5,include/obdh.h,74,builtin,宏 SPI1_BASE 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,44,MISRA C:2012 2.5,include/obdh.h,81,builtin,宏 GPIOA 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,45,MISRA C:2012 2.5,include/obdh.h,109,builtin,宏 TM_FRAME_MAX 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,46,MISRA C:2012 2.5,src/ccsds.c,16,builtin,宏 CCSDS_VERSION 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,47,MISRA C:2012 2.5,src/ccsds.c,17,builtin,宏 CCSDS_TYPE_TM 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,48,MISRA C:2012 2.5,src/crc.c,12,builtin,宏 CRC_UNUSED_MASK 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,49,MISRA C:2012 2.5,src/telemetry.c,13,builtin,宏 HK_SCALE_UV 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,obdh,50,MISRA C:2012 7.2,src/crc.c,60,builtin,常量 0xFFFFFFFF00000000 不小于 0x80000000 但缺少 u/U 后缀，符号性依赖实现,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,51,MISRA C:2012 14.2,src/crc.c,66,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,52,MISRA C:2012 15.1,src/tc.c,117,builtin,函数 tc_execute 中使用了 goto，破坏单入单出结构,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,53,MISRA C:2012 15.5,src/ccsds.c,75,builtin,函数 ccsds_build 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,54,MISRA C:2012 15.5,src/ccsds.c,91,builtin,函数 ccsds_parse 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,55,MISRA C:2012 15.5,src/crc.c,49,builtin,函数 crc16_ccitt 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,56,MISRA C:2012 15.5,src/payload.c,53,builtin,函数 payload_authenticate 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,57,MISRA C:2012 15.5,src/payload.c,82,builtin,函数 payload_route 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,58,MISRA C:2012 15.5,src/ringbuf.c,32,builtin,函数 ringbuf_push 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,59,MISRA C:2012 15.5,src/ringbuf.c,47,builtin,函数 ringbuf_pop 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,60,MISRA C:2012 15.5,src/ringbuf.c,61,builtin,函数 ringbuf_used 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,61,MISRA C:2012 15.5,src/tc.c,38,builtin,函数 tc_lookup 存在 6 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,62,MISRA C:2012 15.5,src/tc.c,75,builtin,函数 tc_parse_line 存在 4 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,63,MISRA C:2012 16.4,src/ccsds.c,119,builtin,函数 ccsds_vc_schedule 第 119 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,64,MISRA C:2012 16.4,src/tc.c,103,builtin,函数 tc_execute 第 103 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,65,MISRA C:2012 21.1,src/crc.c,15,builtin,函数名 __crc_seed 属于 C 标准保留标识符,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,66,MISRA C:2012 21.3,src/payload.c,32,builtin,stdca 禁用的内存分配/释放函数：calloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,67,CERT C MSC30-C,src/payload.c,50,builtin,rand() 非密码学安全随机源，安全场景应使用硬件 RNG：rand(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,68,MISRA C:2012 21.6,src/payload.c,52,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,69,MISRA C:2012 21.6,src/payload.c,56,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,70,MISRA C:2012 21.3,src/payload.c,110,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,71,MISRA C:2012 21.3,src/payload.c,114,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,72,MISRA C:2012 21.6,src/tc.c,73,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sscanf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,73,MISRA C:2012 21.7,src/tc.c,78,builtin,禁止使用的字符串转换函数：atoi(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,74,MISRA C:2012 21.6,src/tc.c,135,builtin,嵌入式场景禁用的 stdio 输入/输出函数：scanf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,75,MISRA C:2012 21.6,src/tc.c,138,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,76,CERT C STR31-C,src/telemetry.c,102,builtin,strcpy() 写入目标数组 name[8] 需要 11 字节，缓冲区溢出,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,77,CERT C STR31-C,src/telemetry.c,104,builtin,strcpy() 写入目标数组 name[8] 需要 9 字节，缓冲区溢出,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,78,CERT C ARR30-C,src/ccsds.c,71,builtin,数组 frame_body[256] 以常量下标 256 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,79,CERT C ARR30-C,src/telemetry.c,30,builtin,数组 s_hk_table[8] 以常量下标 8 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,80,CERT C ARR30-C,src/telemetry.c,88,builtin,数组 s_hk_table[8] 以常量下标 8 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,81,CERT C FIO30-C,src/tc.c,138,builtin,printf() 的格式串为变量而非字面量，存在格式串注入风险,DEFECT_EVIDENCE,地面输入被直接用作printf格式串，源码具有可控格式参数。
+remote_final,obdh,82,ECDET-CWE-1284,src/tc.c,73,builtin,sscanf() 的格式串含无宽度限定的 %s，读取长度无界，缓冲区溢出风险,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,83,ECDET-CWE-1284,src/tc.c,135,builtin,scanf() 的格式串含无宽度限定的 %s，读取长度无界，缓冲区溢出风险,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,84,ECDET-CWE-197,src/ccsds.c,45,builtin,uint8_t seq_window = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,85,ECDET-CWE-197,src/crc.c,59,builtin,uint8_t nibble = 0x1234 超出 8 位表示范围，实际截断为 52,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,86,ECDET-CWE-197,src/telemetry.c,74,builtin,uint8_t gain = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,87,MISRA C:2012 10.3,src/ccsds.c,45,builtin,"赋值 seq_window：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,88,MISRA C:2012 10.3,src/ccsds.c,53,builtin,赋值 apid：rhs 为有符号32 位类型，lhs 为无符号16 位类型，发生秩收窄,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,89,MISRA C:2012 10.3,src/crc.c,59,builtin,"赋值 nibble：字面量 4660 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,90,MISRA C:2012 10.3,src/crc.c,60,builtin,"赋值 wide：字面量 18446744069414584320 超出 无符号32 位类型 表示范围 [0, 4294967295]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,91,MISRA C:2012 10.3,src/ringbuf.c,77,builtin,"赋值 word_mask：字面量 4294967296 超出 无符号32 位类型 表示范围 [0, 4294967295]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,92,MISRA C:2012 10.3,src/telemetry.c,74,builtin,"赋值 gain：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,93,CERT C INT30-C,src/ringbuf.c,77,builtin,常量表达式经 + 运算后结果为 4294967296，超出 无符号32 位类型 范围，发生无符号回绕,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,94,MISRA C:2012 12.2,src/crc.c,25,builtin,移位计数 8 超出左操作数位宽 8 的有效范围 0..7,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,95,MISRA C:2012 12.2,src/ringbuf.c,78,builtin,移位计数 36 超出左操作数位宽 32 的有效范围 0..31,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,96,MISRA C:2012 13.6,src/ringbuf.c,84,builtin,sizeof 操作数包含副作用运算符 ++,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,97,MISRA C:2012 16.3,src/ccsds.c,120,builtin,switch 子句（{）未以无条件 break/return 终止，存在贯穿风险,VALID_RULE_NOTICE,对应case确实贯穿到下一case；按项目MISRA规则计为有效规范提示。
+remote_final,obdh,98,MISRA C:2012 16.3,src/tc.c,104,builtin,switch 子句（{）未以无条件 break/return 终止，存在贯穿风险,VALID_RULE_NOTICE,对应case确实贯穿到下一case；按项目MISRA规则计为有效规范提示。
+remote_final,obdh,99,MISRA C:2012 18.8,src/ringbuf.c,71,builtin,数组 scratch 使用可变长度维度，栈分配大小不可静态确定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,100,CERT C EXP45-C,src/tc.c,81,builtin,if 控制表达式包含赋值运算（可能误写 = 为 ==）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,101,CERT C MEM34-C,src/payload.c,114,builtin,free 释放取地址的对象 s_payload_builtin，该内存并非堆分配,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,102,MISRA C:2012 15.2,src/tc.c,117,builtin,goto 跳转到此前定义的标签 erase_retry（应仅允许前向跳转）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,103,CERT C PRE31-C,src/crc.c,66,builtin,宏 CRC_NIBBLE_ADD(v) 的实参含副作用，且 v 在宏体中被求值 2 次，行为不确定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,104,MISRA C:2012 8.7,src/main.c,80,builtin,函数 SysTick_Handler 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,NEEDS_CONTEXT_REVIEW,中断向量或启动文件未给出，单文件文本引用不足以决定链接可见性。
+remote_final,obdh,105,MISRA C:2012 8.7,src/main.c,23,builtin,对象 g_obdh_tick 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,obdh,106,MISRA C:2012 8.7,src/tc.c,142,builtin,函数 tc_statistics 仅在 src/tc.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,obdh,107,MISRA C:2012 8.7,src/telemetry.c,17,builtin,对象 g_hk_samples 仅在 src/telemetry.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,obdh,108,MISRA C:2012 8.7,src/telemetry.c,18,builtin,对象 g_hk_isr_count 仅在 src/telemetry.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,obdh,109,MISRA C:2012 8.7,src/telemetry.c,19,builtin,对象 g_hk_tick 仅在 src/telemetry.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,obdh,110,ECDET-MMIO-ACCESS,src/telemetry.c,64,builtin-hw,向只读寄存器 CAN1.TSR（read-only） 写入（0x40028008），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,111,ECDET-MMIO-ACCESS,src/telemetry.c,127,builtin-hw,读取只写寄存器 IWDG.KR（write-only）（0x40026000），读到值未定义,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,obdh,112,ECDET-ISR-RACE,src/telemetry.c,34,builtin-hw,全局变量 g_hk_isr_count 被 ISR（TIM2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,113,ECDET-ISR-RACE,src/main.c,113,builtin-hw,全局变量 g_hk_ready 被 ISR（TIM2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,114,ECDET-VOLATILE,src/telemetry.c,17,builtin-hw,ISR 共享变量 g_hk_samples 未声明 volatile，编译器优化可能破坏跨上下文可见性,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,115,ECDET-ISR-RACE,src/telemetry.c,33,builtin-hw,全局变量 g_hk_samples 被 ISR（TIM2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,116,ECDET-ISR-RACE,src/telemetry.c,35,builtin-hw,全局变量 g_hk_tick 被 ISR（TIM2_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,117,ECDET-ISR-RACE,src/main.c,40,builtin-hw,全局变量 g_obdh_tick 被 ISR（SysTick_Handler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,obdh,118,ECDET-ISR-BLOCK,src/telemetry.c,117,builtin-hw,ISR TIM2_IRQHandler 中调用阻塞 API xSemaphoreTake()，应改用 xSemaphoreTakeFromISR,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,119,ECDET-HW-VOLATILE-RMW,src/telemetry.c,55,builtin-hw,volatile 共享变量 g_hk_isr_count 在临界区外执行读改写（自增/复合赋值），操作本身非原子,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,obdh,120,CERT C ARR30-C,src/ccsds.c,71,builtin-flow,"数组frame_body容量256，下标256的当前范围(256, 256)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,121,CERT C STR31-C,src/ccsds.c,105,builtin-flow,复制目标out->data容量256，长度及偏移的当前上界65529超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,122,CERT C STR31-C,src/payload.c,96,builtin-flow,复制目标cache容量32，长度及偏移的当前上界64超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,123,CERT C ARR30-C,src/telemetry.c,30,builtin-flow,"数组s_hk_table容量8，下标8的当前范围(8, 8)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,obdh,124,CERT C ARR30-C,src/telemetry.c,88,builtin-flow,"数组s_hk_table容量8，下标8的当前范围(8, 8)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,1,concurrency-mt-unsafe,src/auth.c,43,codechecker,function is not thread safe,NEEDS_CONTEXT_REVIEW,语法事实存在；是否构成运行缺陷取决于数值范围或调用上下文。
+remote_final,ttc,2,cert-msc50-cpp,src/auth.c,43,codechecker,rand() has limited randomness,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,3,misc-predictable-rand,src/auth.c,43,codechecker,rand() has limited randomness,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,4,cert-err33-c,src/auth.c,44,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,5,bugprone-narrowing-conversions,src/auth.c,49,codechecker,narrowing conversion from 'int' to signed type 'char' is implementation-defined,NEEDS_CONTEXT_REVIEW,语法事实存在；是否构成运行缺陷取决于数值范围或调用上下文。
+remote_final,ttc,6,unix.Malloc,src/auth.c,112,codechecker,"Argument to 'free()' is the address of the global variable 'access_key', which is not memory allocated by 'malloc()'",DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,7,gcc-analyzer-out-of-bounds,src/auth.c,80,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,8,gcc-analyzer-free-of-non-heap,src/auth.c,112,codechecker,'free' of '&access_key' which points to memory not on the heap,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,9,performance-no-int-to-ptr,src/dma.c,77,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,10,cert-err33-c,src/dma.c,80,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,11,performance-no-int-to-ptr,src/dma.c,83,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,12,performance-no-int-to-ptr,src/dma.c,104,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,13,gcc-analyzer-out-of-bounds,src/fec.c,43,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,14,gcc-analyzer-out-of-bounds,src/fec.c,89,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,15,gcc-analyzer-out-of-bounds,src/fec.c,89,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,16,performance-no-int-to-ptr,src/main.c,35,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,17,performance-no-int-to-ptr,src/main.c,65,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,18,performance-no-int-to-ptr,src/main.c,66,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,19,performance-no-int-to-ptr,src/main.c,66,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,20,performance-no-int-to-ptr,src/main.c,67,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,21,performance-no-int-to-ptr,src/main.c,72,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,22,performance-no-int-to-ptr,src/main.c,73,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,23,performance-no-int-to-ptr,src/main.c,78,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,24,performance-no-int-to-ptr,src/main.c,79,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,25,performance-no-int-to-ptr,src/main.c,110,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,26,cert-err33-c,src/main.c,143,codechecker,the value returned by this function should not be disregarded; neglecting it may lead to errors,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,27,performance-no-int-to-ptr,src/main.c,148,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,28,performance-no-int-to-ptr,src/main.c,167,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,29,performance-no-int-to-ptr,src/main.c,182,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,30,gcc-analyzer-too-complex,src/main.c,133,codechecker,"terminating analysis for this program point: callstring: [(SN: 33 -> SN: 5 in main)] before (SN: 32 stmt: 0):  return;EN: 111-113, EN: 258-260, EN: 451-452",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,ttc,31,gcc-analyzer-too-complex,src/main.c,178,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 8 stmt: 0):  _9 = now_29 - last_tm_18;EN: 139-140, EN: 286-288, EN: 473-475",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,ttc,32,gcc-analyzer-too-complex,src/main.c,162,codechecker,"terminating analysis for this program point: callstring: [] before (SN: 3 stmt: 0):  now_29 ={v} g_frame_ticks;EN: 60, EN: 207, EN: 400, EN: 537, EN: 585, EN: 627, EN: 667, EN: 707",ANALYZER_LIMITATION,GCC报告分析复杂度截断，属于分析器状态信息。
+remote_final,ttc,33,bugprone-switch-missing-default-case,src/tc_decode.c,101,codechecker,switching on non-enum value without default case may not cover all cases,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,34,performance-no-int-to-ptr,src/tc_decode.c,106,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,35,performance-no-int-to-ptr,src/tc_decode.c,106,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,36,performance-no-int-to-ptr,src/tc_decode.c,111,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,37,performance-no-int-to-ptr,src/tc_decode.c,120,codechecker,integer to pointer cast pessimizes optimization opportunities,VALID_RULE_NOTICE,源码采用固定地址MMIO模型，属于平台适配或可移植性提示。
+remote_final,ttc,38,cert-err34-c,src/tc_decode.c,165,codechecker,"'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,39,security.insecureAPI.strcpy,src/tc_decode.c,72,codechecker,Call to function 'strcpy' is insecure as it does not provide bounding of the memory buffer. Replace unbounded copy functions with analogous functions that support length arguments such as 'strlcpy'. CWE-119,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,40,core.StackAddressEscape,src/tc_decode.c,145,codechecker,Address of stack memory associated with local variable 'name' returned to caller,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,41,gcc-analyzer-out-of-bounds,src/tc_decode.c,38,codechecker,buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,42,gcc-analyzer-out-of-bounds,src/tc_decode.c,70,codechecker,stack-based buffer over-read,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,43,gcc-analyzer-out-of-bounds,src/tc_decode.c,72,codechecker,stack-based buffer overflow,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,44,MISRA C:2012 2.5,include/ttc.h,84,builtin,宏 ADC1 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,ttc,45,MISRA C:2012 2.5,include/ttc.h,107,builtin,宏 TM_FRAME_MAX 在本翻译单元中未被使用,VALID_RULE_NOTICE,当前完整工程中未找到宏的实际使用，属于未用定义提示。
+remote_final,ttc,46,MISRA C:2012 14.2,src/ranging.c,72,builtin,for 循环控制变量 i 在循环体内被修改,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,47,MISRA C:2012 15.1,src/tc_decode.c,115,builtin,函数 tc_execute 中使用了 goto，破坏单入单出结构,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,48,MISRA C:2012 15.5,src/auth.c,83,builtin,函数 auth_verify 存在 5 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,49,MISRA C:2012 15.5,src/fec.c,55,builtin,函数 fec_gf_mul 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,50,MISRA C:2012 15.5,src/fec.c,118,builtin,函数 fec_encode 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,51,MISRA C:2012 15.5,src/fec.c,139,builtin,函数 fec_decode 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,52,MISRA C:2012 15.5,src/tc_decode.c,60,builtin,函数 tc_decode_frame 存在 3 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,53,MISRA C:2012 15.5,src/tc_decode.c,162,builtin,函数 tc_report 存在 2 个 return，违反单一退出点,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,54,MISRA C:2012 16.4,src/tc_decode.c,101,builtin,函数 tc_execute 第 101 行的 switch 缺少 default 标签,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,55,MISRA C:2012 21.3,src/auth.c,25,builtin,stdca 禁用的内存分配/释放函数：malloc(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,56,CERT C MSC30-C,src/auth.c,43,builtin,rand() 非密码学安全随机源，安全场景应使用硬件 RNG：rand(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,57,MISRA C:2012 21.6,src/auth.c,44,builtin,嵌入式场景禁用的 stdio 输入/输出函数：snprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,58,MISRA C:2012 21.3,src/auth.c,108,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,59,MISRA C:2012 21.3,src/auth.c,112,builtin,stdca 禁用的内存分配/释放函数：free(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,60,MISRA C:2012 21.6,src/dma.c,80,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,61,MISRA C:2012 21.6,src/main.c,143,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,62,MISRA C:2012 21.6,src/tc_decode.c,161,builtin,嵌入式场景禁用的 stdio 输入/输出函数：sscanf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,63,MISRA C:2012 21.7,src/tc_decode.c,165,builtin,禁止使用的字符串转换函数：atoi(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,64,MISRA C:2012 21.6,src/tc_decode.c,169,builtin,嵌入式场景禁用的 stdio 输入/输出函数：printf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,65,CERT C STR31-C,src/tc_decode.c,72,builtin,strcpy() 写入目标数组 cmd_name[12] 需要 16 字节，缓冲区溢出,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,66,CERT C ARR30-C,src/fec.c,43,builtin,数组 s_exp[512] 以常量下标 512 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,67,CERT C ARR30-C,src/tc_decode.c,38,builtin,数组 s_opcode_table[16] 以常量下标 16 越界访问,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,68,CERT C FIO30-C,src/tc_decode.c,169,builtin,printf() 的格式串为变量而非字面量，存在格式串注入风险,DEFECT_EVIDENCE,地面输入被直接用作printf格式串，源码具有可控格式参数。
+remote_final,ttc,69,ECDET-CWE-1284,src/tc_decode.c,161,builtin,sscanf() 的格式串含无宽度限定的 %s，读取长度无界，缓冲区溢出风险,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,70,ECDET-CWE-197,src/dma.c,55,builtin,uint8_t slot_index = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,71,ECDET-CWE-197,src/fec.c,67,builtin,uint8_t small_gain = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,72,ECDET-CWE-197,src/ranging.c,61,builtin,uint16_t iq_gain = 70000 超出 16 位表示范围，实际截断为 4464,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,73,ECDET-CWE-197,src/tc_decode.c,51,builtin,uint8_t crc_gain = 300 超出 8 位表示范围，实际截断为 44,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,74,MISRA C:2012 10.3,src/dma.c,55,builtin,"赋值 slot_index：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,75,MISRA C:2012 10.3,src/fec.c,67,builtin,"赋值 small_gain：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,76,MISRA C:2012 10.3,src/fec.c,105,builtin,"赋值 overflow_probe：字面量 4294967296 超出 无符号32 位类型 表示范围 [0, 4294967295]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,77,MISRA C:2012 10.3,src/ranging.c,61,builtin,"赋值 iq_gain：字面量 70000 超出 无符号16 位类型 表示范围 [0, 65535]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,78,MISRA C:2012 10.3,src/tc_decode.c,51,builtin,"赋值 crc_gain：字面量 300 超出 无符号8 位类型 表示范围 [0, 255]",VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,79,MISRA C:2012 11.4,src/dma.c,105,builtin,整数 0x4002A004u 被转换为指针，地址可移植性与对齐均无保证,VALID_RULE_NOTICE,代码存在固定地址到指针的转换；属于MMIO工程的可移植性提示。
+remote_final,ttc,80,MISRA C:2012 11.3,src/fec.c,113,builtin,指针 s_exp 从 unsigned char* 转换为 unsigned short*，指向类型不同,VALID_RULE_NOTICE,uint8_t对象指针转为uint16_t对象指针，不属于转为字符指针的例外。
+remote_final,ttc,81,CERT C INT30-C,src/fec.c,105,builtin,常量表达式经 + 运算后结果为 4294967296，超出 无符号32 位类型 范围，发生无符号回绕,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,82,MISRA C:2012 12.2,src/fec.c,104,builtin,移位计数 40 超出左操作数位宽 32 的有效范围 0..31,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,83,MISRA C:2012 13.6,src/auth.c,46,builtin,sizeof 操作数包含副作用运算符 ++,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,84,MISRA C:2012 16.3,src/tc_decode.c,102,builtin,switch 子句（{）未以无条件 break/return 终止，存在贯穿风险,VALID_RULE_NOTICE,对应case确实贯穿到下一case；按项目MISRA规则计为有效规范提示。
+remote_final,ttc,85,MISRA C:2012 18.6,src/tc_decode.c,145,builtin,返回局部对象 name 的地址，函数退出后指针悬空,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,86,MISRA C:2012 18.8,src/fec.c,79,builtin,数组 dynamic_block 使用可变长度维度，栈分配大小不可静态确定,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,87,CERT C EXP45-C,src/ranging.c,75,builtin,if 控制表达式包含赋值运算（可能误写 = 为 ==）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,88,CERT C EXP45-C,src/ranging.c,90,builtin,while 控制表达式包含赋值运算（可能误写 = 为 ==）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,89,CERT C MSC41-C,src/auth.c,17,builtin,标识符 access_key 直接赋值/定义为字符串常量，疑似硬编码敏感信息,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,90,ECDET-CWE-785,src/fec.c,64,builtin,局部数组 work_block 占用约 1100 字节栈空间，存在栈溢出风险,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,91,MISRA C:2012 15.2,src/tc_decode.c,115,builtin,goto 跳转到此前定义的标签 dump_retry（应仅允许前向跳转）,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,92,MISRA C:2012 8.7,src/auth.c,105,builtin,函数 auth_cleanup 仅在 src/auth.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,ttc,93,MISRA C:2012 8.7,src/dma.c,16,builtin,对象 g_uart_rx_bytes 仅在 src/dma.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,ttc,94,MISRA C:2012 8.7,src/main.c,58,builtin,函数 SysTick_Handler 仅在 src/main.c 中被引用，建议声明为 static 收窄链接域,NEEDS_CONTEXT_REVIEW,中断向量或启动文件未给出，单文件文本引用不足以决定链接可见性。
+remote_final,ttc,95,MISRA C:2012 8.7,src/ranging.c,82,builtin,函数 ranging_selftest 仅在 src/ranging.c 中被引用，建议声明为 static 收窄链接域,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,ttc,96,MISRA C:2012 8.9,src/dma.c,16,builtin,对象 g_uart_rx_bytes 仅在单个函数中使用，应改在块作用域定义,VALID_RULE_NOTICE,按项目当前可见引用关系，属于缩小对象或函数作用域的规范建议。
+remote_final,ttc,97,ECDET-MMIO-ACCESS,src/dma.c,104,builtin-hw,向只读寄存器 TRX.STATUS（read-only） 写入（0x4002A004），写入被硬件忽略,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,98,ECDET-ISR-RACE,src/dma.c,32,builtin-hw,全局变量 g_dma_count 被 ISR（DMA1_Channel1_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,99,ECDET-VOLATILE,src/dma.c,14,builtin-hw,ISR 共享变量 g_dma_done 未声明 volatile，编译器优化可能破坏跨上下文可见性,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,100,ECDET-ISR-RACE,src/dma.c,31,builtin-hw,全局变量 g_dma_done 被 ISR（DMA1_Channel1_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,101,ECDET-ISR-RACE,src/main.c,93,builtin-hw,全局变量 g_frame_ticks 被 ISR（SysTick_Handler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,102,ECDET-VOLATILE,src/dma.c,19,builtin-hw,ISR 共享变量 s_desc_head 未声明 volatile，编译器优化可能破坏跨上下文可见性,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,103,ECDET-ISR-RACE,src/dma.c,30,builtin-hw,全局变量 s_desc_head 被 ISR（DMA1_Channel1_IRQHandler）与任务上下文共享，且存在临界区区间之外的访问，存在竞争,NEEDS_CONTEXT_REVIEW,已发现任务与中断共享状态；实际竞争和可见性需结合RTOS临界区实现与启动时序核实。
+remote_final,ttc,104,ECDET-ISR-BLOCK,src/dma.c,81,builtin-hw,ISR USART1_IRQHandler 中调用阻塞 API xSemaphoreTake()，应改用 xSemaphoreTakeFromISR,VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,105,ECDET-HW-CRITICAL-PAIR,src/dma.c,94,builtin-hw,函数 dma_task 进入临界区后未退出，中断可能长期被关闭,DEFECT_EVIDENCE,源码对象边界、常量、对象寿命或SVD访问约束与告警原因一致；属于源码审查证据。
+remote_final,ttc,106,ECDET-HW-ISR-HEAP,src/dma.c,80,builtin-hw,ISR USART1_IRQHandler 中调用非 async-safe 函数 sprintf(),VALID_RULE_NOTICE,对应源码具有该规则描述的操作；按项目规则口径保留提示，功能缺陷归属另按逐项清单匹配。
+remote_final,ttc,107,CERT C ARR30-C,src/fec.c,43,builtin-flow,"数组s_exp容量512，下标512的当前范围(512, 512)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,108,CERT C ARR30-C,src/tc_decode.c,38,builtin-flow,"数组s_opcode_table容量16，下标16的当前范围(16, 16)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,109,CERT C STR31-C,src/tc_decode.c,63,builtin-flow,复制目标payload容量192，长度及偏移的当前上界65535超出容量；需校验目标边界,DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。
+remote_final,ttc,110,CERT C ARR30-C,src/tc_decode.c,81,builtin-flow,"数组frame->raw容量192，下标TC_HDR_LEN + i的当前范围(4, 65532)未被限制在合法区间",DEFECT_EVIDENCE,边界或生命周期根因匹配；具体缺陷编号见逐项表。新告警保持Suspected。

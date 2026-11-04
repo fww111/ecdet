@@ -1,0 +1,642 @@
+[
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "B01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "B02",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "B03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "B04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "E01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "E02",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "E03",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "original",
+    "defect": "E04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "B01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "B02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "B03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "B04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "E01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "E02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "E03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "01_earth_observer",
+    "variant": "reference",
+    "defect": "E04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "B01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "B02",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "B03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "B04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "D01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "D02",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "D03",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "original",
+    "defect": "D04",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "B01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "B02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "B03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "B04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "D01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "D02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "D03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "02_deep_space_probe",
+    "variant": "reference",
+    "defect": "D04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "B01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "B02",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "B03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "B04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "L01",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "L02",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "L03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "original",
+    "defect": "L04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "B01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "B02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "B03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "B04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "L01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "L02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "L03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "03_lunar_lander",
+    "variant": "reference",
+    "defect": "L04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "B01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "B02",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "B03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "B04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "O01",
+    "returncode": 1,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": false,
+    "sanitizer": true
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "O02",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "O03",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "original",
+    "defect": "O04",
+    "returncode": 10,
+    "entered": true,
+    "oracle_pass": false,
+    "oracle_failed": true,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "B01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "B02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "B03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "B04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "O01",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "O02",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "O03",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  },
+  {
+    "project": "04_orbital_servicer",
+    "variant": "reference",
+    "defect": "O04",
+    "returncode": 0,
+    "entered": true,
+    "oracle_pass": true,
+    "oracle_failed": false,
+    "sanitizer": false
+  }
+]

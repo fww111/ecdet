@@ -1,0 +1,80 @@
+[
+  {
+    "id": "R-OBDH-01",
+    "project": "obdh",
+    "file": "src/ccsds.c",
+    "line": 105,
+    "title": "解析包只校验源长度，未校验256字节目标容量",
+    "variant": "original",
+    "returncode": 1,
+    "entered": true,
+    "passed": false,
+    "failed": false,
+    "sanitizer": true
+  },
+  {
+    "id": "R-OBDH-01",
+    "project": "obdh",
+    "file": "src/ccsds.c",
+    "line": 105,
+    "title": "解析包只校验源长度，未校验256字节目标容量",
+    "variant": "guarded",
+    "returncode": 0,
+    "entered": true,
+    "passed": true,
+    "failed": false,
+    "sanitizer": false
+  },
+  {
+    "id": "R-TTC-01",
+    "project": "ttc",
+    "file": "src/tc_decode.c",
+    "line": 63,
+    "title": "遥控帧len超出帧缓存，首次memcpy越界",
+    "variant": "original",
+    "returncode": 1,
+    "entered": true,
+    "passed": false,
+    "failed": false,
+    "sanitizer": true
+  },
+  {
+    "id": "R-TTC-01",
+    "project": "ttc",
+    "file": "src/tc_decode.c",
+    "line": 63,
+    "title": "遥控帧len超出帧缓存，首次memcpy越界",
+    "variant": "guarded",
+    "returncode": 0,
+    "entered": true,
+    "passed": true,
+    "failed": false,
+    "sanitizer": false
+  },
+  {
+    "id": "R-EPS-01",
+    "project": "eps",
+    "file": "src/heater.c",
+    "line": 32,
+    "title": "占空比设置接口未执行800上限",
+    "variant": "original",
+    "returncode": 10,
+    "entered": true,
+    "passed": false,
+    "failed": true,
+    "sanitizer": false
+  },
+  {
+    "id": "R-EPS-01",
+    "project": "eps",
+    "file": "src/heater.c",
+    "line": 32,
+    "title": "占空比设置接口未执行800上限",
+    "variant": "guarded",
+    "returncode": 0,
+    "entered": true,
+    "passed": true,
+    "failed": false,
+    "sanitizer": false
+  }
+]
