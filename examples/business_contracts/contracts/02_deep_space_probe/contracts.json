@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "D02",
+      "source": "src/sequencer.c",
+      "function": "ds_instrument_enable",
+      "harness": "D02.c",
+      "requirement": "DS_SAFE状态拒绝仪器上电，其余枚举状态允许上电。",
+      "requirement_origin": "synthetic spacecraft evaluation specification",
+      "sources": [
+        "src/queue.c"
+      ]
+    }
+  ]
+}

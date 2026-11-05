@@ -1,0 +1,43 @@
+{
+  "original_projects": 8,
+  "scan_runs": 13,
+  "static_local_detected": 27,
+  "with_contracts_local_detected": 32,
+  "local_seeded_total": 32,
+  "remote_specific_probes_detected": 3,
+  "remote_specific_probes_total": 3,
+  "contract_bad_fail": 6,
+  "contract_reference_pass": 6,
+  "reference_assertions": 1297,
+  "original_raw_alerts": 606,
+  "original_deduplicated_alerts": 588,
+  "removed_confirmed_false_positives": 359,
+  "review29": {
+    "VALID_RULE_NOTICE": 5,
+    "CONFIRMED_FP": 4,
+    "SOURCE_SHARED_STATE_RISK": 13,
+    "HARDWARE_CONDITIONAL": 7
+  },
+  "expected_project_rule_pairs": 108,
+  "expected_pairs_with_alert": 105,
+  "expected_pairs_without_alert": [
+    {
+      "project": "aocs",
+      "rule": "CERT C FIO30-C",
+      "previous_assessment": "ONLY_FALSE_POSITIVES"
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C FIO30-C",
+      "previous_assessment": "ONLY_FALSE_POSITIVES"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-VOLATILE-RMW",
+      "previous_assessment": "ONLY_FALSE_POSITIVES"
+    }
+  ],
+  "source_inputs_unchanged": true,
+  "detector_hashes_match": true,
+  "hardware_execution_verified": false
+}

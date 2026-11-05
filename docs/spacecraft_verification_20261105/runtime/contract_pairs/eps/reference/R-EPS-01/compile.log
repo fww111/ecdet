@@ -1,0 +1,4 @@
+${WORKSPACE}\spacecraft_followup_20261104\pairs_v2\eps\reference\R-EPS-01-3321840727b4\target.c: In function 'heater_apply_config':
+${WORKSPACE}\spacecraft_followup_20261104\pairs_v2\eps\reference\R-EPS-01-3321840727b4\target.c:47:22: warning: conversion from 'unsigned int' to 'unsigned char:4' changes value from '17' to '1' [-Woverflow]
+   47 |     ctrl.heater_en = 17u;
+      |                      ^~~

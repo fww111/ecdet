@@ -1,0 +1,3 @@
+ECDET_TARGET:L04
+ECDET_TARGET:L04
+ECDET_FAIL:L04:5:result==(left && right)

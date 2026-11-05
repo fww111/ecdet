@@ -1,0 +1,4 @@
+﻿project,rule,file,lines,detected,mode
+obdh,CERT C STR31-C,src/ccsds.c,[105],True,static
+ttc,CERT C STR31-C,src/tc_decode.c,[63],True,static
+eps,ECDET-BUSINESS-CONTRACT,src/heater.c,[27],True,contract

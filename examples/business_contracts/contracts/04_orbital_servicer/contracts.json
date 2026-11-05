@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "O03",
+      "source": "src/rendezvous.c",
+      "function": "os_navigation_valid",
+      "harness": "O03.c",
+      "requirement": "目标有效且无符号时间差不超过750毫秒时导航数据才有效。",
+      "requirement_origin": "synthetic spacecraft evaluation specification",
+      "sources": [
+        "src/platform.c"
+      ]
+    },
+    {
+      "id": "O04",
+      "source": "src/rendezvous.c",
+      "function": "os_capture",
+      "harness": "O04.c",
+      "requirement": "抓捕须获许可、处于OS_CAPTURE、距离不超过0.5米、闭合速度绝对值不超过0.02米每秒。",
+      "requirement_origin": "synthetic spacecraft evaluation specification",
+      "sources": [
+        "src/platform.c"
+      ]
+    }
+  ]
+}

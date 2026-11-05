@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "E02",
+      "source": "src/attitude.c",
+      "function": "eo_fuse_star",
+      "harness": "E02.c",
+      "requirement": "星敏感器有效且无符号时间差不超过500毫秒时才融合姿态。",
+      "requirement_origin": "synthetic spacecraft evaluation specification",
+      "sources": [
+        "src/platform.c"
+      ]
+    }
+  ]
+}

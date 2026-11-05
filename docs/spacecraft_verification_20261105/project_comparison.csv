@@ -1,0 +1,14 @@
+﻿group,project,raw,deduplicated
+original,01_earth_observer,47,47
+original,02_deep_space_probe,48,48
+original,03_lunar_lander,42,42
+original,04_orbital_servicer,44,44
+reference,01_earth_observer,41,40
+reference,02_deep_space_probe,40,40
+reference,03_lunar_lander,36,36
+reference,04_orbital_servicer,36,36
+remote_final,aocs,101,98
+remote_final,eps,92,86
+remote_final,obdh,123,119
+remote_final,ttc,109,104
+remote_reference,eps,91,85

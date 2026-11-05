@@ -1,0 +1,80 @@
+[
+  {
+    "group": "original",
+    "project": "01_earth_observer",
+    "raw": 47,
+    "deduplicated": 47
+  },
+  {
+    "group": "original",
+    "project": "02_deep_space_probe",
+    "raw": 48,
+    "deduplicated": 48
+  },
+  {
+    "group": "original",
+    "project": "03_lunar_lander",
+    "raw": 42,
+    "deduplicated": 42
+  },
+  {
+    "group": "original",
+    "project": "04_orbital_servicer",
+    "raw": 44,
+    "deduplicated": 44
+  },
+  {
+    "group": "reference",
+    "project": "01_earth_observer",
+    "raw": 41,
+    "deduplicated": 40
+  },
+  {
+    "group": "reference",
+    "project": "02_deep_space_probe",
+    "raw": 40,
+    "deduplicated": 40
+  },
+  {
+    "group": "reference",
+    "project": "03_lunar_lander",
+    "raw": 36,
+    "deduplicated": 36
+  },
+  {
+    "group": "reference",
+    "project": "04_orbital_servicer",
+    "raw": 36,
+    "deduplicated": 36
+  },
+  {
+    "group": "remote_final",
+    "project": "aocs",
+    "raw": 101,
+    "deduplicated": 98
+  },
+  {
+    "group": "remote_final",
+    "project": "eps",
+    "raw": 92,
+    "deduplicated": 86
+  },
+  {
+    "group": "remote_final",
+    "project": "obdh",
+    "raw": 123,
+    "deduplicated": 119
+  },
+  {
+    "group": "remote_final",
+    "project": "ttc",
+    "raw": 109,
+    "deduplicated": 104
+  },
+  {
+    "group": "remote_reference",
+    "project": "eps",
+    "raw": 91,
+    "deduplicated": 85
+  }
+]

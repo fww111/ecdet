@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "R-EPS-01",
+      "source": "src/heater.c",
+      "function": "heater_set_duty",
+      "harness": "R-EPS-01.c",
+      "requirement": "有效通道占空比不得超过HEATER_MAX_DUTY=800；合法占空比应原样设置。",
+      "requirement_origin": "heater.c HEATER_MAX_DUTY and temperature-control design"
+    }
+  ]
+}

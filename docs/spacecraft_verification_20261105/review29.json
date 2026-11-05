@@ -1,0 +1,948 @@
+[
+  {
+    "id": "REVIEW-01",
+    "project": "aocs",
+    "rule": "bugprone-implicit-widening-of-multiplication-result",
+    "file": "src/fdir.c",
+    "line": 56,
+    "symbol": "",
+    "status": "VALID_RULE_NOTICE",
+    "reason": "FAULT_LOG_DEPTH*2u恒为32，未超出unsigned范围；隐式拓宽的语法事实成立，但本处没有乘法溢出。保留规范提示，不计运行缺陷。",
+    "source_sha256": "492a221819860af5d517db7c1146baf2e725df89bf423cfc93e6095d72e71668",
+    "evidence": [
+      {
+        "file": "src/fdir.c",
+        "line": 56,
+        "code": "s_fault_log, sizeof(fault_record_t) * (FAULT_LOG_DEPTH * 2u));"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-02",
+    "project": "aocs",
+    "rule": "MISRA C:2012 8.7",
+    "file": "src/main.c",
+    "line": 31,
+    "symbol": "SysTick_Handler",
+    "status": "CONFIRMED_FP",
+    "reason": "CMSIS风格异常入口需要供向量表链接；硬件分析已识别同一函数为ISR，8.7却建议改static，两个入口识别不一致。已统一使用ISR入口集合。",
+    "source_sha256": "59bee1f5c0c681b184baa67ae773e034a99378d54b0bfefdf2f249b2ac684307",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 31,
+        "code": "void SysTick_Handler(void)"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-03",
+    "project": "aocs",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/imu.c",
+    "line": 79,
+    "symbol": "g_imu_events",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "imu_read_rate:79与EXTI0_IRQHandler:123均无保护自增；可构造读—改—写交错导致两次递增只增加1的执行序列。",
+    "source_sha256": "d05c901634e776fe0c8201ed0f37ca1d2ac5ef4a9a144cc17804013497942282",
+    "evidence": [
+      {
+        "file": "src/imu.c",
+        "line": 71,
+        "code": "* g_imu_raw / g_imu_events 由 EXTI0 中断更新，此处未做临界区保护。"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 79,
+        "code": "g_imu_events++;"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 123,
+        "code": "g_imu_events++;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 26,
+        "code": "volatile uint32_t g_imu_events;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-04",
+    "project": "aocs",
+    "rule": "ECDET-VOLATILE",
+    "file": "src/main.c",
+    "line": 25,
+    "symbol": "g_imu_raw",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "EXTI0_IRQHandler:122写入，imu_read_rate:80读取；定义未用volatile且读取没有同步。RACE与VOLATILE两条提示指向同一共享发布风险。",
+    "source_sha256": "59bee1f5c0c681b184baa67ae773e034a99378d54b0bfefdf2f249b2ac684307",
+    "evidence": [
+      {
+        "file": "src/imu.c",
+        "line": 71,
+        "code": "* g_imu_raw / g_imu_events 由 EXTI0 中断更新，此处未做临界区保护。"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 80,
+        "code": "raw = g_imu_raw;"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 122,
+        "code": "g_imu_raw = raw;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 25,
+        "code": "uint32_t g_imu_raw;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-05",
+    "project": "aocs",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/imu.c",
+    "line": 80,
+    "symbol": "g_imu_raw",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "EXTI0_IRQHandler:122写入，imu_read_rate:80读取；定义未用volatile且读取没有同步。RACE与VOLATILE两条提示指向同一共享发布风险。",
+    "source_sha256": "d05c901634e776fe0c8201ed0f37ca1d2ac5ef4a9a144cc17804013497942282",
+    "evidence": [
+      {
+        "file": "src/imu.c",
+        "line": 71,
+        "code": "* g_imu_raw / g_imu_events 由 EXTI0 中断更新，此处未做临界区保护。"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 80,
+        "code": "raw = g_imu_raw;"
+      },
+      {
+        "file": "src/imu.c",
+        "line": 122,
+        "code": "g_imu_raw = raw;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 25,
+        "code": "uint32_t g_imu_raw;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-06",
+    "project": "aocs",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/main.c",
+    "line": 47,
+    "symbol": "g_sys_tick",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "仅ISR递增，任务读取volatile uint32_t快照；需确认32位访问对齐与原子性，以及bsp_init清零时中断是否关闭。单纯共享不能证明读写损坏。",
+    "source_sha256": "59bee1f5c0c681b184baa67ae773e034a99378d54b0bfefdf2f249b2ac684307",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 24,
+        "code": "volatile uint32_t g_sys_tick;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 33,
+        "code": "g_sys_tick++;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 47,
+        "code": "uint32_t start = g_sys_tick;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 48,
+        "code": "while ((g_sys_tick - start) < ticks) {"
+      },
+      {
+        "file": "src/main.c",
+        "line": 56,
+        "code": "while (g_sys_tick < next) {"
+      },
+      {
+        "file": "src/main.c",
+        "line": 144,
+        "code": "g_sys_tick = 0u;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 221,
+        "code": "uint32_t now = g_sys_tick;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-07",
+    "project": "eps",
+    "rule": "bugprone-narrowing-conversions",
+    "file": "src/battery.c",
+    "line": 71,
+    "symbol": "",
+    "status": "VALID_RULE_NOTICE",
+    "reason": "当前程序唯一电芯赋值为3700，8节累计29600，小于INT16_MAX。int到int16_t隐式收窄事实成立，当前正常数据路径未证实数值损失。",
+    "source_sha256": "d0f9dc6943b59214015cb4267da472d399f3eefd710333a0d46d09bdd3570f62",
+    "evidence": [
+      {
+        "file": "src/battery.c",
+        "line": 71,
+        "code": "pack_mv = pack_mv + s_battery.cell_mv[i];"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-08",
+    "project": "eps",
+    "rule": "MISRA C:2012 8.7",
+    "file": "src/main.c",
+    "line": 63,
+    "symbol": "SysTick_Handler",
+    "status": "CONFIRMED_FP",
+    "reason": "CMSIS风格异常入口需要供向量表链接；硬件分析已识别同一函数为ISR，8.7却建议改static，两个入口识别不一致。已统一使用ISR入口集合。",
+    "source_sha256": "39ab5d158cfa64a46924a58560f4ba6a369988adf07811a303f18a5e6ecac671",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 63,
+        "code": "void SysTick_Handler(void)"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-09",
+    "project": "eps",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/adc_isr.c",
+    "line": 21,
+    "symbol": "g_adc_isr_count",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "ADC1_2_IRQHandler:38与adc_task:86无保护自增；原告警落在初始化行，真正运行期风险位于任务自增与ISR自增。",
+    "source_sha256": "d32d8c80025efa6618153da590237e5eb87741f183e32ac10dde400ae5a46b8c",
+    "evidence": [
+      {
+        "file": "src/adc_isr.c",
+        "line": 15,
+        "code": "volatile uint32_t g_adc_isr_count;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 21,
+        "code": "g_adc_isr_count = 0u;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 38,
+        "code": "g_adc_isr_count++;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 76,
+        "code": "* 与中断共享的 g_adc_raw / g_adc_isr_count 未做保护。"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 86,
+        "code": "g_adc_isr_count++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-10",
+    "project": "eps",
+    "rule": "ECDET-VOLATILE",
+    "file": "src/adc_isr.c",
+    "line": 14,
+    "symbol": "g_adc_raw",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "ADC1_2_IRQHandler:37发布采样，adc_task:83读取；定义未用volatile，也没有同步。两条提示按一个共享采样问题解释。",
+    "source_sha256": "d32d8c80025efa6618153da590237e5eb87741f183e32ac10dde400ae5a46b8c",
+    "evidence": [
+      {
+        "file": "src/adc_isr.c",
+        "line": 14,
+        "code": "uint32_t g_adc_raw;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 20,
+        "code": "g_adc_raw = 0u;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 37,
+        "code": "g_adc_raw = sample;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 76,
+        "code": "* 与中断共享的 g_adc_raw / g_adc_isr_count 未做保护。"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 83,
+        "code": "raw = g_adc_raw;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-11",
+    "project": "eps",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/adc_isr.c",
+    "line": 20,
+    "symbol": "g_adc_raw",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "ADC1_2_IRQHandler:37发布采样，adc_task:83读取；定义未用volatile，也没有同步。两条提示按一个共享采样问题解释。",
+    "source_sha256": "d32d8c80025efa6618153da590237e5eb87741f183e32ac10dde400ae5a46b8c",
+    "evidence": [
+      {
+        "file": "src/adc_isr.c",
+        "line": 14,
+        "code": "uint32_t g_adc_raw;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 20,
+        "code": "g_adc_raw = 0u;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 37,
+        "code": "g_adc_raw = sample;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 76,
+        "code": "* 与中断共享的 g_adc_raw / g_adc_isr_count 未做保护。"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 83,
+        "code": "raw = g_adc_raw;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-12",
+    "project": "eps",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/adc_isr.c",
+    "line": 22,
+    "symbol": "g_adc_ticks",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "SysTick_Handler与TIM2_IRQHandler均执行递增；丢计数取决于两个中断是否允许相互抢占。任务读取与初始化清零还需核对启动屏蔽顺序。",
+    "source_sha256": "d32d8c80025efa6618153da590237e5eb87741f183e32ac10dde400ae5a46b8c",
+    "evidence": [
+      {
+        "file": "src/adc_isr.c",
+        "line": 16,
+        "code": "volatile uint32_t g_adc_ticks;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 22,
+        "code": "g_adc_ticks = 0u;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 63,
+        "code": "g_adc_ticks++;"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 65,
+        "code": "sprintf(tick_msg, \"EPS tick=%lu\", (unsigned long)g_adc_ticks);"
+      },
+      {
+        "file": "src/adc_isr.c",
+        "line": 68,
+        "code": "*(uint32_t *)record = g_adc_ticks;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 65,
+        "code": "g_adc_ticks++;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 149,
+        "code": "uint32_t now = g_adc_ticks;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-13",
+    "project": "obdh",
+    "rule": "concurrency-mt-unsafe",
+    "file": "src/payload.c",
+    "line": 50,
+    "symbol": "rand",
+    "status": "VALID_RULE_NOTICE",
+    "reason": "检查器按线程不安全API名单报告rand，不证明并发调用。完整工程未找到该鉴权函数的实际调用者或并行rand路径；保留API使用约束，不计已确认竞争。",
+    "source_sha256": "28d46ddcb32e919ce763853a9325d3c87f3de8edfcdf9ce1052e833576c5189d",
+    "evidence": [
+      {
+        "file": "src/payload.c",
+        "line": 50,
+        "code": "session_id = (uint32_t)rand();"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-14",
+    "project": "obdh",
+    "rule": "MISRA C:2012 8.7",
+    "file": "src/main.c",
+    "line": 80,
+    "symbol": "SysTick_Handler",
+    "status": "CONFIRMED_FP",
+    "reason": "CMSIS风格异常入口需要供向量表链接；硬件分析已识别同一函数为ISR，8.7却建议改static，两个入口识别不一致。已统一使用ISR入口集合。",
+    "source_sha256": "df8759c096a5201e87b46f2eba59c375b5d1ad3298d8dfb57718493790321463",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 80,
+        "code": "void SysTick_Handler(void)"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-15",
+    "project": "obdh",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/telemetry.c",
+    "line": 34,
+    "symbol": "g_hk_isr_count",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "hk_collect:55与TIM2_IRQHandler:118均无保护自增，存在丢增量的读改写交错。原定位为初始化，运行期访问在证据中单列。",
+    "source_sha256": "6e19dffd65d8e09e31d6ae17e550e107bb2d0c0b5753dec22ecf1a77985a7a75",
+    "evidence": [
+      {
+        "file": "src/telemetry.c",
+        "line": 18,
+        "code": "volatile uint32_t g_hk_isr_count;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 34,
+        "code": "g_hk_isr_count = 0u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 55,
+        "code": "g_hk_isr_count++;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 118,
+        "code": "g_hk_isr_count++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-16",
+    "project": "obdh",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/main.c",
+    "line": 113,
+    "symbol": "g_hk_ready",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "运行期hk_collect和TIM2_IRQHandler均写1，未找到运行期清零或消费；原告警定位bsp_init清零。须核对初始化与中断使能顺序，不能据此认定存在丢事件。",
+    "source_sha256": "df8759c096a5201e87b46f2eba59c375b5d1ad3298d8dfb57718493790321463",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 21,
+        "code": "volatile uint32_t g_hk_ready;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 113,
+        "code": "g_hk_ready = 0u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 60,
+        "code": "g_hk_ready = 1u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 121,
+        "code": "g_hk_ready = 1u;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-17",
+    "project": "obdh",
+    "rule": "ECDET-VOLATILE",
+    "file": "src/telemetry.c",
+    "line": 17,
+    "symbol": "g_hk_samples",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "TIM2_IRQHandler:119递增，hk_collect:57读取；声明没有volatile，且没有同步，存在跨上下文可见性风险。",
+    "source_sha256": "6e19dffd65d8e09e31d6ae17e550e107bb2d0c0b5753dec22ecf1a77985a7a75",
+    "evidence": [
+      {
+        "file": "src/telemetry.c",
+        "line": 17,
+        "code": "uint32_t g_hk_samples;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 33,
+        "code": "g_hk_samples = 0u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 57,
+        "code": "sample_tag = g_hk_samples;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 119,
+        "code": "g_hk_samples++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-18",
+    "project": "obdh",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/telemetry.c",
+    "line": 33,
+    "symbol": "g_hk_samples",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "TIM2_IRQHandler:119递增，hk_collect:57读取；声明没有volatile，且没有同步，存在跨上下文可见性风险。",
+    "source_sha256": "6e19dffd65d8e09e31d6ae17e550e107bb2d0c0b5753dec22ecf1a77985a7a75",
+    "evidence": [
+      {
+        "file": "src/telemetry.c",
+        "line": 17,
+        "code": "uint32_t g_hk_samples;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 33,
+        "code": "g_hk_samples = 0u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 57,
+        "code": "sample_tag = g_hk_samples;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 119,
+        "code": "g_hk_samples++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-19",
+    "project": "obdh",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/telemetry.c",
+    "line": 35,
+    "symbol": "g_hk_tick",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "任务侧仅telemetry_init清零，运行期只有TIM2_IRQHandler递增；初始化后是否共享冲突取决于定时器使能顺序。",
+    "source_sha256": "6e19dffd65d8e09e31d6ae17e550e107bb2d0c0b5753dec22ecf1a77985a7a75",
+    "evidence": [
+      {
+        "file": "src/telemetry.c",
+        "line": 19,
+        "code": "volatile uint32_t g_hk_tick;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 35,
+        "code": "g_hk_tick = 0u;"
+      },
+      {
+        "file": "src/telemetry.c",
+        "line": 120,
+        "code": "g_hk_tick++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-20",
+    "project": "obdh",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/main.c",
+    "line": 40,
+    "symbol": "g_obdh_tick",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "单ISR递增、任务读取volatile uint32_t节拍；需要目标CPU对齐字访问保证，当前SVD只描述寄存器宽度。",
+    "source_sha256": "df8759c096a5201e87b46f2eba59c375b5d1ad3298d8dfb57718493790321463",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 23,
+        "code": "volatile uint32_t g_obdh_tick;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 40,
+        "code": "uint32_t start = g_obdh_tick;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 41,
+        "code": "while ((g_obdh_tick - start) < ticks) {"
+      },
+      {
+        "file": "src/main.c",
+        "line": 82,
+        "code": "g_obdh_tick++;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 163,
+        "code": "uint32_t now = g_obdh_tick;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-21",
+    "project": "ttc",
+    "rule": "concurrency-mt-unsafe",
+    "file": "src/auth.c",
+    "line": 43,
+    "symbol": "rand",
+    "status": "VALID_RULE_NOTICE",
+    "reason": "检查器按线程不安全API名单报告rand，不证明并发调用。完整工程未找到该鉴权函数的实际调用者或并行rand路径；保留API使用约束，不计已确认竞争。",
+    "source_sha256": "5cd6674b02caa0486f0e0c836b22576037236862079026058c730d07a121d844",
+    "evidence": [
+      {
+        "file": "src/auth.c",
+        "line": 43,
+        "code": "seed = (uint32_t)rand();"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-22",
+    "project": "ttc",
+    "rule": "bugprone-narrowing-conversions",
+    "file": "src/auth.c",
+    "line": 49,
+    "symbol": "",
+    "status": "VALID_RULE_NOTICE",
+    "reason": "在有效索引和已初始化输入上，十六进制ASCII字符或NUL与ASCII常量异或均落在0..127；int到char收窄事实成立，没有由该转换导致的数值损失证据。",
+    "source_sha256": "5cd6674b02caa0486f0e0c836b22576037236862079026058c730d07a121d844",
+    "evidence": [
+      {
+        "file": "src/auth.c",
+        "line": 49,
+        "code": "dst[i] = local_tag[i % 8u] ^ access_key[i % 24u];"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-23",
+    "project": "ttc",
+    "rule": "MISRA C:2012 8.7",
+    "file": "src/main.c",
+    "line": 58,
+    "symbol": "SysTick_Handler",
+    "status": "CONFIRMED_FP",
+    "reason": "CMSIS风格异常入口需要供向量表链接；硬件分析已识别同一函数为ISR，8.7却建议改static，两个入口识别不一致。已统一使用ISR入口集合。",
+    "source_sha256": "8883072cba77dc14eb1ab2bd8b2303790ae2b0a2166787879dc118edb930f591",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 58,
+        "code": "void SysTick_Handler(void)"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-24",
+    "project": "ttc",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/dma.c",
+    "line": 32,
+    "symbol": "g_dma_count",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "运行期任务递增处于ENTER之后，未退出另有配对告警；当前竞争告警指向dma_init清零。临界区函数为空桩，须确认实机屏蔽实现及初始化阶段。",
+    "source_sha256": "a50e27b4a73e408cfaa1a73febe9b7b7e40c0a1f3ee5b9f7eb6815d04905053c",
+    "evidence": [
+      {
+        "file": "src/dma.c",
+        "line": 15,
+        "code": "volatile uint32_t g_dma_count;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 32,
+        "code": "g_dma_count = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 62,
+        "code": "g_dma_count++;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 96,
+        "code": "g_dma_count++;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-25",
+    "project": "ttc",
+    "rule": "ECDET-VOLATILE",
+    "file": "src/dma.c",
+    "line": 14,
+    "symbol": "g_dma_done",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "DMA1_Channel1_IRQHandler:61置位，dma_start:47在无保护情况下清零；dma_task的临界区不能覆盖dma_start，启动与完成交错可能丢失完成事件。",
+    "source_sha256": "a50e27b4a73e408cfaa1a73febe9b7b7e40c0a1f3ee5b9f7eb6815d04905053c",
+    "evidence": [
+      {
+        "file": "src/dma.c",
+        "line": 14,
+        "code": "uint32_t g_dma_done;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 31,
+        "code": "g_dma_done = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 47,
+        "code": "g_dma_done = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 61,
+        "code": "g_dma_done = 1u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 88,
+        "code": "* g_dma_done 由中断置位，任务读取后清空，未做保护。"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 97,
+        "code": "done = g_dma_done;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 99,
+        "code": "g_dma_done = 0u;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-26",
+    "project": "ttc",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/dma.c",
+    "line": 31,
+    "symbol": "g_dma_done",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "DMA1_Channel1_IRQHandler:61置位，dma_start:47在无保护情况下清零；dma_task的临界区不能覆盖dma_start，启动与完成交错可能丢失完成事件。",
+    "source_sha256": "a50e27b4a73e408cfaa1a73febe9b7b7e40c0a1f3ee5b9f7eb6815d04905053c",
+    "evidence": [
+      {
+        "file": "src/dma.c",
+        "line": 14,
+        "code": "uint32_t g_dma_done;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 31,
+        "code": "g_dma_done = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 47,
+        "code": "g_dma_done = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 61,
+        "code": "g_dma_done = 1u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 88,
+        "code": "* g_dma_done 由中断置位，任务读取后清空，未做保护。"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 97,
+        "code": "done = g_dma_done;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 99,
+        "code": "g_dma_done = 0u;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-27",
+    "project": "ttc",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/main.c",
+    "line": 93,
+    "symbol": "g_frame_ticks",
+    "status": "HARDWARE_CONDITIONAL",
+    "reason": "单ISR递增、主循环读取volatile uint32_t节拍；bsp_init清零是否能与中断重叠，以及字访问原子性尚无目标CPU资料。",
+    "source_sha256": "8883072cba77dc14eb1ab2bd8b2303790ae2b0a2166787879dc118edb930f591",
+    "evidence": [
+      {
+        "file": "src/main.c",
+        "line": 20,
+        "code": "volatile uint32_t g_frame_ticks;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 60,
+        "code": "g_frame_ticks++;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 93,
+        "code": "g_frame_ticks = 0u;"
+      },
+      {
+        "file": "src/main.c",
+        "line": 162,
+        "code": "uint32_t now = g_frame_ticks;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-28",
+    "project": "ttc",
+    "rule": "ECDET-VOLATILE",
+    "file": "src/dma.c",
+    "line": 19,
+    "symbol": "s_desc_head",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "dma_start:39/44读取并推进头指针，ISR:58读取该状态；变量未用volatile，启动侧无同步。描述符发布和回收协议需要保护，单独补volatile不能提供事务一致性。",
+    "source_sha256": "a50e27b4a73e408cfaa1a73febe9b7b7e40c0a1f3ee5b9f7eb6815d04905053c",
+    "evidence": [
+      {
+        "file": "src/dma.c",
+        "line": 19,
+        "code": "static uint32_t s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 30,
+        "code": "s_desc_head = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 39,
+        "code": "slot = s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 44,
+        "code": "s_desc_head = (s_desc_head + 1u) % DMA_DESC_COUNT;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 58,
+        "code": "slot = s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 100,
+        "code": "s_desc_head = 0u;"
+      }
+    ],
+    "hardware_execution_verified": false
+  },
+  {
+    "id": "REVIEW-29",
+    "project": "ttc",
+    "rule": "ECDET-ISR-RACE",
+    "file": "src/dma.c",
+    "line": 30,
+    "symbol": "s_desc_head",
+    "status": "SOURCE_SHARED_STATE_RISK",
+    "reason": "dma_start:39/44读取并推进头指针，ISR:58读取该状态；变量未用volatile，启动侧无同步。描述符发布和回收协议需要保护，单独补volatile不能提供事务一致性。",
+    "source_sha256": "a50e27b4a73e408cfaa1a73febe9b7b7e40c0a1f3ee5b9f7eb6815d04905053c",
+    "evidence": [
+      {
+        "file": "src/dma.c",
+        "line": 19,
+        "code": "static uint32_t s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 30,
+        "code": "s_desc_head = 0u;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 39,
+        "code": "slot = s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 44,
+        "code": "s_desc_head = (s_desc_head + 1u) % DMA_DESC_COUNT;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 58,
+        "code": "slot = s_desc_head;"
+      },
+      {
+        "file": "src/dma.c",
+        "line": 100,
+        "code": "s_desc_head = 0u;"
+      }
+    ],
+    "hardware_execution_verified": false
+  }
+]

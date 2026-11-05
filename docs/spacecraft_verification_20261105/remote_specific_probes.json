@@ -1,0 +1,32 @@
+[
+  {
+    "project": "obdh",
+    "rule": "CERT C STR31-C",
+    "file": "src/ccsds.c",
+    "lines": [
+      105
+    ],
+    "detected": true,
+    "mode": "static"
+  },
+  {
+    "project": "ttc",
+    "rule": "CERT C STR31-C",
+    "file": "src/tc_decode.c",
+    "lines": [
+      63
+    ],
+    "detected": true,
+    "mode": "static"
+  },
+  {
+    "project": "eps",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "file": "src/heater.c",
+    "lines": [
+      27
+    ],
+    "detected": true,
+    "mode": "contract"
+  }
+]

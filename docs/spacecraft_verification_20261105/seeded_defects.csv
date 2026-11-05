@@ -1,0 +1,33 @@
+﻿project,defect,title,file,line,trigger_confirmed,matched_rule,comment,before_detection,alert_line,previous_round_detection,static_detection,with_contracts_detection,after_detection
+01_earth_observer,B01,遥控包长度校验与目标缓冲区不一致,src/packet.c,11,True,CERT C STR31-C,静态告警根因匹配,MISSED,20,DETECTED,True,True,DETECTED
+01_earth_observer,B02,截断后的格式化长度被当作有效发送长度,src/telemetry.c,11,True,CERT C ARR30-C,静态告警根因匹配,MISSED,15,DETECTED,True,True,DETECTED
+01_earth_observer,B03,看门狗截止时间加法回绕导致提前超时,src/scheduler.c,19,True,CERT C INT30-C,静态告警根因匹配,MISSED,19,DETECTED,True,True,DETECTED
+01_earth_observer,B04,页内写入缺少长度校验，破坏下一页记录,src/storage.c,7,True,ECDET-CWE-119,静态告警根因匹配,MISSED,10,DETECTED,True,True,DETECTED
+01_earth_observer,E01,反作用飞轮索引上界多放行一个元素,src/attitude.c,6,True,CERT C ARR30-C,静态告警根因匹配,MISSED,9,DETECTED,True,True,DETECTED
+01_earth_observer,E02,姿态融合继续采用过期星敏感器数据,src/attitude.c,16,True,ECDET-BUSINESS-CONTRACT,显式业务契约执行触发；修复对照通过,MISSED,13,MISSED,False,True,DETECTED
+01_earth_observer,E03,空图像统计发生整数除零,src/camera.c,6,True,core.DivideZero,静态告警根因匹配,DETECTED,10,DETECTED,True,True,DETECTED
+01_earth_observer,E04,图像分块复制超过缓存容量,src/camera.c,15,True,CERT C STR31-C,静态告警根因匹配,MISSED,18,DETECTED,True,True,DETECTED
+02_deep_space_probe,B01,遥控包长度校验与目标缓冲区不一致,src/packet.c,11,True,CERT C STR31-C,静态告警根因匹配,MISSED,20,DETECTED,True,True,DETECTED
+02_deep_space_probe,B02,截断后的格式化长度被当作有效发送长度,src/telemetry.c,11,True,CERT C ARR30-C,静态告警根因匹配,MISSED,15,DETECTED,True,True,DETECTED
+02_deep_space_probe,B03,看门狗截止时间加法回绕导致提前超时,src/scheduler.c,19,True,CERT C INT30-C,静态告警根因匹配,MISSED,19,DETECTED,True,True,DETECTED
+02_deep_space_probe,B04,页内写入缺少长度校验，破坏下一页记录,src/storage.c,7,True,ECDET-CWE-119,静态告警根因匹配,MISSED,10,DETECTED,True,True,DETECTED
+02_deep_space_probe,D01,延时指令表装载超过容量,src/sequencer.c,6,True,CERT C STR31-C,静态告警根因匹配,MISSED,9,DETECTED,True,True,DETECTED
+02_deep_space_probe,D02,安全模式仍允许科学仪器上电,src/sequencer.c,19,True,ECDET-BUSINESS-CONTRACT,显式业务契约执行触发；修复对照通过,MISSED,17,MISSED,False,True,DETECTED
+02_deep_space_probe,D03,分片末地址截断回绕绕过边界校验,src/bundle.c,7,True,CERT C STR31-C,静态告警根因匹配,MISSED,11,DETECTED,True,True,DETECTED
+02_deep_space_probe,D04,重传确认释放后保留悬空指针,src/bundle.c,39,True,ECDET-CWE-416,静态告警根因匹配,MISSED,39,DETECTED,True,True,DETECTED
+03_lunar_lander,B01,遥控包长度校验与目标缓冲区不一致,src/packet.c,11,True,CERT C STR31-C,静态告警根因匹配,MISSED,20,DETECTED,True,True,DETECTED
+03_lunar_lander,B02,截断后的格式化长度被当作有效发送长度,src/telemetry.c,11,True,CERT C ARR30-C,静态告警根因匹配,MISSED,15,DETECTED,True,True,DETECTED
+03_lunar_lander,B03,看门狗截止时间加法回绕导致提前超时,src/scheduler.c,19,True,CERT C INT30-C,静态告警根因匹配,MISSED,19,DETECTED,True,True,DETECTED
+03_lunar_lander,B04,页内写入缺少长度校验，破坏下一页记录,src/storage.c,7,True,ECDET-CWE-119,静态告警根因匹配,MISSED,10,DETECTED,True,True,DETECTED
+03_lunar_lander,L01,雷达无效负值被转为巨大正高度,src/navigation.c,7,True,ECDET-CWE-195,静态告警根因匹配,MISSED,7,DETECTED,True,True,DETECTED
+03_lunar_lander,L02,下降参数表复制循环多执行一次,src/navigation.c,15,True,CERT C ARR30-C,静态告警根因匹配,MISSED,16,DETECTED,True,True,DETECTED
+03_lunar_lander,L03,推进剂扣减发生无符号下溢,src/propulsion.c,6,True,CERT C INT30-C,静态告警根因匹配,MISSED,6,DETECTED,True,True,DETECTED
+03_lunar_lander,L04,单侧触地误信号触发提前关机,src/propulsion.c,13,True,ECDET-BUSINESS-CONTRACT,显式业务契约执行触发；修复对照通过,MISSED,11,MISSED,False,True,DETECTED
+04_orbital_servicer,B01,遥控包长度校验与目标缓冲区不一致,src/packet.c,11,True,CERT C STR31-C,静态告警根因匹配,MISSED,20,DETECTED,True,True,DETECTED
+04_orbital_servicer,B02,截断后的格式化长度被当作有效发送长度,src/telemetry.c,11,True,CERT C ARR30-C,静态告警根因匹配,MISSED,15,DETECTED,True,True,DETECTED
+04_orbital_servicer,B03,看门狗截止时间加法回绕导致提前超时,src/scheduler.c,19,True,CERT C INT30-C,静态告警根因匹配,MISSED,19,DETECTED,True,True,DETECTED
+04_orbital_servicer,B04,页内写入缺少长度校验，破坏下一页记录,src/storage.c,7,True,ECDET-CWE-119,静态告警根因匹配,MISSED,10,DETECTED,True,True,DETECTED
+04_orbital_servicer,O01,机械臂关节索引漏检负值,src/robot_arm.c,7,True,CERT C ARR30-C,静态告警根因匹配,MISSED,10,DETECTED,True,True,DETECTED
+04_orbital_servicer,O02,轨迹表容量检查使用错误上限,src/robot_arm.c,16,True,CERT C STR31-C,静态告警根因匹配,MISSED,30,DETECTED,True,True,DETECTED
+04_orbital_servicer,O03,相对导航失联后仍沿旧数据接近,src/rendezvous.c,7,True,ECDET-BUSINESS-CONTRACT,显式业务契约执行触发；修复对照通过,MISSED,4,MISSED,False,True,DETECTED
+04_orbital_servicer,O04,抓捕互锁漏检模式与闭合速度,src/rendezvous.c,12,True,ECDET-BUSINESS-CONTRACT,显式业务契约执行触发；修复对照通过,MISSED,10,MISSED,False,True,DETECTED

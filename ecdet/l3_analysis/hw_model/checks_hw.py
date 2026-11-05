@@ -269,8 +269,6 @@ def check_isr_race(ctx: ProjectContext, hw: HwContext,
     task_refs: dict[str, set[tuple[str, str]]] = {}   # name -> {(file, func)}
     for f in ctx.facts:
         for func in f.functions:
-            if func.name == "main":
-                continue      # main 中的访问视为调度前初始化（MVP 口径）
             is_isr = func.name in hw.isr_names
             refs = {t.value for t in func.tokens if t.kind == "ident"}
             for g in refs & globals_info.keys():
@@ -308,11 +306,12 @@ def check_isr_race(ctx: ProjectContext, hw: HwContext,
                 out.append(_alert(
                     "ECDET-ISR-RACE", Severity.WARNING,
                     f"全局变量 {g} 被 ISR（{sorted(isr_refs[g])[0]}）与任务上下文共享，"
-                    f"且存在临界区区间之外的访问，存在竞争",
+                    f"且存在临界区区间之外的访问；需核对访问原子性、中断优先级与启动时序",
                     first_site[0], first_site[1], "CWE-362",
                     [_evidence(gpath, gline, "code",
                                f"声明于 {gpath}:{gline}；无保护访问："
-                               f"{', '.join(unprotected)}；需以临界区或互斥量覆盖全部访问")],
+                               f"{', '.join(unprotected)}；共享访问事实不等于已复现竞争")],
+                    provenance=Provenance.SUSPECTED,
                 ))
     return out
 

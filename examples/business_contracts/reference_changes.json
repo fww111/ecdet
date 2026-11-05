@@ -1,0 +1,48 @@
+{
+  "01_earth_observer": [
+    {
+      "id": "E02",
+      "file": "src/attitude.c",
+      "before": "if (m->star_valid)",
+      "after": "if (m->star_valid && (uint32_t)(now - m->star_timestamp) <= 500u)"
+    }
+  ],
+  "02_deep_space_probe": [
+    {
+      "id": "D02",
+      "file": "src/sequencer.c",
+      "before": "m->instrument_on = true;",
+      "after": "if (m->mode == DS_SAFE) { return false; }\n    m->instrument_on = true;"
+    }
+  ],
+  "03_lunar_lander": [
+    {
+      "id": "L04",
+      "file": "src/propulsion.c",
+      "before": "m->contact_left || m->contact_right",
+      "after": "m->contact_left && m->contact_right"
+    }
+  ],
+  "04_orbital_servicer": [
+    {
+      "id": "O03",
+      "file": "src/rendezvous.c",
+      "before": "return m->target_valid;",
+      "after": "return m->target_valid && (uint32_t)(now - m->nav_timestamp) <= 750u;"
+    },
+    {
+      "id": "O04",
+      "file": "src/rendezvous.c",
+      "before": "!m->permit || m->range > 0.5f",
+      "after": "!m->permit || m->mode != OS_CAPTURE || m->range > 0.5f || fabsf(m->closing_speed) > 0.02f"
+    }
+  ],
+  "eps": [
+    {
+      "id": "R-EPS-01",
+      "file": "src/heater.c",
+      "before": "g_eps.heater_duty[channel] = duty;",
+      "after": "g_eps.heater_duty[channel] = duty > HEATER_MAX_DUTY ? HEATER_MAX_DUTY : duty;"
+    }
+  ]
+}

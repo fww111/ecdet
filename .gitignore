@@ -42,3 +42,6 @@ demo_video/frame_*.png
 
 # 软著申请材料（隐私，不入库）
 软著/
+
+# Reviewed, reproducible spacecraft business-contract fixtures.
+!examples/business_contracts/projects/

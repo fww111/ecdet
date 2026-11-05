@@ -830,12 +830,14 @@ def check_single_tu_funcs(ctx: ProjectContext, active: set[str]) -> list[Alert]:
     """MISRA 8.7：仅单翻译单元引用的函数或对象应 static。"""
     out: list[Alert] = []
     name_files = _name_usage_map(ctx)
+    from ecdet.l3_analysis.hw_model.isr import collect_isr_names
+    interrupt_entries = collect_isr_names(ctx)
     for f in ctx.facts:
         if not f.path.endswith(".c"):
             continue
         for func in f.functions:
             name = func.name
-            if name == "main" or _ISR_PAT.search(name) or re.search(r'\bstatic\b', func.signature):
+            if name == "main" or name in interrupt_entries or _ISR_PAT.search(name) or re.search(r'\bstatic\b', func.signature):
                 continue
             context_src = "\n".join(
                 f.lex.source_lines[max(0, func.def_line - 2):func.def_line + 1])

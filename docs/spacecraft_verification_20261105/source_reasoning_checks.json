@@ -1,0 +1,42 @@
+{
+  "numeric": {
+    "constant_product": 32,
+    "battery_pack_mv": 29600,
+    "ascii_xor_min": 0,
+    "ascii_xor_max": 127
+  },
+  "increment_model": "Potential preemption between load/add/store; no hardware execution",
+  "lost_increment_witness": [
+    {
+      "actor": "task",
+      "operation": "load",
+      "shared": 0
+    },
+    {
+      "actor": "task",
+      "operation": "add",
+      "shared": 0
+    },
+    {
+      "actor": "isr",
+      "operation": "load",
+      "shared": 0
+    },
+    {
+      "actor": "task",
+      "operation": "store",
+      "shared": 1
+    },
+    {
+      "actor": "isr",
+      "operation": "add",
+      "shared": 1
+    },
+    {
+      "actor": "isr",
+      "operation": "store",
+      "shared": 1
+    }
+  ],
+  "expected_serial_result": 2
+}

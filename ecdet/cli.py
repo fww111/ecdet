@@ -124,6 +124,20 @@ def cmd_scan(args: argparse.Namespace) -> int:
                                       'constraint-based', '受限C路径数组越界候选', ['CWE-129']))
                 known.add(candidate.rule_id)
 
+    contract_receipt = None
+    if getattr(args, 'contracts', None):
+        from ecdet.l3_analysis.business_contracts import RULE, run_contracts
+        try:
+            contract_receipt, candidates = run_contracts(
+                root, Path(args.contracts), out_dir / 'business-contracts',
+                compiler=args.contract_compiler, timeout=args.contract_timeout)
+        except (ValueError, OSError) as exc:
+            print(f"错误：业务契约配置无效：{exc}", file=sys.stderr)
+            return 2
+        alerts.extend(candidates)
+        metas.append(RULE)
+        print(f"[Contracts] 分项状态：{contract_receipt['status_counts']}")
+
     # L5 聚合输出
     result = aggregate(alerts, metas)
     records = build_compliance_records(result)
@@ -169,6 +183,8 @@ def cmd_scan(args: argparse.Namespace) -> int:
         print(f"CWE Top5：{top}")
     print(f"\nSARIF：{sarif_path}")
     print(f"HTML 报告：{html_path}")
+    if contract_receipt is not None and set(contract_receipt['status_counts']) - {'PASS', 'FAIL'}:
+        return 2
     if s['error']:
         return 1
     if constraint_receipt is not None:
@@ -470,6 +486,9 @@ def main(argv: list[str] | None = None) -> int:
                                           "按影响集收缩扫描范围")
     p_scan.add_argument("--output", "-o", help="报告输出目录")
     p_scan.add_argument('--constraints', action='store_true', help='启用可选Z3路径约束检查')
+    p_scan.add_argument('--contracts', help='显式执行受信任的业务契约JSON及其C测试驱动')
+    p_scan.add_argument('--contract-compiler', default='gcc', help='业务契约宿主GCC编译器')
+    p_scan.add_argument('--contract-timeout', type=float, default=5.0, help='单个业务契约执行超时秒数，最大60')
     from ecdet.advanced_cli import positive_int, register_commands
     p_scan.add_argument('--constraint-timeout-ms', type=positive_int, default=1000)
     p_scan.set_defaults(func=cmd_scan)

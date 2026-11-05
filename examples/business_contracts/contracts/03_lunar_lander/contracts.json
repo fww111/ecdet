@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "L04",
+      "source": "src/propulsion.c",
+      "function": "ld_touchdown",
+      "harness": "L04.c",
+      "requirement": "只有左右触地传感器同时有效时才能宣布着陆并关闭发动机。",
+      "requirement_origin": "synthetic spacecraft evaluation specification",
+      "sources": [
+        "src/platform.c"
+      ]
+    }
+  ]
+}
