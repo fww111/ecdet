@@ -411,6 +411,7 @@ class Analyzer:
                 self.emit('ECDET-CWE-119',node,
                     f'分区步长为{stride[0]}，仅检查分区内偏移；偏移加传输长度可能越过分区边界', 'CWE-119')
         if name in {'memcpy','memmove'} and len(args)==3:
+            self.copy_source(node,args,state)
             target=unwrap(args[0]);offset=None
             if target.type=='binary_expression' and text(child(target,'operator'))=='+':
                 offset=child(target,'right');target=unwrap(child(target,'left'))
@@ -442,13 +443,55 @@ class Analyzer:
                     if bounds is None or bounds[1]>=capacity[0]:
                         self.emit('CERT C ARR30-C',node,'snprintf返回所需长度；截断后直接将其作为缓冲区有效长度传递，可能越界读取','CWE-125')
 
+    def copy_source(self,node,args,state):
+        source=unwrap(args[1]);offset=None
+        if source.type=='pointer_expression' and text(child(source,'operator'))=='&':
+            subscript=unwrap(child(source,'argument'))
+            if subscript.type=='subscript_expression':
+                source=unwrap(child(subscript,'argument'));offset=child(subscript,'index')
+        elif source.type=='binary_expression' and text(child(source,'operator'))=='+':
+            offset=child(source,'right');source=unwrap(child(source,'left'))
+        typ=self.model.type_of(source,state)
+        if typ.count is None or typ.pointer:return
+        capacity=typ.size
+        amount=self.model.interval(args[2],state)
+        if capacity is None or amount is None or amount[0]>amount[1]:return
+        offset_range=self.model.interval(offset,state) if offset is not None else (0,0)
+        element=replace(typ,count=None).size
+        if offset_range is None or element is None:return
+        lower=offset_range[0]*element
+        upper=offset_range[1]*element+amount[1]
+        if offset is not None and element==1 and 0<=offset_range[0]<=offset_range[1]<=capacity:
+            suffix='-'+key(offset)
+            for variable,relation,limit in state.relations:
+                if variable!=key(args[2]) or relation not in {'<','<='} or not limit.endswith(suffix):continue
+                bound=limit[:-len(suffix)]
+                maximum=capacity if bound=='sizeof('+key(source)+')' else self.model.constant(bound)
+                if maximum is not None and maximum<=capacity:
+                    upper=min(upper,maximum-(relation=='<'))
+        if lower<0 or upper>capacity:
+            self.emit('MISRA C:2012 21.17',node,
+                f'复制源{text(source)}字节容量{capacity}，偏移加长度的当前上界{upper}超出源对象边界；需校验源容量',
+                'CWE-125')
+
     def statement(self,node,state):
         if node is None:return False
         kind=node.type
         if kind=='compound_statement':
-            for sub in node.named_children:
-                if self.statement(sub,state):return True
-            return False
+            # Restore bindings hidden by block declarations. A small local
+            # array must not replace a larger outer array after the block.
+            names={text(_decl_name(d)) for sub in node.named_children if sub.type=='declaration'
+                   for d in sub.children_by_field_name('declarator')}
+            previous_types=dict(state.types);previous_values=dict(state.values)
+            try:
+                for sub in node.named_children:
+                    if self.statement(sub,state):return True
+                return False
+            finally:
+                for name in names:
+                    for mapping,previous in [(state.types,previous_types),(state.values,previous_values)]:
+                        if name in previous:mapping[name]=previous[name]
+                        else:mapping.pop(name,None)
         if kind=='case_statement':
             for sub in node.named_children:
                 if sub==child(node,'value'):continue
@@ -529,6 +572,9 @@ class Analyzer:
             params=child(_function_declarator(decl),'parameters')
             for p in params.named_children if params else []:
                 name,typ=self.model.declaration(p,child(p,'declarator'))
+                # A C array parameter is adjusted to a pointer. Its spelling
+                # does not establish the caller's allocation size.
+                if typ.count is not None:typ=replace(typ,count=None,pointer=typ.pointer+1)
                 if name:state.types[name]=typ
             self.statement(child(function,'body'),state)
             self.lifetime(function,state)
@@ -559,7 +605,23 @@ def check_value_flow(facts,active):
         logging.getLogger(__name__).warning('Boundary analysis unavailable: install ecdet[syntax]')
         return []
     out=[]
+    # Source bounds are dispatched by the existing MISRA 21.17 file rule.
+    # Keep one alert per source call instead of emitting it a second time.
+    active=set(active)-{'MISRA C:2012 21.17'}
     for path,root in model.roots.items():
         if path.endswith(('.c','.cc','.cpp')):
             out.extend(Analyzer(model,path,active).run(root))
     return out
+
+
+def check_copy_source_syntax(fact,ctx):
+    """Return scoped source-copy findings, or None for the token fallback."""
+    if not hasattr(ctx,'_copy_source_findings'):
+        try:
+            model=Model(ctx.facts)
+        except ImportError:
+            ctx._copy_source_findings={}
+        else:
+            ctx._copy_source_findings={path:Analyzer(model,path,{'MISRA C:2012 21.17'}).run(root)
+                                       for path,root in model.roots.items()}
+    return ctx._copy_source_findings.get(fact.path)

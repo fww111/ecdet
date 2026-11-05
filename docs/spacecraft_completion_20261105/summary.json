@@ -1,0 +1,124 @@
+{
+  "defect_roots": 44,
+  "detected": 44,
+  "static_roots": 38,
+  "business_roots": 6,
+  "scan_runs": 13,
+  "original_raw": 720,
+  "original_deduplicated": 695,
+  "historical_false_positives_checked": 359,
+  "historical_false_positives_retained": 0,
+  "z3_total": {
+    "UNSUPPORTED": 841,
+    "NO_QUERIES": 30
+  },
+  "esbmc_statuses": {
+    "TIMEOUT": 8,
+    "BOUND_EXHAUSTED": 5
+  },
+  "contract_statuses": {
+    "FAIL": 6,
+    "PASS": 6
+  },
+  "contract_reference_assertions": 1297,
+  "full_suite": {
+    "total": 858,
+    "passed": 858,
+    "failed": 0,
+    "skipped": 0,
+    "failures": [],
+    "receipt": {
+      "returncode": 0,
+      "source_unchanged": true,
+      "environment": "CTU toolchain + cppcheck + ESBMC",
+      "esbmc_timeout": 15
+    }
+  },
+  "cppcheck": {
+    "raw_diagnostics": 68,
+    "deduplicated_rule_file_line": 67,
+    "counts": {
+      "CONFIRMED_SOURCE_DEFECT": 36,
+      "DOWNSTREAM_DUPLICATE_RISK": 4,
+      "VALID_RULE_NOTICE": 25,
+      "CONFIRMED_FP": 2,
+      "NEEDS_REVIEW": 0
+    },
+    "by_project": {
+      "aocs": {
+        "CONFIRMED_SOURCE_DEFECT": 7,
+        "VALID_RULE_NOTICE": 7,
+        "CONFIRMED_FP": 1
+      },
+      "eps": {
+        "CONFIRMED_SOURCE_DEFECT": 4,
+        "VALID_RULE_NOTICE": 3
+      },
+      "obdh": {
+        "CONFIRMED_SOURCE_DEFECT": 12,
+        "VALID_RULE_NOTICE": 3,
+        "CONFIRMED_FP": 1
+      },
+      "ttc": {
+        "CONFIRMED_SOURCE_DEFECT": 9,
+        "VALID_RULE_NOTICE": 3
+      },
+      "01_earth_observer": {
+        "DOWNSTREAM_DUPLICATE_RISK": 1,
+        "CONFIRMED_SOURCE_DEFECT": 2,
+        "VALID_RULE_NOTICE": 2
+      },
+      "02_deep_space_probe": {
+        "DOWNSTREAM_DUPLICATE_RISK": 1,
+        "VALID_RULE_NOTICE": 2,
+        "CONFIRMED_SOURCE_DEFECT": 1
+      },
+      "03_lunar_lander": {
+        "DOWNSTREAM_DUPLICATE_RISK": 1,
+        "VALID_RULE_NOTICE": 2,
+        "CONFIRMED_SOURCE_DEFECT": 1
+      },
+      "04_orbital_servicer": {
+        "DOWNSTREAM_DUPLICATE_RISK": 1,
+        "VALID_RULE_NOTICE": 3
+      }
+    },
+    "direct_defect_alerts": 36,
+    "downstream_duplicate_risk_locations": 4,
+    "downstream_new_independent_roots": 0,
+    "defect_alert_share": 0.5373134328358209,
+    "valid_direct_alert_share": 0.9104477611940298,
+    "direct_defect_share_excluding_downstream_locations": 0.5714285714285714,
+    "valid_direct_alert_share_excluding_downstream_locations": 0.9682539682539683,
+    "distinct_defect_roots_are_not_equivalent_to_rule_file_line_count": true,
+    "interpretation": "36 direct source-defect alerts, 4 B01 downstream duplicate-risk sites, 25 valid rule notices, and 2 false positives. The 36 direct alerts are not necessarily distinct defect roots. Four app.c:104 sites add no independent roots and are excluded from direct-alert share denominators where explicitly named. Source-reviewed outputs of this run only; no recall denominator or overall hardware accuracy. Multi-location trace points are not extra alerts; payload.c:96 source/destination diagnostics are merged. Probes stop BEFORE unsafe copy, so no post-UB dispatch execution is claimed. Reference app.c:104 findings are false positives under the complete program ingress invariant.",
+    "input_sha256": "8d0a56d8434c349a9a94eca9996d646880ac1eb1a831298c7e0c2c96b1e72b06"
+  },
+  "llm_controlled": {
+    "total_cases": 4,
+    "executed_cases": 4,
+    "calls": 8,
+    "transport_successes": 5,
+    "structured_cases": 0,
+    "correct_suggestions": 0,
+    "incorrect_suggestions": 0,
+    "needs_review": 4
+  },
+  "llm_spacecraft": {
+    "projects": 8,
+    "cases": 16,
+    "planned_cases": 16,
+    "transport_successes": 22,
+    "structured": 6,
+    "raw_suggestion_matches": 6,
+    "citation_verified": 6,
+    "final_verdicts": {
+      "TRUE_POSITIVE": 5,
+      "FALSE_POSITIVE": 1,
+      "NEEDS_REVIEW": 10
+    }
+  },
+  "hardware_pending": 7,
+  "remote_ci_executed": false,
+  "pr_updated": false
+}

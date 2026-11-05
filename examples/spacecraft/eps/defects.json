@@ -1,0 +1,13 @@
+[
+  {
+    "id": "R-EPS-01",
+    "project": "eps",
+    "file": "src/heater.c",
+    "line": 27,
+    "title": "加热器占空比超过800",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "R-EPS-01",
+    "required_engine": "contract"
+  }
+]

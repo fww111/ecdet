@@ -1,0 +1,3022 @@
+{
+  "scope": "Audit the original 108 project-rule expectations against final CTU scans; counts are rule appearances, not defect recall",
+  "original_test_path": "C:\\Users\\admin\\Desktop\\嵌入式项目\\ecdet_spacecraft_remote_20261104\\tests\\test_spacecraft_examples.py",
+  "original_test_sha256": "36a71e36825ff059f5647f785f465b5b9889a0384e138400060b7a2d316047f8",
+  "original_expected": 108,
+  "retained_positive": 105,
+  "retained_positive_detected": 105,
+  "correct_negative": 3,
+  "missing_retained_positive": 0,
+  "explicit_current_positive_gates": 3,
+  "positive_pairs_not_explicitly_asserted_by_current_suite": [
+    {
+      "project": "aocs",
+      "rule": "CERT C ARR30-C"
+    },
+    {
+      "project": "aocs",
+      "rule": "CERT C STR31-C"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-197"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-563"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-785"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-BITFIELD"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-CRITICAL-PAIR"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-ISR-HEAP"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-VOLATILE-RMW"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-ISR-BLOCK"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-ISR-RACE"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-MMIO-ACCESS"
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-VOLATILE"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 10.3"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 12.2"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 13.5"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 13.6"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 14.2"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 14.3"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 15.1"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 15.2"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 16.4"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 16.6"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 17.2"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 18.8"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 21.3"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 21.7"
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 6.1"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C ARR30-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C EXP45-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C FIO30-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C INT30-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C MEM34-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C MSC30-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C PRE31-C"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-CWE-1284"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-CWE-197"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-HW-VOLATILE-RMW"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-ISR-BLOCK"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-ISR-RACE"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-MMIO-ACCESS"
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-VOLATILE"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 10.3"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 12.2"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 13.6"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 14.2"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 15.1"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 15.2"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 16.3"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 16.4"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 18.8"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.1"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.3"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.7"
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 7.2"
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C ARR30-C"
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C EXP45-C"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-CWE-197"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-BITFIELD"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-CRITICAL-PAIR"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-ISR-HEAP"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-VOLATILE-RMW"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-ISR-BLOCK"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-ISR-RACE"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-MMIO-ACCESS"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-VOLATILE"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 10.3"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 11.8"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 12.2"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 13.6"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 14.2"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 15.5"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 16.3"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 16.4"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 21.3"
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 6.1"
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C ARR30-C"
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C EXP45-C"
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C FIO30-C"
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C MSC30-C"
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C MSC41-C"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-1284"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-197"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-785"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-CRITICAL-PAIR"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-ISR-HEAP"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-ISR-BLOCK"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-ISR-RACE"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-MMIO-ACCESS"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-VOLATILE"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 10.3"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 11.4"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 12.2"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 13.6"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 14.2"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.1"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.2"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.5"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 16.4"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 18.8"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 21.3"
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 21.7"
+    }
+  ],
+  "comparison_now_performed": true,
+  "ci_note": "The current 44-root gate explicitly asserts only the overlapping project-rule pairs. This evidence audit covers all 105 retained positives but does not add those assertions to CI.",
+  "projects": [
+    {
+      "project": "aocs",
+      "original_expected": 29,
+      "retained_positive": 28,
+      "positive_detected": 28,
+      "correct_negative": 1,
+      "sarif_sha256": "fea15065d5c8a8b8b426de8bf1af56c95c5ffbfca9bfff9236285c52305e2e0a"
+    },
+    {
+      "project": "obdh",
+      "original_expected": 28,
+      "retained_positive": 28,
+      "positive_detected": 28,
+      "correct_negative": 0,
+      "sarif_sha256": "2e93ef4d5b661f9dd7be503e30f117aed871807fee12b7899c96144f52c38b39"
+    },
+    {
+      "project": "eps",
+      "original_expected": 22,
+      "retained_positive": 21,
+      "positive_detected": 21,
+      "correct_negative": 1,
+      "sarif_sha256": "eba34841df852c99b7e80c814f04814d72bbbaae28fb21d694dc4d03d697b21c"
+    },
+    {
+      "project": "ttc",
+      "original_expected": 29,
+      "retained_positive": 28,
+      "positive_detected": 28,
+      "correct_negative": 1,
+      "sarif_sha256": "8a38603c81d104d62866d5f5007700de34eee89a11cb1fc556e4ab948d41dce0"
+    }
+  ],
+  "expectations": [
+    {
+      "project": "aocs",
+      "rule": "CERT C ARR30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/attitude.c",
+          "line": 121
+        },
+        {
+          "engine": "builtin",
+          "file": "src/imu.c",
+          "line": 30
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/attitude.c",
+          "line": 121
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/imu.c",
+          "line": 30
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "CERT C FIO30-C",
+      "original_expected_positive": true,
+      "current_expected": "negative",
+      "status": "EXPECTED_FALSE_POSITIVE_ABSENT",
+      "builtin_alert_count": 0,
+      "all_engine_alert_count": 0,
+      "evidence": [],
+      "explicit_current_gate": true,
+      "exclusion_reason": "fixed literal format is not controllable"
+    },
+    {
+      "project": "aocs",
+      "rule": "CERT C STR31-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/main.c",
+          "line": 162
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-197",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/imu.c",
+          "line": 45
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-563",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 73
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-CWE-785",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/attitude.c",
+          "line": 73
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-BITFIELD",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 98
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-CRITICAL-PAIR",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 71
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-ISR-HEAP",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 104
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 108
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 112
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-HW-VOLATILE-RMW",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 79
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-ISR-BLOCK",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 106
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-ISR-RACE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 79
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 80
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/main.c",
+          "line": 47
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-MMIO-ACCESS",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/fdir.c",
+          "line": 100
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 60
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/imu.c",
+          "line": 61
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "ECDET-VOLATILE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/main.c",
+          "line": 25
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 10.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/imu.c",
+          "line": 45
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 12.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 107
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 13.5",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/attitude.c",
+          "line": 130
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 13.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 90
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 14.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/attitude.c",
+          "line": 142
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 14.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/orbit.c",
+          "line": 63
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 15.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 124
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 15.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 124
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 16.4",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 40
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 16.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/wheel.c",
+          "line": 40
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 17.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/attitude.c",
+          "line": 63
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 18.8",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/orbit.c",
+          "line": 48
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 21.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/fdir.c",
+          "line": 27
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fdir.c",
+          "line": 55
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fdir.c",
+          "line": 108
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fdir.c",
+          "line": 112
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 21.7",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/main.c",
+          "line": 185
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "aocs",
+      "rule": "MISRA C:2012 6.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "include/aocs.h",
+          "line": 148
+        },
+        {
+          "engine": "builtin",
+          "file": "include/aocs.h",
+          "line": 149
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C ARR30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 6,
+      "all_engine_alert_count": 6,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 71
+        },
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 30
+        },
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 88
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/ccsds.c",
+          "line": 71
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/telemetry.c",
+          "line": 30
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/telemetry.c",
+          "line": 88
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C EXP45-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 81
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C FIO30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 138
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C INT30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ringbuf.c",
+          "line": 77
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C MEM34-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/payload.c",
+          "line": 114
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C MSC30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/payload.c",
+          "line": 50
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C PRE31-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 66
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "CERT C STR31-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 102
+        },
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 104
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/ccsds.c",
+          "line": 105
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/payload.c",
+          "line": 96
+        }
+      ],
+      "explicit_current_gate": true,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-CWE-1284",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 73
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 135
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-CWE-197",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 45
+        },
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 59
+        },
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 74
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-HW-VOLATILE-RMW",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 55
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-ISR-BLOCK",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 117
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-ISR-RACE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 5,
+      "all_engine_alert_count": 5,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 34
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/main.c",
+          "line": 113
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 33
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 35
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/main.c",
+          "line": 40
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-MMIO-ACCESS",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 64
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 127
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "ECDET-VOLATILE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/telemetry.c",
+          "line": 17
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 10.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 6,
+      "all_engine_alert_count": 6,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 45
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 53
+        },
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 59
+        },
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 60
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ringbuf.c",
+          "line": 77
+        },
+        {
+          "engine": "builtin",
+          "file": "src/telemetry.c",
+          "line": 74
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 12.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 25
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ringbuf.c",
+          "line": 78
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 13.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ringbuf.c",
+          "line": 84
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 14.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 66
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 15.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 117
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 15.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 117
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 16.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 120
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 104
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 16.4",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ccsds.c",
+          "line": 119
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 103
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 18.8",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ringbuf.c",
+          "line": 71
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 15
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/payload.c",
+          "line": 32
+        },
+        {
+          "engine": "builtin",
+          "file": "src/payload.c",
+          "line": 110
+        },
+        {
+          "engine": "builtin",
+          "file": "src/payload.c",
+          "line": 114
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 21.7",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc.c",
+          "line": 78
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "obdh",
+      "rule": "MISRA C:2012 7.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/crc.c",
+          "line": 60
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C ARR30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 6,
+      "all_engine_alert_count": 6,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/battery.c",
+          "line": 33
+        },
+        {
+          "engine": "builtin",
+          "file": "src/mppt.c",
+          "line": 43
+        },
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 43
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/battery.c",
+          "line": 33
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/mppt.c",
+          "line": 43
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/protection.c",
+          "line": 43
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C EXP45-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 75
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "CERT C FIO30-C",
+      "original_expected_positive": true,
+      "current_expected": "negative",
+      "status": "EXPECTED_FALSE_POSITIVE_ABSENT",
+      "builtin_alert_count": 0,
+      "all_engine_alert_count": 0,
+      "evidence": [],
+      "explicit_current_gate": true,
+      "exclusion_reason": "fixed literal format is not controllable"
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-CWE-197",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/mppt.c",
+          "line": 40
+        },
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 76
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-BITFIELD",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/heater.c",
+          "line": 44
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-CRITICAL-PAIR",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 93
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-ISR-HEAP",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 40
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 65
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 66
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 69
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-HW-VOLATILE-RMW",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 86
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-ISR-BLOCK",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 45
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-ISR-RACE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 21
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 20
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 22
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-MMIO-ACCESS",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 48
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 51
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 62
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "ECDET-VOLATILE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/adc_isr.c",
+          "line": 14
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 10.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/battery.c",
+          "line": 86
+        },
+        {
+          "engine": "builtin",
+          "file": "src/mppt.c",
+          "line": 40
+        },
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 76
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 11.8",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 71
+        },
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 82
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 12.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 88
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 13.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 73
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 14.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 78
+        },
+        {
+          "engine": "builtin",
+          "file": "src/mppt.c",
+          "line": 100
+        },
+        {
+          "engine": "builtin",
+          "file": "src/protection.c",
+          "line": 97
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 15.5",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/battery.c",
+          "line": 49
+        },
+        {
+          "engine": "builtin",
+          "file": "src/battery.c",
+          "line": 105
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 16.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 87
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 16.4",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/heater.c",
+          "line": 86
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 21.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/adc_isr.c",
+          "line": 66
+        },
+        {
+          "engine": "builtin",
+          "file": "src/adc_isr.c",
+          "line": 69
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "eps",
+      "rule": "MISRA C:2012 6.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "include/eps.h",
+          "line": 141
+        },
+        {
+          "engine": "builtin",
+          "file": "include/eps.h",
+          "line": 142
+        },
+        {
+          "engine": "builtin",
+          "file": "include/eps.h",
+          "line": 143
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C ARR30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 5,
+      "all_engine_alert_count": 5,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 43
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 38
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/fec.c",
+          "line": 43
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/tc_decode.c",
+          "line": 38
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/tc_decode.c",
+          "line": 81
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C EXP45-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ranging.c",
+          "line": 75
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ranging.c",
+          "line": 90
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C FIO30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 169
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C MSC30-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 43
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C MSC41-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 17
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "CERT C STR31-C",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 72
+        },
+        {
+          "engine": "builtin-flow",
+          "file": "src/tc_decode.c",
+          "line": 63
+        }
+      ],
+      "explicit_current_gate": true,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-1284",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 161
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-197",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/dma.c",
+          "line": 55
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 67
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ranging.c",
+          "line": 61
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 51
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-CWE-785",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 64
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-CRITICAL-PAIR",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 94
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-ISR-HEAP",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 80
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-HW-VOLATILE-RMW",
+      "original_expected_positive": true,
+      "current_expected": "negative",
+      "status": "EXPECTED_FALSE_POSITIVE_ABSENT",
+      "builtin_alert_count": 0,
+      "all_engine_alert_count": 0,
+      "evidence": [],
+      "explicit_current_gate": true,
+      "exclusion_reason": "read-modify-write targets ordinary RAM, not MMIO"
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-ISR-BLOCK",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 81
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-ISR-RACE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 4,
+      "all_engine_alert_count": 4,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 32
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 31
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/main.c",
+          "line": 93
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 30
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-MMIO-ACCESS",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 104
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "ECDET-VOLATILE",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 2,
+      "all_engine_alert_count": 2,
+      "evidence": [
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 14
+        },
+        {
+          "engine": "builtin-hw",
+          "file": "src/dma.c",
+          "line": 19
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 10.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 5,
+      "all_engine_alert_count": 5,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/dma.c",
+          "line": 55
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 67
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 105
+        },
+        {
+          "engine": "builtin",
+          "file": "src/ranging.c",
+          "line": 61
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 51
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 11.4",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/dma.c",
+          "line": 105
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 12.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 104
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 13.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 46
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 14.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/ranging.c",
+          "line": 72
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.1",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 115
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.2",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 115
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 15.5",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 6,
+      "all_engine_alert_count": 6,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 83
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 55
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 118
+        },
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 139
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 60
+        },
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 162
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 16.4",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 101
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 18.6",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 145
+        }
+      ],
+      "explicit_current_gate": true,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 18.8",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/fec.c",
+          "line": 79
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 21.3",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 3,
+      "all_engine_alert_count": 3,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 25
+        },
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 108
+        },
+        {
+          "engine": "builtin",
+          "file": "src/auth.c",
+          "line": 112
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    },
+    {
+      "project": "ttc",
+      "rule": "MISRA C:2012 21.7",
+      "original_expected_positive": true,
+      "current_expected": "positive",
+      "status": "RETAINED_EXPECTATION_DETECTED",
+      "builtin_alert_count": 1,
+      "all_engine_alert_count": 1,
+      "evidence": [
+        {
+          "engine": "builtin",
+          "file": "src/tc_decode.c",
+          "line": 165
+        }
+      ],
+      "explicit_current_gate": false,
+      "exclusion_reason": ""
+    }
+  ],
+  "final_engine_execution": [
+    {
+      "project": "aocs",
+      "codechecker": "complete",
+      "analyzers": [
+        "clangsa",
+        "clang-tidy",
+        "cppcheck",
+        "gcc"
+      ],
+      "executed_analyzers": [
+        "clang-tidy",
+        "clangsa",
+        "cppcheck",
+        "gcc"
+      ],
+      "ctu": true,
+      "subanalyses": {
+        "z3": {
+          "UNSUPPORTED": 127
+        },
+        "esbmc": "BOUND_EXHAUSTED"
+      }
+    },
+    {
+      "project": "obdh",
+      "codechecker": "complete",
+      "analyzers": [
+        "clangsa",
+        "clang-tidy",
+        "cppcheck",
+        "gcc"
+      ],
+      "executed_analyzers": [
+        "clang-tidy",
+        "clangsa",
+        "cppcheck",
+        "gcc"
+      ],
+      "ctu": true,
+      "subanalyses": {
+        "z3": {
+          "UNSUPPORTED": 38,
+          "NO_QUERIES": 1
+        },
+        "esbmc": "BOUND_EXHAUSTED"
+      }
+    },
+    {
+      "project": "eps",
+      "codechecker": "complete",
+      "analyzers": [
+        "clangsa",
+        "clang-tidy",
+        "cppcheck",
+        "gcc"
+      ],
+      "executed_analyzers": [
+        "clang-tidy",
+        "clangsa",
+        "cppcheck",
+        "gcc"
+      ],
+      "ctu": true,
+      "subanalyses": {
+        "z3": {
+          "UNSUPPORTED": 27
+        },
+        "business": {
+          "FAIL": 1
+        },
+        "esbmc": "BOUND_EXHAUSTED"
+      }
+    },
+    {
+      "project": "ttc",
+      "codechecker": "complete",
+      "analyzers": [
+        "clangsa",
+        "clang-tidy",
+        "cppcheck",
+        "gcc"
+      ],
+      "executed_analyzers": [
+        "clang-tidy",
+        "clangsa",
+        "cppcheck",
+        "gcc"
+      ],
+      "ctu": true,
+      "subanalyses": {
+        "z3": {
+          "UNSUPPORTED": 50,
+          "NO_QUERIES": 1
+        },
+        "esbmc": "BOUND_EXHAUSTED"
+      }
+    }
+  ],
+  "functional_gaps": [
+    {
+      "feature": "Real LLM triage",
+      "state": "EXECUTED_PARTIAL_QUALIFICATION",
+      "evidence": "Real endpoint execution receipts are present: controlled 4 cases / 8 calls (5 transport successes, 0 structured cases, 4 NEEDS_REVIEW; run status ERROR); spacecraft 16 selected alerts from 8 projects / 28 calls (22 transport successes, 6 structured and citation-verified cases, 10 NEEDS_REVIEW); 2 additional response-format diagnostic calls. Citation validation does not establish semantic correctness.",
+      "evidence_paths": [
+        "llm/controlled/validation.json",
+        "llm/spacecraft/validation.json",
+        "llm/spacecraft/response_diagnostics.json"
+      ]
+    },
+    {
+      "feature": "Z3 spacecraft model solving",
+      "state": "UNSUPPORTED",
+      "evidence": "Compiler preprocessing succeeded, but final scans retain unsupported local-model query sites; positive/negative solver fixtures are tested separately"
+    },
+    {
+      "feature": "ESBMC complete spacecraft proof",
+      "state": "INCOMPLETE",
+      "evidence": "Actual engineering runs produce TIMEOUT/BOUND_EXHAUSTED; installed solver positive/negative and multi-TU fixtures passed"
+    },
+    {
+      "feature": "Hardware atomicity and interrupt scheduling",
+      "state": "NOT_EXECUTED_ON_HARDWARE",
+      "evidence": "Seven source-reviewed alerts remain conditional on target hardware"
+    },
+    {
+      "feature": "Remote GitHub CI",
+      "state": "NOT_EXECUTED",
+      "evidence": "Workflow added locally; this task does not push or trigger GitHub"
+    },
+    {
+      "feature": "Real LLM automatic patch generation on the eight new projects",
+      "state": "NOT_EXECUTED",
+      "evidence": "This round executed real LLM triage and response diagnostics. No real LLM automatic patch-generation and generated-patch verification run on the eight new spacecraft projects is recorded in these execution receipts."
+    }
+  ],
+  "real_llm_execution": {
+    "verified_at_utc": "2026-11-05T11:00:02.418285+00:00",
+    "evidence_sources": {
+      "controlled": {
+        "path": "llm/controlled/validation.json",
+        "sha256": "66dbdf89aed7d555631e844f207beb6c5848ac4cd4feae41ba7dfcb15f0abd9c"
+      },
+      "spacecraft": {
+        "path": "llm/spacecraft/validation.json",
+        "sha256": "958eaaf69a8899f6fb326536716cbb09adc9495cacd1dda2ba13bfeeaba484f1"
+      },
+      "response_diagnostics": {
+        "path": "llm/spacecraft/response_diagnostics.json",
+        "sha256": "bde6f4dce4dbe92c080e1ade4e01b01967c554e01d3338b92e009214f3efc1df"
+      }
+    },
+    "controlled": {
+      "mode": "real",
+      "status": "ERROR",
+      "summary": {
+        "total_cases": 4,
+        "executed_cases": 4,
+        "calls": 8,
+        "transport_successes": 5,
+        "structured_cases": 0,
+        "correct_suggestions": 0,
+        "incorrect_suggestions": 0,
+        "needs_review": 4
+      },
+      "final_verdicts": {
+        "NEEDS_REVIEW": 4
+      }
+    },
+    "spacecraft": {
+      "mode": "real",
+      "status": "COMPLETED",
+      "calls": 28,
+      "summary": {
+        "projects": 8,
+        "cases": 16,
+        "planned_cases": 16,
+        "transport_successes": 22,
+        "structured": 6,
+        "raw_suggestion_matches": 6,
+        "citation_verified": 6,
+        "final_verdicts": {
+          "TRUE_POSITIVE": 5,
+          "FALSE_POSITIVE": 1,
+          "NEEDS_REVIEW": 10
+        }
+      },
+      "scope": "16 selected alerts from 8 projects; full project sources loaded but bounded slices sent. Citation validation is not semantic proof. FP entries replay historical removed alerts. No population accuracy claim."
+    },
+    "response_diagnostics": {
+      "baseline_calls": 28,
+      "additional_calls": 2,
+      "spacecraft_total_including_diagnostics": 30,
+      "records": [
+        {
+          "id": "O01",
+          "transport": "PASS",
+          "strict_parser_pass": false,
+          "format_issue": "content is not a standalone JSON document"
+        },
+        {
+          "id": "FP-AOCS",
+          "transport": "PASS",
+          "strict_parser_pass": false,
+          "format_issue": "content is not a standalone JSON document"
+        }
+      ]
+    },
+    "total_cases_excluding_diagnostics": 20,
+    "total_calls_including_diagnostics": 38,
+    "interpretation": "Execution, transport success, structured/citation validation, and semantic correctness are distinct. The 16 spacecraft cases are selected alerts, including replayed historical false positives; this is not a population accuracy or project safety result."
+  }
+}

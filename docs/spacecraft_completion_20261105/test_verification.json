@@ -1,0 +1,13 @@
+{
+  "total": 858,
+  "passed": 858,
+  "failed": 0,
+  "skipped": 0,
+  "failures": [],
+  "receipt": {
+    "returncode": 0,
+    "source_unchanged": true,
+    "environment": "CTU toolchain + cppcheck + ESBMC",
+    "esbmc_timeout": 15
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "01_earth_observer": [
+    {
+      "id": "B01",
+      "file": "src/packet.c",
+      "before": "length > 192u",
+      "after": "length > sizeof(command->payload)"
+    },
+    {
+      "id": "B02",
+      "file": "src/telemetry.c",
+      "before": "if (length < 0)",
+      "after": "if (length < 0 || (size_t)length >= sizeof(message))"
+    },
+    {
+      "id": "B03",
+      "file": "src/scheduler.c",
+      "before": "now > w->last_kick + w->timeout",
+      "after": "(uint32_t)(now - w->last_kick) > w->timeout"
+    },
+    {
+      "id": "B04",
+      "file": "src/storage.c",
+      "before": "offset >= FLASH_PAGE)",
+      "after": "offset >= FLASH_PAGE || size > FLASH_PAGE - offset)"
+    },
+    {
+      "id": "E01",
+      "file": "src/attitude.c",
+      "before": "index > ARRAY_COUNT(m->wheel)",
+      "after": "index >= ARRAY_COUNT(m->wheel)"
+    },
+    {
+      "id": "E02",
+      "file": "src/attitude.c",
+      "before": "if (m->star_valid)",
+      "after": "if (m->star_valid && (uint32_t)(now - m->star_timestamp) <= 500u)"
+    },
+    {
+      "id": "E03",
+      "file": "src/camera.c",
+      "before": "unsigned total = 0;",
+      "after": "if (!pixels || count == 0) { return 0; }\n    unsigned total = 0;"
+    },
+    {
+      "id": "E04",
+      "file": "src/camera.c",
+      "before": "count > 256u",
+      "after": "count > sizeof(m->tile)"
+    }
+  ],
+  "02_deep_space_probe": [
+    {
+      "id": "B01",
+      "file": "src/packet.c",
+      "before": "length > 192u",
+      "after": "length > sizeof(command->payload)"
+    },
+    {
+      "id": "B02",
+      "file": "src/telemetry.c",
+      "before": "if (length < 0)",
+      "after": "if (length < 0 || (size_t)length >= sizeof(message))"
+    },
+    {
+      "id": "B03",
+      "file": "src/scheduler.c",
+      "before": "now > w->last_kick + w->timeout",
+      "after": "(uint32_t)(now - w->last_kick) > w->timeout"
+    },
+    {
+      "id": "B04",
+      "file": "src/storage.c",
+      "before": "offset >= FLASH_PAGE)",
+      "after": "offset >= FLASH_PAGE || size > FLASH_PAGE - offset)"
+    },
+    {
+      "id": "D01",
+      "file": "src/sequencer.c",
+      "before": "count > 12u",
+      "after": "count > ARRAY_COUNT(m->steps)"
+    },
+    {
+      "id": "D02",
+      "file": "src/sequencer.c",
+      "before": "m->instrument_on = true;",
+      "after": "if (m->mode == DS_SAFE) { return false; }\n    m->instrument_on = true;"
+    },
+    {
+      "id": "D03",
+      "file": "src/bundle.c",
+      "before": "uint16_t end = (uint16_t)(offset + count);",
+      "after": "size_t end = (size_t)offset + count;"
+    },
+    {
+      "id": "D04",
+      "file": "src/bundle.c",
+      "before": "free(m->retry_cache);",
+      "after": "free(m->retry_cache);\n    m->retry_cache = NULL;\n    m->retry_size = 0;"
+    }
+  ],
+  "03_lunar_lander": [
+    {
+      "id": "B01",
+      "file": "src/packet.c",
+      "before": "length > 192u",
+      "after": "length > sizeof(command->payload)"
+    },
+    {
+      "id": "B02",
+      "file": "src/telemetry.c",
+      "before": "if (length < 0)",
+      "after": "if (length < 0 || (size_t)length >= sizeof(message))"
+    },
+    {
+      "id": "B03",
+      "file": "src/scheduler.c",
+      "before": "now > w->last_kick + w->timeout",
+      "after": "(uint32_t)(now - w->last_kick) > w->timeout"
+    },
+    {
+      "id": "B04",
+      "file": "src/storage.c",
+      "before": "offset >= FLASH_PAGE)",
+      "after": "offset >= FLASH_PAGE || size > FLASH_PAGE - offset)"
+    },
+    {
+      "id": "L01",
+      "file": "src/navigation.c",
+      "before": "return (float)(uint16_t)raw * 0.1f;",
+      "after": "if (raw < 0) { return -1.0f; }\n    return (float)raw * 0.1f;"
+    },
+    {
+      "id": "L02",
+      "file": "src/navigation.c",
+      "before": "i <= count",
+      "after": "i < count"
+    },
+    {
+      "id": "L03",
+      "file": "src/propulsion.c",
+      "before": "m->fuel_units -= amount;",
+      "after": "if (amount > m->fuel_units) { return false; }\n    m->fuel_units -= amount;"
+    },
+    {
+      "id": "L04",
+      "file": "src/propulsion.c",
+      "before": "m->contact_left || m->contact_right",
+      "after": "m->contact_left && m->contact_right"
+    }
+  ],
+  "04_orbital_servicer": [
+    {
+      "id": "B01",
+      "file": "src/packet.c",
+      "before": "length > 192u",
+      "after": "length > sizeof(command->payload)"
+    },
+    {
+      "id": "B02",
+      "file": "src/telemetry.c",
+      "before": "if (length < 0)",
+      "after": "if (length < 0 || (size_t)length >= sizeof(message))"
+    },
+    {
+      "id": "B03",
+      "file": "src/scheduler.c",
+      "before": "now > w->last_kick + w->timeout",
+      "after": "(uint32_t)(now - w->last_kick) > w->timeout"
+    },
+    {
+      "id": "B04",
+      "file": "src/storage.c",
+      "before": "offset >= FLASH_PAGE)",
+      "after": "offset >= FLASH_PAGE || size > FLASH_PAGE - offset)"
+    },
+    {
+      "id": "O01",
+      "file": "src/robot_arm.c",
+      "before": "index >= 4 ||",
+      "after": "index < 0 || index >= 4 ||"
+    },
+    {
+      "id": "O02",
+      "file": "src/robot_arm.c",
+      "before": "count > 10u",
+      "after": "count > ARRAY_COUNT(m->trajectory)"
+    },
+    {
+      "id": "O03",
+      "file": "src/rendezvous.c",
+      "before": "return m->target_valid;",
+      "after": "return m->target_valid && (uint32_t)(now - m->nav_timestamp) <= 750u;"
+    },
+    {
+      "id": "O04",
+      "file": "src/rendezvous.c",
+      "before": "!m->permit || m->range > 0.5f",
+      "after": "!m->permit || m->mode != OS_CAPTURE || m->range > 0.5f || fabsf(m->closing_speed) > 0.02f"
+    }
+  ],
+  "eps": [
+    {
+      "id": "R-EPS-01",
+      "file": "src/heater.c",
+      "before": "g_eps.heater_duty[channel] = duty;",
+      "after": "g_eps.heater_duty[channel] = duty > HEATER_MAX_DUTY ? HEATER_MAX_DUTY : duty;"
+    }
+  ]
+}

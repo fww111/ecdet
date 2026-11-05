@@ -1,0 +1,90 @@
+[
+  {
+    "id": "01_earth_observer-B01",
+    "project": "01_earth_observer",
+    "file": "src/packet.c",
+    "line": 20,
+    "title": "遥控包长度校验与目标缓冲区不一致",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "01_earth_observer-B02",
+    "project": "01_earth_observer",
+    "file": "src/telemetry.c",
+    "line": 15,
+    "title": "截断后的格式化长度被当作有效发送长度",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "01_earth_observer-B03",
+    "project": "01_earth_observer",
+    "file": "src/scheduler.c",
+    "line": 19,
+    "title": "看门狗截止时间加法回绕导致提前超时",
+    "category": "defect",
+    "rule": "CERT C INT30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "01_earth_observer-B04",
+    "project": "01_earth_observer",
+    "file": "src/storage.c",
+    "line": 10,
+    "title": "页内写入缺少长度校验，破坏下一页记录",
+    "category": "defect",
+    "rule": "ECDET-CWE-119",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "01_earth_observer-E01",
+    "project": "01_earth_observer",
+    "file": "src/attitude.c",
+    "line": 9,
+    "title": "反作用飞轮索引上界多放行一个元素",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "01_earth_observer-E02",
+    "project": "01_earth_observer",
+    "file": "src/attitude.c",
+    "line": 13,
+    "title": "姿态融合继续采用过期星敏感器数据",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "E02",
+    "required_engine": "contract"
+  },
+  {
+    "id": "01_earth_observer-E03",
+    "project": "01_earth_observer",
+    "file": "src/camera.c",
+    "line": 10,
+    "title": "空图像统计发生整数除零",
+    "category": "defect",
+    "rule": "core.DivideZero",
+    "contract_id": "",
+    "required_engine": "codechecker"
+  },
+  {
+    "id": "01_earth_observer-E04",
+    "project": "01_earth_observer",
+    "file": "src/camera.c",
+    "line": 18,
+    "title": "图像分块复制超过缓存容量",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  }
+]

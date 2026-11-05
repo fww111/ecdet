@@ -1,0 +1,90 @@
+[
+  {
+    "id": "03_lunar_lander-B01",
+    "project": "03_lunar_lander",
+    "file": "src/packet.c",
+    "line": 20,
+    "title": "遥控包长度校验与目标缓冲区不一致",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-B02",
+    "project": "03_lunar_lander",
+    "file": "src/telemetry.c",
+    "line": 15,
+    "title": "截断后的格式化长度被当作有效发送长度",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-B03",
+    "project": "03_lunar_lander",
+    "file": "src/scheduler.c",
+    "line": 19,
+    "title": "看门狗截止时间加法回绕导致提前超时",
+    "category": "defect",
+    "rule": "CERT C INT30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-B04",
+    "project": "03_lunar_lander",
+    "file": "src/storage.c",
+    "line": 10,
+    "title": "页内写入缺少长度校验，破坏下一页记录",
+    "category": "defect",
+    "rule": "ECDET-CWE-119",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-L01",
+    "project": "03_lunar_lander",
+    "file": "src/navigation.c",
+    "line": 7,
+    "title": "雷达无效负值被转为巨大正高度",
+    "category": "defect",
+    "rule": "ECDET-CWE-195",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-L02",
+    "project": "03_lunar_lander",
+    "file": "src/navigation.c",
+    "line": 16,
+    "title": "下降参数表复制循环多执行一次",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-L03",
+    "project": "03_lunar_lander",
+    "file": "src/propulsion.c",
+    "line": 6,
+    "title": "推进剂扣减发生无符号下溢",
+    "category": "defect",
+    "rule": "CERT C INT30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "03_lunar_lander-L04",
+    "project": "03_lunar_lander",
+    "file": "src/propulsion.c",
+    "line": 11,
+    "title": "单侧触地误信号触发提前关机",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "L04",
+    "required_engine": "contract"
+  }
+]

@@ -1,0 +1,90 @@
+[
+  {
+    "id": "04_orbital_servicer-B01",
+    "project": "04_orbital_servicer",
+    "file": "src/packet.c",
+    "line": 20,
+    "title": "遥控包长度校验与目标缓冲区不一致",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-B02",
+    "project": "04_orbital_servicer",
+    "file": "src/telemetry.c",
+    "line": 15,
+    "title": "截断后的格式化长度被当作有效发送长度",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-B03",
+    "project": "04_orbital_servicer",
+    "file": "src/scheduler.c",
+    "line": 19,
+    "title": "看门狗截止时间加法回绕导致提前超时",
+    "category": "defect",
+    "rule": "CERT C INT30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-B04",
+    "project": "04_orbital_servicer",
+    "file": "src/storage.c",
+    "line": 10,
+    "title": "页内写入缺少长度校验，破坏下一页记录",
+    "category": "defect",
+    "rule": "ECDET-CWE-119",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-O01",
+    "project": "04_orbital_servicer",
+    "file": "src/robot_arm.c",
+    "line": 10,
+    "title": "机械臂关节索引漏检负值",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-O02",
+    "project": "04_orbital_servicer",
+    "file": "src/robot_arm.c",
+    "line": 30,
+    "title": "轨迹表容量检查使用错误上限",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "04_orbital_servicer-O03",
+    "project": "04_orbital_servicer",
+    "file": "src/rendezvous.c",
+    "line": 4,
+    "title": "相对导航失联后仍沿旧数据接近",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "O03",
+    "required_engine": "contract"
+  },
+  {
+    "id": "04_orbital_servicer-O04",
+    "project": "04_orbital_servicer",
+    "file": "src/rendezvous.c",
+    "line": 10,
+    "title": "抓捕互锁漏检模式与闭合速度",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "O04",
+    "required_engine": "contract"
+  }
+]

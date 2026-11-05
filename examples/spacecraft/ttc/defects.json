@@ -1,0 +1,57 @@
+[
+  {
+    "id": "REMOTE-06",
+    "project": "ttc",
+    "file": "src/auth.c",
+    "line": 80,
+    "title": "拷贝源越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-07",
+    "project": "ttc",
+    "file": "src/tc_decode.c",
+    "line": 70,
+    "title": "拷贝源越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-08",
+    "project": "ttc",
+    "file": "src/fec.c",
+    "line": 89,
+    "title": "拷贝源越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-09",
+    "project": "ttc",
+    "file": "src/tc_decode.c",
+    "line": 145,
+    "title": "返回局部数组地址",
+    "category": "defect",
+    "rule": "MISRA C:2012 18.6",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-11",
+    "project": "ttc",
+    "file": "src/tc_decode.c",
+    "line": 63,
+    "title": "遥控帧长度越界",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  }
+]

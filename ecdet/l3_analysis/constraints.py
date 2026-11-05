@@ -48,6 +48,7 @@ class ConstraintReport:
     diagnostics: list[str] = field(default_factory=list)
     solver_version: str = ''
     model: str = MODEL
+    context: dict = field(default_factory=dict)
 
     def to_dict(self):
         return asdict(self)

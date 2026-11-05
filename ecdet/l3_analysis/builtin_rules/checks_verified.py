@@ -204,7 +204,7 @@ def _local_names(f: FileFacts, func) -> set[str]:
             continue
         text = f.lex.clean_lines[line - 1]
         for m in _LOCAL_DECL_RE.finditer(text):
-            if m.group("type") in ("void", "float", "double"):
+            if m.group("type") == "void":
                 continue
             storage = m.group("storage") or ""
             if "static" in storage or "extern" in storage:
@@ -639,7 +639,7 @@ def check_unreachable(f: FileFacts, ctx: ProjectContext, active: set[str]) -> li
             if t.kind != "keyword" or t.value != "return":
                 continue
             prev = toks[i - 1].value if i > 0 else ""
-            if i > 0 and prev not in ("{", ";", ":"):
+            if i > 0 and prev not in ("{", "}", ";", ":"):
                 continue      # if/for/while 的单语句 return 不是无条件
             j, d = i + 1, 0
             while j < len(toks):
@@ -893,6 +893,12 @@ def _array_element_bytes(a) -> int | None:
 def check_copy_source_bounds(f: FileFacts, ctx: ProjectContext,
                              active: set[str]) -> list[Alert]:
     """MISRA 21.17：memcpy/memmove 字节长度超过源数组字节容量（越界读）。"""
+    # Share one project model across file-rule dispatches. The syntax path keeps
+    # local scopes and resolves macro lengths, typed sizes and member arrays.
+    from ecdet.l3_analysis.value_flow import check_copy_source_syntax
+    structured = check_copy_source_syntax(f, ctx)
+    if structured is not None:
+        return structured
     out: list[Alert] = []
     capacities: dict[str, int] = {}
     for a in f.arrays:

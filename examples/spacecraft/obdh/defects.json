@@ -1,0 +1,35 @@
+[
+  {
+    "id": "REMOTE-04",
+    "project": "obdh",
+    "file": "src/ccsds.c",
+    "line": 61,
+    "title": "拷贝源越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-05",
+    "project": "obdh",
+    "file": "src/payload.c",
+    "line": 96,
+    "title": "拷贝源与目标越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-10",
+    "project": "obdh",
+    "file": "src/ccsds.c",
+    "line": 105,
+    "title": "CCSDS解析目标越界",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  }
+]

@@ -54,15 +54,14 @@ def write_reports(output, alerts, receipt, project):
 
 
 def analyze_constraint_files(root, files, *, function=None, timeout_ms=1000):
-    from ecdet.l3_analysis.constraints import analyze_constraints
+    from ecdet.l3_analysis.constraints_tu import analyze_translation_unit
     reports, alerts = [], []
     for relative in files:
         path = root / relative
         if path.suffix.lower() != '.c':
             continue
-        report = analyze_constraints(path.read_text(encoding='utf-8', errors='replace'),
-                                     path=relative.as_posix(), function=function,
-                                     timeout_ms=timeout_ms)
+        report = analyze_translation_unit(root, relative, function=function,
+                                          timeout_ms=timeout_ms)
         reports.append(report.to_dict())
         alerts.extend(report.alerts())
     counts = Counter()

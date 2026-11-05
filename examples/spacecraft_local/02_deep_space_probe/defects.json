@@ -1,0 +1,90 @@
+[
+  {
+    "id": "02_deep_space_probe-B01",
+    "project": "02_deep_space_probe",
+    "file": "src/packet.c",
+    "line": 20,
+    "title": "遥控包长度校验与目标缓冲区不一致",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-B02",
+    "project": "02_deep_space_probe",
+    "file": "src/telemetry.c",
+    "line": 15,
+    "title": "截断后的格式化长度被当作有效发送长度",
+    "category": "defect",
+    "rule": "CERT C ARR30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-B03",
+    "project": "02_deep_space_probe",
+    "file": "src/scheduler.c",
+    "line": 19,
+    "title": "看门狗截止时间加法回绕导致提前超时",
+    "category": "defect",
+    "rule": "CERT C INT30-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-B04",
+    "project": "02_deep_space_probe",
+    "file": "src/storage.c",
+    "line": 10,
+    "title": "页内写入缺少长度校验，破坏下一页记录",
+    "category": "defect",
+    "rule": "ECDET-CWE-119",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-D01",
+    "project": "02_deep_space_probe",
+    "file": "src/sequencer.c",
+    "line": 9,
+    "title": "延时指令表装载超过容量",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-D02",
+    "project": "02_deep_space_probe",
+    "file": "src/sequencer.c",
+    "line": 17,
+    "title": "安全模式仍允许科学仪器上电",
+    "category": "business",
+    "rule": "ECDET-BUSINESS-CONTRACT",
+    "contract_id": "D02",
+    "required_engine": "contract"
+  },
+  {
+    "id": "02_deep_space_probe-D03",
+    "project": "02_deep_space_probe",
+    "file": "src/bundle.c",
+    "line": 11,
+    "title": "分片末地址截断回绕绕过边界校验",
+    "category": "defect",
+    "rule": "CERT C STR31-C",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "02_deep_space_probe-D04",
+    "project": "02_deep_space_probe",
+    "file": "src/bundle.c",
+    "line": 39,
+    "title": "重传确认释放后保留悬空指针",
+    "category": "defect",
+    "rule": "ECDET-CWE-416",
+    "contract_id": "",
+    "required_engine": "builtin"
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "REMOTE-01",
+    "project": "aocs",
+    "file": "src/orbit.c",
+    "line": 82,
+    "title": "返回局部标量地址",
+    "category": "defect",
+    "rule": "MISRA C:2012 18.6",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-02",
+    "project": "aocs",
+    "file": "src/orbit.c",
+    "line": 99,
+    "title": "拷贝源越界",
+    "category": "defect",
+    "rule": "MISRA C:2012 21.17",
+    "contract_id": "",
+    "required_engine": "builtin"
+  },
+  {
+    "id": "REMOTE-03",
+    "project": "aocs",
+    "file": "src/orbit.c",
+    "line": 68,
+    "title": "return后不可达语句",
+    "category": "defect",
+    "rule": "MISRA C:2012 2.1",
+    "contract_id": "",
+    "required_engine": "builtin"
+  }
+]
